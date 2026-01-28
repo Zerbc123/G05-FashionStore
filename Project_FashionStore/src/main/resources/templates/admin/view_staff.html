@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Danh sách nhân viên</title>
+
+    <!-- Bootstrap CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                        success: '#C8E6C9',
+                        danger: '#F8D7DA',
+                        warning: '#FFF3CD'
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div style="margin-top: 80px;">
+
+<main class="flex-grow p-8 max-w-[1320px] mx-auto w-full">
+
+    <!-- Page Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-heading font-bold text-text-main">Quản lý nhân viên</h1>
+            <div class="w-12 h-1 bg-primary mt-2"></div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <input type="text" placeholder="Tìm kiếm nhân viên..." class="pl-10 pr-4 py-2.5 rounded-xl border border-divider focus:outline-none focus:border-primary w-64 text-sm transition shadow-sm">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
+            </div>
+            <a th:href="@{/admin/staff/add}" class="bg-admin-gradient text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2 no-underline">
+                <i class="fa-solid fa-plus"></i> Thêm nhân viên
+            </a>
+        </div>
+    </div>
+
+    <!-- Staff Table Container -->
+    <div class="table-container">
+        <table class="w-full text-left border-collapse">
+            <thead>
+            <tr class="border-b-2 border-primary/20 bg-secondary-bg/30">
+                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Staff ID</th>
+                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Họ và Tên</th>
+                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Email</th>
+                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Trạng thái</th>
+                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider text-right">Hành động</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-divider">
+            <!-- Staff Row 1 -->
+            <tr class="hover:bg-secondary-bg/50 transition-colors group">
+                <td class="px-6 py-4">
+                    <span class="font-mono text-xs font-bold text-primary">STF-2024-001</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">HT</div>
+                        <span class="text-sm font-medium text-text-main">Lê Hoàng Thành</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-text-muted">thanh.le@fashionstore.com</td>
+                <td class="px-6 py-4">
+                    <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a th:href="@{/admin/staffdetails/1}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
+                        View Detail
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Staff Row 2 -->
+            <tr class="hover:bg-secondary-bg/50 transition-colors">
+                <td class="px-6 py-4">
+                    <span class="font-mono text-xs font-bold text-primary">STF-2024-002</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">MA</div>
+                        <span class="text-sm font-medium text-text-main">Trần Minh Anh</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-text-muted">minhanh.tran@fashionstore.com</td>
+                <td class="px-6 py-4">
+                    <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a th:href="@{/admin/staffdetails/2}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
+                        View Detail
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Staff Row 3 -->
+            <tr class="hover:bg-secondary-bg/50 transition-colors">
+                <td class="px-6 py-4">
+                    <span class="font-mono text-xs font-bold text-primary">STF-2023-089</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-text-muted/10 flex items-center justify-center text-text-muted font-bold text-xs">QL</div>
+                        <span class="text-sm font-medium text-text-main">Phạm Quốc Long</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-text-muted">long.pham@fashionstore.com</td>
+                <td class="px-6 py-4">
+                    <span class="status-badge bg-danger text-red-700">Đã khóa</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a th:href="@{/admin/staffdetails/3}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
+                        View Detail
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Staff Row 4 -->
+            <tr class="hover:bg-secondary-bg/50 transition-colors">
+                <td class="px-6 py-4">
+                    <span class="font-mono text-xs font-bold text-primary">STF-2024-015</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">DN</div>
+                        <span class="text-sm font-medium text-text-main">Ngô Diệu Nhi</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-text-muted">nhi.ngo@fashionstore.com</td>
+                <td class="px-6 py-4">
+                    <span class="status-badge bg-warning text-yellow-700">Nghỉ phép</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a th:href="@{/admin/staffdetails/4}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
+                        View Detail
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination Section -->
+        <div class="px-6 py-5 flex items-center justify-between bg-white">
+            <p class="text-xs text-text-muted font-medium">Hiển thị 1 - 4 trong tổng số 12 nhân viên</p>
+            <div class="flex items-center gap-2">
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white text-xs font-bold shadow-sm">1</button>
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold">2</button>
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold">3</button>
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer class="py-6 border-t border-divider bg-white text-center mt-auto">
+    <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest">FashionStore Admin Console &copy; 2024</p>
+</footer>
+
+</body>
+</html>

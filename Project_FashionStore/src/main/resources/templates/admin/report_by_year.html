@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Báo cáo theo năm</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .admin-sidebar { width: 260px; height: calc(100vh - 64px); }
+        .table-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+        thead { border-bottom: 2px solid #F06292; }
+        tbody tr:hover { background-color: #FFF5F7; transition: background 0.2s; }
+
+        /* Remove arrows from number input */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+<div th:replace="~{fragments/header :: adminheader}"></div>
+<div style="margin-top: 80px;">
+<!-- ADMIN HEADER -->
+<header class="h-16 bg-admin-gradient flex items-center justify-between px-8 text-white sticky top-0 z-50">
+    <div class="flex items-center gap-4">
+        <i class="fa-solid fa-bars-staggered text-xl cursor-pointer"></i>
+        <span class="text-xl font-heading font-bold tracking-wide">FashionStore Admin</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="relative cursor-pointer">
+            <i class="fa-solid fa-bell text-lg"></i>
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Admin Manager</p>
+                <p class="text-[10px] opacity-80">Quản trị viên</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-grow">
+    <!-- SIDEBAR -->
+    <aside class="hidden lg:block admin-sidebar bg-white border-r border-divider sticky top-16">
+        <nav class="p-6 space-y-2">
+            <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-box w-5"></i> Sản phẩm
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-receipt w-5"></i> Đơn hàng
+            </a>
+            <div class="pt-4 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-widest pl-3">Báo cáo</div>
+            <a href="report_by_day.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-calendar-day w-5"></i> Báo cáo theo ngày
+            </a>
+            <a href="report_by_month.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-calendar-week w-5"></i> Báo cáo tháng
+            </a>
+            <a href="report_by_year.html" class="flex items-center gap-3 p-3 bg-secondary-bg text-primary rounded-xl transition font-medium">
+                <i class="fa-solid fa-calendar-check w-5"></i> Báo cáo năm
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-heading font-bold text-text-main">Báo cáo tổng kết năm</h1>
+                <div class="w-20 h-1 bg-primary mt-2"></div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="handleExport()" class="px-5 py-2.5 bg-white border border-primary text-primary rounded-xl text-sm font-medium hover:bg-secondary-bg transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Xuất báo cáo năm (PDF)
+                </button>
+            </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="bg-white p-6 rounded-2xl shadow-soft mb-8 flex flex-wrap items-end gap-6">
+            <!-- Year Selector -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Chọn năm báo cáo</label>
+                <div class="relative">
+                    <input type="number" id="yearSelector" class="w-40 px-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm font-semibold focus:outline-none focus:border-primary transition" value="2024" min="2020" max="2030">
+                    <i class="fa-solid fa-calendar absolute right-4 top-1/2 -translate-y-1/2 text-primary opacity-50"></i>
+                </div>
+            </div>
+
+            <!-- Search within results -->
+            <div class="space-y-2 flex-grow max-w-sm">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Tìm kiếm trong dữ liệu</label>
+                <div class="relative">
+                    <input type="text" id="reportSearch" placeholder="Tìm tháng, quý hoặc sự kiện..." class="w-full pl-10 pr-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm focus:outline-none focus:border-primary transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="generateReport()" class="px-8 py-2.5 bg-admin-gradient text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-sync"></i> Tạo báo cáo
+                </button>
+                <button onclick="handleSearch()" class="px-6 py-2.5 bg-text-main text-white rounded-xl text-sm font-semibold hover:bg-black transition">
+                    Tìm kiếm
+                </button>
+            </div>
+        </div>
+
+        <!-- YEARLY TOTALS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-admin-gradient p-1 rounded-2xl">
+                <div class="bg-white p-6 rounded-[14px] flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Tổng doanh thu năm</p>
+                        <h3 class="text-3xl font-bold text-primary font-heading">$1,452,800</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-secondary-bg rounded-full flex items-center justify-center text-primary">
+                        <i class="fa-solid fa-money-bill-trend-up text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft flex items-center justify-between border-b-4 border-blue-400">
+                <div>
+                    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Tổng đơn hàng</p>
+                    <h3 class="text-3xl font-bold text-text-main font-heading">14,250</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-400">
+                    <i class="fa-solid fa-box-archive text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft flex items-center justify-between border-b-4 border-green-400">
+                <div>
+                    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">Tăng trưởng so năm trước</p>
+                    <h3 class="text-3xl font-bold text-green-500 font-heading">+24.5%</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-500">
+                    <i class="fa-solid fa-arrow-up-right-dots text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORT RESULTS TABLE -->
+        <div class="table-container">
+            <div class="p-6 border-b border-divider flex items-center justify-between bg-white">
+                <h3 class="font-heading font-bold text-xl text-text-main">Phân tích theo tháng - Năm <span id="currentYearDisplay" class="text-primary italic">2024</span></h3>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-3 h-3 bg-green-400 rounded-full"></span> <span>Vượt mục tiêu</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-3 h-3 bg-primary rounded-full"></span> <span>Đạt mục tiêu</span>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                    <tr class="text-text-main text-xs font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Tháng</th>
+                        <th class="px-6 py-4">Số đơn hàng</th>
+                        <th class="px-6 py-4 text-right">Doanh thu ($)</th>
+                        <th class="px-6 py-4 text-right">Chi phí Marketing ($)</th>
+                        <th class="px-6 py-4 text-right">Lợi nhuận gộp ($)</th>
+                        <th class="px-6 py-4">Hiệu suất</th>
+                    </tr>
+                    </thead>
+                    <tbody id="reportBody" class="text-sm text-text-main">
+                    <!-- Rows 1-4 for Demo -->
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tháng 01</td>
+                        <td class="px-6 py-5">1,050</td>
+                        <td class="px-6 py-5 text-right font-bold">$105,200.00</td>
+                        <td class="px-6 py-5 text-right text-text-muted">$8,500.00</td>
+                        <td class="px-6 py-5 text-right font-semibold">$62,400.00</td>
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-tighter">Vượt 12%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tháng 02</td>
+                        <td class="px-6 py-5">980</td>
+                        <td class="px-6 py-5 text-right font-bold">$98,450.00</td>
+                        <td class="px-6 py-5 text-right text-text-muted">$7,200.00</td>
+                        <td class="px-6 py-5 text-right font-semibold">$58,120.00</td>
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 bg-pink-100 text-primary rounded-full text-[10px] font-bold uppercase tracking-tighter">Đạt 98%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tháng 03</td>
+                        <td class="px-6 py-5">1,240</td>
+                        <td class="px-6 py-5 text-right font-bold">$132,100.00</td>
+                        <td class="px-6 py-5 text-right text-text-muted">$12,000.00</td>
+                        <td class="px-6 py-5 text-right font-semibold">$74,500.00</td>
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-tighter">Vượt 25%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tháng 04</td>
+                        <td class="px-6 py-5">1,115</td>
+                        <td class="px-6 py-5 text-right font-bold">$112,000.00</td>
+                        <td class="px-6 py-5 text-right text-text-muted">$9,100.00</td>
+                        <td class="px-6 py-5 text-right font-semibold">$66,200.00</td>
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-tighter">Vượt 5%</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot class="bg-secondary-bg font-bold">
+                    <tr class="text-text-main">
+                        <td class="px-6 py-5">TỔNG CỘNG (Q1 - Q4)</td>
+                        <td class="px-6 py-5">14,250 đơn</td>
+                        <td class="px-6 py-5 text-right text-primary">$1,452,800.00</td>
+                        <td class="px-6 py-5 text-right">$115,000.00</td>
+                        <td class="px-6 py-5 text-right font-bold text-lg">$850,200.00</td>
+                        <td class="px-6 py-5"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function generateReport() {
+        const year = document.getElementById('yearSelector').value;
+        if (!year) {
+            alert("Vui lòng nhập năm.");
+            return;
+        }
+        document.getElementById('currentYearDisplay').innerText = year;
+        alert(`Hệ thống đang tổng hợp dữ liệu giao dịch cho năm tài chính ${year}...`);
+        // In a real app, this would trigger an AJAX fetch and re-render of reportBody
+    }
+
+    function handleSearch() {
+        const query = document.getElementById('reportSearch').value;
+        if(!query) {
+            alert("Vui lòng nhập nội dung tìm kiếm.");
+            return;
+        }
+        alert("Đang tìm kiếm trong báo cáo năm: " + query);
+    }
+
+    function handleExport() {
+        const year = document.getElementById('yearSelector').value;
+        alert(`Đang khởi tạo trình xuất báo cáo PDF cho năm ${year}. Vui lòng không đóng trình duyệt...`);
+        setTimeout(() => {
+            alert("Báo cáo năm đã được lưu vào thư mục Downloads.");
+        }, 1500);
+    }
+</script>
+</body>
+</html>
