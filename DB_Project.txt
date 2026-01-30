@@ -1,0 +1,477 @@
+USE [master]
+GO
+/****** Object:  Database [fashion_shopping]    Script Date: 30/01/2026 4:15:24 CH ******/
+CREATE DATABASE [fashion_shopping]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'fashion_shopping', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\fashion_shopping.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'fashion_shopping_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\fashion_shopping_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
+ALTER DATABASE [fashion_shopping] SET COMPATIBILITY_LEVEL = 160
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [fashion_shopping].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [fashion_shopping] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET AUTO_CLOSE ON 
+GO
+ALTER DATABASE [fashion_shopping] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [fashion_shopping] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [fashion_shopping] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET  ENABLE_BROKER 
+GO
+ALTER DATABASE [fashion_shopping] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [fashion_shopping] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET RECOVERY SIMPLE 
+GO
+ALTER DATABASE [fashion_shopping] SET  MULTI_USER 
+GO
+ALTER DATABASE [fashion_shopping] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [fashion_shopping] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [fashion_shopping] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [fashion_shopping] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [fashion_shopping] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [fashion_shopping] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+ALTER DATABASE [fashion_shopping] SET QUERY_STORE = ON
+GO
+ALTER DATABASE [fashion_shopping] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
+GO
+USE [fashion_shopping]
+GO
+/****** Object:  Table [dbo].[Account]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Account](
+	[account_id] [int] IDENTITY(1,1) NOT NULL,
+	[username] [nvarchar](50) NULL,
+	[password] [nvarchar](100) NULL,
+	[email] [nvarchar](100) NULL,
+	[status] [nvarchar](20) NULL,
+	[role_id] [int] NULL,
+	[full_name] [nvarchar](100) NULL,
+	[phone] [nvarchar](20) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[account_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[CartItem]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CartItem](
+	[cart_item_id] [int] IDENTITY(1,1) NOT NULL,
+	[customer_id] [int] NULL,
+	[variant_id] [int] NULL,
+	[quantity] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[cart_item_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Category]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Category](
+	[category_id] [int] IDENTITY(1,1) NOT NULL,
+	[category_name] [nvarchar](100) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[category_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Category_Size]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Category_Size](
+	[category_size_id] [int] IDENTITY(1,1) NOT NULL,
+	[size_name] [nvarchar](20) NULL,
+	[category_id] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[category_size_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Color]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Color](
+	[color_id] [int] IDENTITY(1,1) NOT NULL,
+	[color_name] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[color_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Customer]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Customer](
+	[customer_id] [int] IDENTITY(1,1) NOT NULL,
+	[full_name] [nvarchar](100) NULL,
+	[phone] [nvarchar](20) NULL,
+	[address] [nvarchar](255) NULL,
+	[account_id] [int] NULL,
+	[email] [varchar](255) NULL,
+	[birthday] [date] NULL,
+	[gender] [bit] NULL,
+	[created_at] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[customer_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[account_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[OrderItem]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[OrderItem](
+	[order_item_id] [int] IDENTITY(1,1) NOT NULL,
+	[order_id] [int] NULL,
+	[variant_id] [int] NULL,
+	[quantity] [int] NULL,
+	[price] [decimal](10, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[order_item_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Orders]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Orders](
+	[order_id] [int] IDENTITY(1,1) NOT NULL,
+	[customer_id] [int] NULL,
+	[voucher_id] [int] NULL,
+	[account_id] [int] NULL,
+	[order_date] [date] NULL,
+	[status] [nvarchar](30) NULL,
+	[total_amount] [decimal](10, 2) NULL,
+	[payment_status] [nvarchar](30) NULL,
+	[shipping_address] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[order_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Payment]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Payment](
+	[payment_id] [int] IDENTITY(1,1) NOT NULL,
+	[order_id] [int] NULL,
+	[payment_method] [nvarchar](50) NULL,
+	[payment_status] [nvarchar](30) NULL,
+	[payment_date] [date] NULL,
+	[amount] [decimal](10, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[payment_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[order_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Product]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Product](
+	[product_id] [int] IDENTITY(1,1) NOT NULL,
+	[product_name] [nvarchar](150) NULL,
+	[description] [nvarchar](max) NULL,
+	[category_id] [int] NULL,
+	[account_id] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[product_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProductVariant]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProductVariant](
+	[variant_id] [int] IDENTITY(1,1) NOT NULL,
+	[product_id] [int] NULL,
+	[color_id] [int] NULL,
+	[category_size_id] [int] NULL,
+	[price] [decimal](10, 2) NULL,
+	[stock] [int] NULL,
+	[image_url] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[variant_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ReturnRequest]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ReturnRequest](
+	[return_id] [int] IDENTITY(1,1) NOT NULL,
+	[order_item_id] [int] NULL,
+	[return_type_id] [int] NULL,
+	[reason] [nvarchar](max) NULL,
+	[status] [nvarchar](30) NULL,
+	[request_date] [date] NULL,
+	[message_text] [nvarchar](max) NULL,
+	[voucher_cancelled] [bit] NULL,
+	[handled_by] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[return_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ReturnType]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ReturnType](
+	[return_type_id] [int] IDENTITY(1,1) NOT NULL,
+	[type_name] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[return_type_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Review]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Review](
+	[review_id] [int] IDENTITY(1,1) NOT NULL,
+	[order_item_id] [int] NULL,
+	[rating] [int] NULL,
+	[comment] [nvarchar](max) NULL,
+	[review_date] [date] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[review_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Role]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Role](
+	[role_id] [int] IDENTITY(1,1) NOT NULL,
+	[role_name] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[role_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Voucher]    Script Date: 30/01/2026 4:15:24 CH ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Voucher](
+	[voucher_id] [int] IDENTITY(1,1) NOT NULL,
+	[code] [nvarchar](50) NULL,
+	[discount_value] [decimal](10, 2) NULL,
+	[expired_date] [date] NULL,
+	[is_active] [bit] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[voucher_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Customer] ADD  DEFAULT (getdate()) FOR [created_at]
+GO
+ALTER TABLE [dbo].[ReturnRequest] ADD  DEFAULT ((0)) FOR [voucher_cancelled]
+GO
+ALTER TABLE [dbo].[Voucher] ADD  DEFAULT ((1)) FOR [is_active]
+GO
+ALTER TABLE [dbo].[Account]  WITH CHECK ADD  CONSTRAINT [FK_Account_Role] FOREIGN KEY([role_id])
+REFERENCES [dbo].[Role] ([role_id])
+GO
+ALTER TABLE [dbo].[Account] CHECK CONSTRAINT [FK_Account_Role]
+GO
+ALTER TABLE [dbo].[CartItem]  WITH CHECK ADD  CONSTRAINT [FK_CartItem_Customer] FOREIGN KEY([customer_id])
+REFERENCES [dbo].[Customer] ([customer_id])
+GO
+ALTER TABLE [dbo].[CartItem] CHECK CONSTRAINT [FK_CartItem_Customer]
+GO
+ALTER TABLE [dbo].[CartItem]  WITH CHECK ADD  CONSTRAINT [FK_CartItem_Variant] FOREIGN KEY([variant_id])
+REFERENCES [dbo].[ProductVariant] ([variant_id])
+GO
+ALTER TABLE [dbo].[CartItem] CHECK CONSTRAINT [FK_CartItem_Variant]
+GO
+ALTER TABLE [dbo].[Category_Size]  WITH CHECK ADD  CONSTRAINT [FK_CategorySize_Category] FOREIGN KEY([category_id])
+REFERENCES [dbo].[Category] ([category_id])
+GO
+ALTER TABLE [dbo].[Category_Size] CHECK CONSTRAINT [FK_CategorySize_Category]
+GO
+ALTER TABLE [dbo].[Customer]  WITH CHECK ADD  CONSTRAINT [FK_Customer_Account] FOREIGN KEY([account_id])
+REFERENCES [dbo].[Account] ([account_id])
+GO
+ALTER TABLE [dbo].[Customer] CHECK CONSTRAINT [FK_Customer_Account]
+GO
+ALTER TABLE [dbo].[OrderItem]  WITH CHECK ADD  CONSTRAINT [FK_OrderItem_Orders] FOREIGN KEY([order_id])
+REFERENCES [dbo].[Orders] ([order_id])
+GO
+ALTER TABLE [dbo].[OrderItem] CHECK CONSTRAINT [FK_OrderItem_Orders]
+GO
+ALTER TABLE [dbo].[OrderItem]  WITH CHECK ADD  CONSTRAINT [FK_OrderItem_Variant] FOREIGN KEY([variant_id])
+REFERENCES [dbo].[ProductVariant] ([variant_id])
+GO
+ALTER TABLE [dbo].[OrderItem] CHECK CONSTRAINT [FK_OrderItem_Variant]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD  CONSTRAINT [FK_Orders_Account] FOREIGN KEY([account_id])
+REFERENCES [dbo].[Account] ([account_id])
+GO
+ALTER TABLE [dbo].[Orders] CHECK CONSTRAINT [FK_Orders_Account]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD  CONSTRAINT [FK_Orders_Customer] FOREIGN KEY([customer_id])
+REFERENCES [dbo].[Customer] ([customer_id])
+GO
+ALTER TABLE [dbo].[Orders] CHECK CONSTRAINT [FK_Orders_Customer]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD  CONSTRAINT [FK_Orders_Voucher] FOREIGN KEY([voucher_id])
+REFERENCES [dbo].[Voucher] ([voucher_id])
+GO
+ALTER TABLE [dbo].[Orders] CHECK CONSTRAINT [FK_Orders_Voucher]
+GO
+ALTER TABLE [dbo].[Payment]  WITH CHECK ADD  CONSTRAINT [FK_Payment_Orders] FOREIGN KEY([order_id])
+REFERENCES [dbo].[Orders] ([order_id])
+GO
+ALTER TABLE [dbo].[Payment] CHECK CONSTRAINT [FK_Payment_Orders]
+GO
+ALTER TABLE [dbo].[Product]  WITH CHECK ADD  CONSTRAINT [FK_Product_Account] FOREIGN KEY([account_id])
+REFERENCES [dbo].[Account] ([account_id])
+GO
+ALTER TABLE [dbo].[Product] CHECK CONSTRAINT [FK_Product_Account]
+GO
+ALTER TABLE [dbo].[Product]  WITH CHECK ADD  CONSTRAINT [FK_Product_Category] FOREIGN KEY([category_id])
+REFERENCES [dbo].[Category] ([category_id])
+GO
+ALTER TABLE [dbo].[Product] CHECK CONSTRAINT [FK_Product_Category]
+GO
+ALTER TABLE [dbo].[ProductVariant]  WITH CHECK ADD  CONSTRAINT [FK_ProductVariant_Color] FOREIGN KEY([color_id])
+REFERENCES [dbo].[Color] ([color_id])
+GO
+ALTER TABLE [dbo].[ProductVariant] CHECK CONSTRAINT [FK_ProductVariant_Color]
+GO
+ALTER TABLE [dbo].[ProductVariant]  WITH CHECK ADD  CONSTRAINT [FK_ProductVariant_Product] FOREIGN KEY([product_id])
+REFERENCES [dbo].[Product] ([product_id])
+GO
+ALTER TABLE [dbo].[ProductVariant] CHECK CONSTRAINT [FK_ProductVariant_Product]
+GO
+ALTER TABLE [dbo].[ProductVariant]  WITH CHECK ADD  CONSTRAINT [FK_ProductVariant_Size] FOREIGN KEY([category_size_id])
+REFERENCES [dbo].[Category_Size] ([category_size_id])
+GO
+ALTER TABLE [dbo].[ProductVariant] CHECK CONSTRAINT [FK_ProductVariant_Size]
+GO
+ALTER TABLE [dbo].[ReturnRequest]  WITH CHECK ADD  CONSTRAINT [FK_ReturnRequest_HandledBy] FOREIGN KEY([handled_by])
+REFERENCES [dbo].[Account] ([account_id])
+GO
+ALTER TABLE [dbo].[ReturnRequest] CHECK CONSTRAINT [FK_ReturnRequest_HandledBy]
+GO
+ALTER TABLE [dbo].[ReturnRequest]  WITH CHECK ADD  CONSTRAINT [FK_ReturnRequest_OrderItem] FOREIGN KEY([order_item_id])
+REFERENCES [dbo].[OrderItem] ([order_item_id])
+GO
+ALTER TABLE [dbo].[ReturnRequest] CHECK CONSTRAINT [FK_ReturnRequest_OrderItem]
+GO
+ALTER TABLE [dbo].[ReturnRequest]  WITH CHECK ADD  CONSTRAINT [FK_ReturnRequest_ReturnType] FOREIGN KEY([return_type_id])
+REFERENCES [dbo].[ReturnType] ([return_type_id])
+GO
+ALTER TABLE [dbo].[ReturnRequest] CHECK CONSTRAINT [FK_ReturnRequest_ReturnType]
+GO
+ALTER TABLE [dbo].[Review]  WITH CHECK ADD  CONSTRAINT [FK_Review_OrderItem] FOREIGN KEY([order_item_id])
+REFERENCES [dbo].[OrderItem] ([order_item_id])
+GO
+ALTER TABLE [dbo].[Review] CHECK CONSTRAINT [FK_Review_OrderItem]
+GO
+USE [master]
+GO
+ALTER DATABASE [fashion_shopping] SET  READ_WRITE 
+GO
