@@ -13,7 +13,7 @@ public class StaffController {
     // Kiểm tra quyền truy cập STAFF
     private boolean isStaff(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "STAFF".equals(role) || "ADMIN".equals(role);
+        return "Staff".equals(role) || "Admin".equals(role);
     }
 
     // Trang Staff View chính
