@@ -18,19 +18,26 @@ public class Account {
     @JoinColumn (name = "role_id")
     private Role role;
 
+    @Column (name = "full_name")
+    private String fullName;
+    // Trong file Account.java và Customer.java
+    private Integer phone; // Integer (Wrapper class) cho phép nhận giá trị null
+
     @OneToMany (mappedBy = "account")
     private List<Customer> customers;
 
     public Account() {
     }
 
-    public Account(int accountId, String username, String password, String email, String status, Role role) {
+    public Account(int accountId, String username, String password, String status, String email, Role role, String fullName, Integer phone) {
         this.accountId = accountId;
         this.username = username;
         this.password = password;
-        this.email = email;
         this.status = status;
+        this.email = email;
         this.role = role;
+        this.fullName = fullName;
+        this.phone = phone;
     }
 
     public int getAccountId() {
@@ -79,5 +86,29 @@ public class Account {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public Integer getPhone() {
+        return phone;
+    }
+
+    public void setPhone(Integer phone) {
+        this.phone = phone;
+    }
+
+    public List<Customer> getCustomers() {
+        return customers;
+    }
+
+    public void setCustomers(List<Customer> customers) {
+        this.customers = customers;
     }
 }
