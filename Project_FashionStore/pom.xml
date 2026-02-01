@@ -52,6 +52,13 @@
             <version>12.10.1.jre11</version>
         </dependency>
 
+        <!-- H2 Database (for development) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Spring Boot DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

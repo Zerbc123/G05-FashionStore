@@ -30,11 +30,6 @@ public class HomeController {
         return "register";
     }
 
-    @GetMapping(value = "/products")
-    public String productsPage(){
-        return "list"; // Trả về list.html
-    }
-
     @GetMapping(value = "/cart")
     public String cartPage(){
         return "cart"; // Trả về cart.html
