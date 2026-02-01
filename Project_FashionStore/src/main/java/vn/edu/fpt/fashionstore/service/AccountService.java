@@ -99,13 +99,11 @@ public class AccountService {
      * @return Account nếu đăng ký thành công, null nếu thất bại
      */
     public Account registerAccount(String email, String password, String fullName, String phone) {
-
-        // 1. Kiểm tra email tồn tại
         if (accountRepository.existsByEmail(email)) {
-            return null; // Email đã tồn tại
+            return null;
         }
 
-        //Logic tạo username tự động
+        // Logic tạo username... (giữ nguyên của ông)
         String baseUsername = email.split("@")[0];
         String finalUsername = baseUsername;
         int count = 1;
@@ -113,29 +111,34 @@ public class AccountService {
             finalUsername = baseUsername + count++;
         }
 
-        // Chuyển đổi phone sang Integer (nếu cần)
+        // SỬA CHỖ NÀY: Kiểm tra phone trước khi parse
         Integer phoneNumber = null;
-        try {
-            phoneNumber = Integer.parseInt(phone);
-        } catch (NumberFormatException e) {
-            // Nếu không chuyển được, để null
+        if (phone != null && !phone.trim().isEmpty()) {
+            try {
+                // Loại bỏ tất cả ký tự không phải số trước khi parse
+                String cleanPhone = phone.replaceAll("[^0-9]", "");
+                if (!cleanPhone.isEmpty()) {
+                    // Lưu ý: Nếu vẫn dùng Integer, số 0 ở đầu sẽ mất.
+                    // Tốt nhất nên đổi field Phone trong Entity thành String.
+                    phoneNumber = Integer.parseInt(cleanPhone);
+                }
+            } catch (NumberFormatException e) {
+                phoneNumber = null; // Nếu quá lớn hoặc lỗi thì để null cho an toàn
+            }
         }
 
-        //  Khởi tạo Account
         Account newAccount = new Account();
         newAccount.setUsername(finalUsername);
         newAccount.setEmail(email);
-        newAccount.setPassword(password); // Nên mã hóa trong thực tế
+        newAccount.setPassword(password);
         newAccount.setFullName(fullName);
-        newAccount.setPhone(phoneNumber);
+        newAccount.setPhone(phoneNumber); // Gán số đã xử lý
         newAccount.setStatus("active");
 
-        // Gán Role CUSTOMER
         Role customerRole = roleRepository.findByRoleName("Customer")
                 .orElseGet(() -> roleRepository.findById(3).orElse(null));
         newAccount.setRole(customerRole);
 
-        // Lưu vào database
         return accountRepository.save(newAccount);
     }
 
@@ -208,6 +211,47 @@ public class AccountService {
                 .password(acc.getPassword()) // Vì dùng NoOp nên nó sẽ so sánh trực tiếp chữ thường
                 .roles("USER")
                 .build();
+    }
+
+
+    @Transactional
+    public Account processOAuthPostLogin(String email, String fullName) {
+        Optional<Account> existAccount = accountRepository.findByEmail(email);
+
+        if (existAccount.isEmpty()) {
+            // Tự động tạo Username từ Email (giống logic ông đã viết)
+            String baseUsername = email.split("@")[0];
+            String finalUsername = baseUsername;
+            int count = 1;
+            while (accountRepository.existsByUsername(finalUsername)) {
+                finalUsername = baseUsername + count++;
+            }
+
+            Account newAccount = new Account();
+            newAccount.setUsername(finalUsername);
+            newAccount.setEmail(email);
+            newAccount.setFullName(fullName);
+            newAccount.setPassword(null); // Không có mật khẩu cho User Google
+            newAccount.setStatus("active");
+
+            // Gán Role Customer (Lấy ID 3 hoặc tìm theo tên như ông đã làm)
+            Role customerRole = roleRepository.findByRoleName("Customer")
+                    .orElseGet(() -> roleRepository.findById(3).orElse(null));
+            newAccount.setRole(customerRole);
+
+            Account savedAccount = accountRepository.save(newAccount);
+
+            // Tạo luôn bản ghi bên bảng Customer để đồng bộ
+            Customer customer = new Customer();
+            customer.setAccount(savedAccount);
+            customer.setFullName(fullName);
+            customer.setEmail(email);
+            customer.setCreatedDate(new Date());
+            customerRepository.save(customer);
+
+            return savedAccount;
+        }
+        return existAccount.get();
     }
 
 }

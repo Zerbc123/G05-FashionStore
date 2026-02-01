@@ -22,8 +22,16 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Thêm /oauth2/** vào đây để Google có quyền gọi API về máy Duy
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/oauth2/**").permitAll()
+                        // CẤP QUYỀN TRUY CẬP FILE TĨNH (CSS, JS, IMAGES) - Cực kỳ quan trọng
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+
+                        // CÁC TRANG CÔNG KHAI
+                        .requestMatchers("/", "/home", "/login", "/register", "/products/**", "/product-details/**", "/profile/**").permitAll()
+
+                        // 1. CHẶN: Chỉ giỏ hàng và thanh toán mới cần Login
+                        .requestMatchers("/cart/**", "/checkout/**", "/order/**").authenticated()
+
+                        // 2. CÒN LẠI: Cho phép hết (để tránh lỗi load tài nguyên ngầm)
                         .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
