@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.entity.Product;
+import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.List;
 
@@ -25,7 +26,9 @@ public class ProductController {
     public String showProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) Long accountId,
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
             @RequestParam(defaultValue = "productName") String sort,
@@ -40,9 +43,9 @@ public class ProductController {
         Page<Product> productPage;
 
         // Nếu có từ khóa tìm kiếm hoặc bộ lọc, sử dụng searchAndFilterProducts
-        if (hasSearchOrFilter(keyword, categoryId, accountId)) {
+        if (hasSearchOrFilter(keyword, categoryId, size, minPrice, maxPrice)) {
             productPage = productService.searchAndFilterProducts(
-                keyword, categoryId, accountId, pageable);
+                keyword, categoryId, size, minPrice, maxPrice, pageable);
         } else {
             productPage = productService.getAllProducts(pageable);
         }
@@ -50,9 +53,9 @@ public class ProductController {
         if (page > 0 && productPage.getNumberOfElements() == 0 && productPage.getTotalElements() > 0) {
             page = 0;
             pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
-            if (hasSearchOrFilter(keyword, categoryId, accountId)) {
+            if (hasSearchOrFilter(keyword, categoryId, size, minPrice, maxPrice)) {
                 productPage = productService.searchAndFilterProducts(
-                    keyword, categoryId, accountId, pageable);
+                    keyword, categoryId, size, minPrice, maxPrice, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -75,7 +78,9 @@ public class ProductController {
         // Thêm các tham số tìm kiếm và lọc vào model
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategoryId", categoryId);
-        model.addAttribute("selectedAccountId", accountId);
+        model.addAttribute("selectedSize", size);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
 
         // Thêm danh sách cho bộ lọc
         model.addAttribute("categoryIds", categoryIds);
@@ -95,10 +100,23 @@ public class ProductController {
         return "list";
     }
 
+    @GetMapping("/product-details")
+    public String productDetails(@RequestParam("id") Long productId, Model model) {
+        Product product = productService.getProductById(productId);
+        if (product != null) {
+            model.addAttribute("product", product);
+            return "productdetails";
+        } else {
+            return "redirect:/products";
+        }
+    }
+
     // Kiểm tra xem có tham số tìm kiếm hoặc lọc nào không
-    private boolean hasSearchOrFilter(String keyword, Long categoryId, Long accountId) {
+    private boolean hasSearchOrFilter(String keyword, Long categoryId, String size, Double minPrice, Double maxPrice) {
         return (keyword != null && !keyword.trim().isEmpty()) ||
                categoryId != null || 
-               accountId != null;
+               (size != null && !size.trim().isEmpty()) ||
+               minPrice != null || 
+               maxPrice != null;
     }
 }

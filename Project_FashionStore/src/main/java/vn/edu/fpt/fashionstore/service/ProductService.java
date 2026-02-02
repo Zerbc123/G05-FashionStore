@@ -39,7 +39,7 @@ public class ProductService {
     }
 
     // Lọc sản phẩm theo nhiều tiêu chí
-    public Page<Product> filterProducts(Long categoryId, Long accountId, Pageable pageable) {
+    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
             
@@ -48,9 +48,22 @@ public class ProductService {
                 predicates.add(cb.equal(root.get("categoryId"), categoryId));
             }
             
-            // Lọc theo tài khoản
-            if (accountId != null) {
-                predicates.add(cb.equal(root.get("accountId"), accountId));
+            // Lọc theo size (nếu có field size trong entity)
+            if (size != null && !size.trim().isEmpty()) {
+                // predicates.add(cb.equal(root.get("size"), size));
+                // Tạm thời bỏ qua vì entity Product chưa có field size
+            }
+            
+            // Lọc theo giá tối thiểu (nếu có field price trong entity)
+            if (minPrice != null) {
+                // predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+                // Tạm thời bỏ qua vì entity Product chưa có field price
+            }
+            
+            // Lọc theo giá tối đa (nếu có field price trong entity)
+            if (maxPrice != null) {
+                // predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+                // Tạm thời bỏ qua vì entity Product chưa có field price
             }
             
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -60,8 +73,8 @@ public class ProductService {
     }
 
     // Tìm kiếm và lọc kết hợp
-    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, 
-                                               Long accountId, Pageable pageable) {
+    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size, 
+                                               Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
             
@@ -75,8 +88,21 @@ public class ProductService {
                 predicates.add(cb.equal(root.get("categoryId"), categoryId));
             }
             
-            if (accountId != null) {
-                predicates.add(cb.equal(root.get("accountId"), accountId));
+            // Lọc theo size (nếu có field size trong entity)
+            if (size != null && !size.trim().isEmpty()) {
+                // predicates.add(cb.equal(root.get("size"), size));
+                // Tạm thời bỏ qua vì entity Product chưa có field size
+            }
+            
+            // Lọc theo giá (nếu có field price trong entity)
+            if (minPrice != null) {
+                // predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+                // Tạm thời bỏ qua vì entity Product chưa có field price
+            }
+            
+            if (maxPrice != null) {
+                // predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+                // Tạm thời bỏ qua vì entity Product chưa có field price
             }
             
             return cb.and(predicates.toArray(new Predicate[0]));
