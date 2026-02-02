@@ -43,6 +43,7 @@
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -858,11 +859,11 @@
                     <div class="product-price-section">
                         <div class="current-price">
                             <span class="price-symbol">₫</span>
-                            <span class="price-value" th:text="${#numbers.formatDecimal(299000, 0, 'POINT')}">299.000</span>
+                            <span class="price-value" id="dynamicPrice">299.000</span>
                         </div>
                         <div class="original-price">
                             <span class="price-symbol">₫</span>
-                            <span th:text="${#numbers.formatDecimal(399000, 0, 'POINT')}">399.000</span>
+                            <span id="dynamicOriginalPrice">399.000</span>
                             <span class="discount-badge">-25%</span>
                         </div>
                     </div>
@@ -1118,13 +1119,46 @@ function loadProductVariants(productId) {
     console.log('Found variants:', variants.length);
     
     if (variants.length === 0) {
-        console.log('No variants found, loading default product (ID: 4)');
-        // Load default product if no variants found
-        const defaultVariants = productVariants.filter(v => v.product_id === 4);
-        if (defaultVariants.length > 0) {
-            currentProductId = 4;
-            loadProductVariants(4);
-        }
+        console.log('No variants found, creating default variant');
+        // Create a default variant if none found
+        const defaultVariant = {
+            variant_id: 999,
+            product_id: productId,
+            color_id: 1,
+            color_name: 'Default',
+            color_code: '#CCCCCC',
+            size_name: 'One Size',
+            size_id: 1,
+            price: 299000,
+            stock: 100,
+            image_url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600'
+        };
+        
+        // Create size options
+        const sizeOptionsContainer = document.getElementById('sizeOptions');
+        sizeOptionsContainer.innerHTML = '';
+        const sizeBtn = document.createElement('button');
+        sizeBtn.className = 'size-btn active';
+        sizeBtn.textContent = defaultVariant.size_name;
+        sizeBtn.dataset.size = defaultVariant.size_name;
+        sizeBtn.dataset.sizeId = defaultVariant.size_id;
+        sizeBtn.onclick = () => selectSize(defaultVariant.size_name, defaultVariant.size_id);
+        sizeOptionsContainer.appendChild(sizeBtn);
+        
+        // Create color options
+        const colorOptionsContainer = document.getElementById('colorOptions');
+        colorOptionsContainer.innerHTML = '';
+        const colorBtn = document.createElement('button');
+        colorBtn.className = 'color-btn active';
+        colorBtn.style.background = defaultVariant.color_code;
+        colorBtn.title = defaultVariant.color_name;
+        colorBtn.dataset.color = defaultVariant.color_name;
+        colorBtn.dataset.colorId = defaultVariant.color_id;
+        colorBtn.onclick = () => selectColor(defaultVariant.color_name, defaultVariant.color_id);
+        colorOptionsContainer.appendChild(colorBtn);
+        
+        // Select the default variant
+        selectVariant(defaultVariant);
         return;
     }
     
@@ -1207,9 +1241,16 @@ function selectVariant(variant) {
     selectedVariant = variant;
     
     // Update price
-    const priceValue = document.querySelector('.price-value');
+    const priceValue = document.getElementById('dynamicPrice');
     if (priceValue) {
         priceValue.textContent = (variant.price * 1000).toLocaleString('vi-VN');
+    }
+    
+    // Update original price (assuming 25% discount)
+    const originalPriceValue = document.getElementById('dynamicOriginalPrice');
+    if (originalPriceValue) {
+        const originalPrice = variant.price * 1000 * 1.33; // Add 25% to get original price
+        originalPriceValue.textContent = originalPrice.toLocaleString('vi-VN');
     }
     
     // Update stock information
@@ -1265,7 +1306,12 @@ function changeImage(src) {
     document.querySelectorAll('.thumbnail').forEach(thumb => {
         thumb.classList.remove('active');
     });
-    event.target.classList.add('active');
+    // Find the thumbnail with matching src and set it as active
+    document.querySelectorAll('.thumbnail').forEach(thumb => {
+        if (thumb.src === src) {
+            thumb.classList.add('active');
+        }
+    });
 }
 
 // Add to cart functionality

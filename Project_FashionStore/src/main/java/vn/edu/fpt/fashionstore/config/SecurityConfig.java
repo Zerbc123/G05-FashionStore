@@ -41,10 +41,9 @@ public class SecurityConfig {
                         // 2. CÒN LẠI: Cho phép hết (để tránh lỗi load tài nguyên ngầm)
                         .anyRequest().permitAll()
                 )
+                // Disable Spring Security form login to use custom login
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/home", true)
-                        .permitAll()
+                        .disable()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
