@@ -33,15 +33,19 @@ public class HomeController {
 
     @GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
-        // 1. Ưu tiên lấy từ Session (Login thường)
-        String email = (String) session.getAttribute("user");
+        String email = null;
         boolean isGoogleLogin = false;
 
-        // 2. Nếu Session trống thì lấy từ Google
-        if (email == null && principal != null) {
+        // 1. ƯU TIÊN GOOGLE PRINCIPAL NẾU CÓ (Để verify real-time)
+        if (principal != null) {
             email = principal.getAttribute("email");
+            isGoogleLogin = true;
+            // Luôn cập nhật session với email mới từ Google
             session.setAttribute("user", email);
-            isGoogleLogin = true; // Đánh dấu đây là đăng nhập bằng Google
+        }
+        // 2. Nếu không có Google principal thì lấy từ session (Login thường)
+        else {
+            email = (String) session.getAttribute("user");
         }
 
         if (email == null) return "redirect:/login";
@@ -52,36 +56,36 @@ public class HomeController {
             Account account = accountOpt.get();
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
 
+            // Kiểm tra status account
+            if (!"active".equalsIgnoreCase(account.getStatus())) {
+                // Clear session và redirect về login nếu account không active
+                session.invalidate();
+                return "redirect:/login?error=account_disabled";
+            }
+
             session.setAttribute("userName", account.getFullName());
             session.setAttribute("userRole", roleName);
-
-            // 3. CHỈ ÉP NHẬP THÔNG TIN NẾU LÀ ĐĂNG NHẬP GOOGLE LẦN ĐẦU
-            if (isGoogleLogin && "Customer".equalsIgnoreCase(roleName)) {
-                boolean hasNoAddress = true;
-                if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
-                    String addr = account.getCustomers().get(0).getAddress();
-                    if (addr != null && !addr.trim().isEmpty()) {
-                        hasNoAddress = false;
-                    }
-                }
-
-                // Nếu là Google và thiếu thông tin thì mới bắt chuyển hướng
-                if (account.getPhone() == null || hasNoAddress) {
-                    return "redirect:/edit-profile?firstLogin=true";
-                }
-            }
 
             model.addAttribute("userName", account.getFullName());
             return "page";
         }
-        // Trường hợp đăng nhập Google lần đầu (Email chưa có trong DB)
+        // TRƯỜNG HỢP ACCOUNT KHÔNG TỒN TẠI TRONG DB - ĐĂNG KÝ MỚI CHO GOOGLE USER
         else if (principal != null) {
-            accountService.registerAccount(email, "OAUTH2_USER", principal.getAttribute("name"), "");
+            // Đăng ký tài khoản mới cho Google user
+            Account newAccount = accountService.registerAccount(email, "OAUTH2_USER", principal.getAttribute("name"), "");
             session.setAttribute("user", email); // Lưu session ngay sau khi đăng ký
-            return "redirect:/edit-profile?firstLogin=true";
+            session.setAttribute("userName", newAccount.getFullName());
+            session.setAttribute("userRole", "Customer");
+            
+            model.addAttribute("userName", newAccount.getFullName());
+            return "page"; // Vào thẳng trang home
         }
-
-        return "redirect:/login";
+        // Trường hợp login thường nhưng account không tồn tại
+        else {
+            // Clear session và redirect về login
+            session.invalidate();
+            return "redirect:/login?error=session_expired";
+        }
     }
 
     @GetMapping(value = "/login")
@@ -136,14 +140,21 @@ public class HomeController {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
-        accountService.findByEmail(email).ifPresent(acc -> {
+        // Force reload account from database to get latest data
+        Optional<Account> accountOpt = accountService.findByEmail(email);
+        
+        if (accountOpt.isPresent()) {
+            Account acc = accountOpt.get();
             model.addAttribute("account", acc); // Chứa FullName, Email, Phone
 
             // Lấy thông tin khách hàng để lấy Address
             Customer customer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
                     ? acc.getCustomers().get(0) : new Customer();
             model.addAttribute("customer", customer); // Chứa Address
-        });
+        } else {
+            // Nếu không tìm thấy account, redirect về login
+            return "redirect:/login?error=account_not_found";
+        }
 
         return "editprofile";
     }

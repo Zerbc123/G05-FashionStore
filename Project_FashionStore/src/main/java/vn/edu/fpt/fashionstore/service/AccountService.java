@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
@@ -26,6 +27,9 @@ public class AccountService {
 
     @Autowired
     private RoleRepository roleRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Khai báo Enum hoặc Constant
     public static final String ROLE_CUSTOMER = "Customer";
@@ -47,9 +51,9 @@ public class AccountService {
 
         Account account = accountOpt.get();
 
-        // 2. Kiểm tra password
-        // Lưu ý: Nếu dùng Google Login, password có thể null. Cần check null trước khi .equals()
-        if (account.getPassword() == null || !account.getPassword().equals(password)) {
+        // 2. Kiểm tra password với BCrypt
+        // Nếu dùng Google Login, password có thể null. Cần check null trước khi so sánh
+        if (account.getPassword() == null || !passwordEncoder.matches(password, account.getPassword())) {
             return null; // Sai mật khẩu hoặc tài khoản này chỉ dùng login qua Google
         }
 
@@ -125,7 +129,8 @@ public class AccountService {
         Account newAccount = new Account();
         newAccount.setUsername(finalUsername);
         newAccount.setEmail(email);
-        newAccount.setPassword(password); // Nên mã hóa trong thực tế
+        // Hash mật khẩu trước khi lưu
+        newAccount.setPassword(passwordEncoder.encode(password));
         newAccount.setFullName(fullName);
         newAccount.setPhone(phoneNumber);
         newAccount.setStatus("active");
@@ -202,10 +207,10 @@ public class AccountService {
         vn.edu.fpt.fashionstore.entity.Account acc = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        // Trả về User của Spring Security
+        // Trả về User của Spring Security với password đã được hash bằng BCrypt
         return org.springframework.security.core.userdetails.User
                 .withUsername(acc.getEmail())
-                .password(acc.getPassword()) // Vì dùng NoOp nên nó sẽ so sánh trực tiếp chữ thường
+                .password(acc.getPassword()) // Password đã được hash bằng BCrypt
                 .roles("USER")
                 .build();
     }
