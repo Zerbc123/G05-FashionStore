@@ -4,17 +4,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import vn.edu.fpt.fashionstore.service.CustomOAuth2UserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+        this.customOAuth2UserService = customOAuth2UserService;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -34,12 +41,21 @@ public class SecurityConfig {
                         // 2. CÒN LẠI: Cho phép hết (để tránh lỗi load tài nguyên ngầm)
                         .anyRequest().permitAll()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login") // Phải khớp với @GetMapping trong Controller
+                .formLogin(form -> form
+                        .loginPage("/login")
                         .defaultSuccessUrl("/home", true)
+                        .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home", true)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/ss-logout")
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
