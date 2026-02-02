@@ -25,15 +25,11 @@ public class ProductController {
     @GetMapping
     public String showProducts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String size,
-            @RequestParam(required = false) Boolean isNew,
-            @RequestParam(required = false) Boolean isSale,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long accountId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
-            @RequestParam(defaultValue = "name") String sort,
+            @RequestParam(defaultValue = "productName") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             Model model) {
 
@@ -45,9 +41,9 @@ public class ProductController {
         Page<Product> productPage;
 
         // Nếu có từ khóa tìm kiếm hoặc bộ lọc, sử dụng searchAndFilterProducts
-        if (hasSearchOrFilter(keyword, category, minPrice, maxPrice, size, isNew, isSale)) {
+        if (hasSearchOrFilter(keyword, categoryId, accountId)) {
             productPage = productService.searchAndFilterProducts(
-                keyword, category, minPrice, maxPrice, size, isNew, isSale, pageable);
+                keyword, categoryId, accountId, pageable);
         } else {
             productPage = productService.getAllProducts(pageable);
         }
@@ -55,9 +51,9 @@ public class ProductController {
         if (page > 0 && productPage.getNumberOfElements() == 0 && productPage.getTotalElements() > 0) {
             page = 0;
             pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
-            if (hasSearchOrFilter(keyword, category, minPrice, maxPrice, size, isNew, isSale)) {
+            if (hasSearchOrFilter(keyword, categoryId, accountId)) {
                 productPage = productService.searchAndFilterProducts(
-                    keyword, category, minPrice, maxPrice, size, isNew, isSale, pageable);
+                    keyword, categoryId, accountId, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -65,9 +61,8 @@ public class ProductController {
 
         System.out.println("/products loaded elements=" + productPage.getNumberOfElements() + ", total=" + productPage.getTotalElements() + ", page=" + page);
 
-        // Lấy danh sách danh mục và kích thước cho bộ lọc
-        List<String> categories = productService.getAllCategories();
-        List<String> sizes = productService.getAllSizes();
+        // Lấy danh sách danh mục cho bộ lọc
+        List<Long> categoryIds = productService.getAllCategoryIds();
 
         // Thêm dữ liệu vào model
         model.addAttribute("products", productPage.getContent());
@@ -80,16 +75,11 @@ public class ProductController {
 
         // Thêm các tham số tìm kiếm và lọc vào model
         model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedCategory", category);
-        model.addAttribute("minPrice", minPrice);
-        model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("selectedSize", size);
-        model.addAttribute("isNew", isNew);
-        model.addAttribute("isSale", isSale);
+        model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("selectedAccountId", accountId);
 
         // Thêm danh sách cho bộ lọc
-        model.addAttribute("categories", categories);
-        model.addAttribute("sizes", sizes);
+        model.addAttribute("categoryIds", categoryIds);
 
         // Thêm thông tin hiển thị
         long totalElements = productPage.getTotalElements();
@@ -107,12 +97,9 @@ public class ProductController {
     }
 
     // Kiểm tra xem có tham số tìm kiếm hoặc lọc nào không
-    private boolean hasSearchOrFilter(String keyword, String category, Double minPrice, 
-                                    Double maxPrice, String size, Boolean isNew, Boolean isSale) {
+    private boolean hasSearchOrFilter(String keyword, Long categoryId, Long accountId) {
         return (keyword != null && !keyword.trim().isEmpty()) ||
-               (category != null && !category.trim().isEmpty()) ||
-               minPrice != null || maxPrice != null ||
-               (size != null && !size.trim().isEmpty()) ||
-               isNew != null || isSale != null;
+               categoryId != null || 
+               accountId != null;
     }
 }

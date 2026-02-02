@@ -3,121 +3,80 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "products")
+@Table(name = "Product")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "product_id")
+    private Long productId;
     
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "product_name", nullable = false)
+    private String productName;
     
-    @Column(nullable = false)
-    private String size;
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String description;
     
-    @Column(nullable = false)
-    private double price;
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
     
-    @Column(nullable = false)
-    private String category;
-    
-    @Column(name = "is_new")
-    private boolean isNew;
-    
-    @Column(name = "is_sale")
-    private boolean isSale;
+    @Column(name = "account_id", nullable = false)
+    private Long accountId;
 
     public Product() {
     }
 
-    public Product(String name, String size, double price, String category, boolean isNew, boolean isSale) {
-        this.name = name;
-        this.size = size;
-        this.price = price;
-        this.category = category;
-        this.isNew = isNew;
-        this.isSale = isSale;
+    public Product(String productName, String description, Long categoryId, Long accountId) {
+        this.productName = productName;
+        this.description = description;
+        this.categoryId = categoryId;
+        this.accountId = accountId;
     }
 
-    public Product(long id, String name, String size, double price, String category, boolean isNew, boolean isSale) {
-        this.id = id;
-        this.name = name;
-        this.size = size;
-        this.price = price;
-        this.category = category;
-        this.isNew = isNew;
-        this.isSale = isSale;
+    public Product(Long productId, String productName, String description, Long categoryId, Long accountId) {
+        this.productId = productId;
+        this.productName = productName;
+        this.description = description;
+        this.categoryId = categoryId;
+        this.accountId = accountId;
     }
 
-    public Long getId() {
-        return id;
+    public Long getProductId() {
+        return productId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
-    public boolean isSale() {
-        return isSale;
+    public String getProductName() {
+        return productName;
     }
 
-    public boolean getIsSale() {
-        return isSale;
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
-    public void setSale(boolean sale) {
-        isSale = sale;
+    public String getDescription() {
+        return description;
     }
 
-    public void setIsSale(boolean sale) {
-        isSale = sale;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public boolean isNew() {
-        return isNew;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public boolean getIsNew() {
-        return isNew;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 
-    public void setNew(boolean aNew) {
-        isNew = aNew;
+    public Long getAccountId() {
+        return accountId;
     }
 
-    public void setIsNew(boolean aNew) {
-        isNew = aNew;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public String getSize() {
-        return size;
-    }
-
-    public void setSize(String size) {
-        this.size = size;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 }
