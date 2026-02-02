@@ -43,10 +43,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newAccount.setStatus("active");
             
             // Gán role USER (mặc định)
-            Role userRole = roleRepository.findByRoleName("USER")
+            Role userRole = roleRepository.findByRoleName("Customer")
                     .orElseGet(() -> {
                         Role newRole = new Role();
-                        newRole.setRoleName("USER");
+                        newRole.setRoleName("Customer");
                         return roleRepository.save(newRole);
                     });
             newAccount.setRole(userRole);

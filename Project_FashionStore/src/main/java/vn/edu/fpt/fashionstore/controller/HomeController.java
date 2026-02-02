@@ -58,9 +58,9 @@ public class HomeController {
 
             // 3. KIỂM TRA THÔNG TIN (Dành cho User Google)
             // Kiểm tra nếu là OAuth2 user bằng cách xem password là null hoặc không có hash prefix
-            boolean isOAuthUser = account.getPassword() == null || 
-                                 account.getPassword().equals("OAUTH2_USER") ||
-                                 !account.getPassword().startsWith("$2");
+            boolean isOAuthUser = account.getPassword() == null ||
+                    account.getPassword().equals("OAUTH2_USER") ||
+                    !account.getPassword().startsWith("$2");
 
             if (isOAuthUser && "Customer".equalsIgnoreCase(roleName)) {
                 boolean hasNoAddress = true;

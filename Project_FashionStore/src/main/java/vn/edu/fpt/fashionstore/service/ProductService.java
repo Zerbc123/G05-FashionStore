@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
 
@@ -42,72 +43,72 @@ public class ProductService {
     public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
-            
+
             // Lọc theo danh mục
             if (categoryId != null) {
                 predicates.add(cb.equal(root.get("categoryId"), categoryId));
             }
-            
+
             // Lọc theo size (nếu có field size trong entity)
             if (size != null && !size.trim().isEmpty()) {
                 // predicates.add(cb.equal(root.get("size"), size));
                 // Tạm thời bỏ qua vì entity Product chưa có field size
             }
-            
+
             // Lọc theo giá tối thiểu (nếu có field price trong entity)
             if (minPrice != null) {
                 // predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
                 // Tạm thời bỏ qua vì entity Product chưa có field price
             }
-            
+
             // Lọc theo giá tối đa (nếu có field price trong entity)
             if (maxPrice != null) {
                 // predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
                 // Tạm thời bỏ qua vì entity Product chưa có field price
             }
-            
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        
+
         return productRepository.findAll(spec, pageable);
     }
 
     // Tìm kiếm và lọc kết hợp
-    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size, 
+    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size,
                                                Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
-            
+
             // Tìm kiếm theo tên
             if (keyword != null && !keyword.trim().isEmpty()) {
                 predicates.add(cb.like(cb.lower(root.get("productName")), "%" + keyword.toLowerCase() + "%"));
             }
-            
+
             // Áp dụng các bộ lọc
             if (categoryId != null) {
                 predicates.add(cb.equal(root.get("categoryId"), categoryId));
             }
-            
+
             // Lọc theo size (nếu có field size trong entity)
             if (size != null && !size.trim().isEmpty()) {
                 // predicates.add(cb.equal(root.get("size"), size));
                 // Tạm thời bỏ qua vì entity Product chưa có field size
             }
-            
+
             // Lọc theo giá (nếu có field price trong entity)
             if (minPrice != null) {
                 // predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
                 // Tạm thời bỏ qua vì entity Product chưa có field price
             }
-            
+
             if (maxPrice != null) {
                 // predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
                 // Tạm thời bỏ qua vì entity Product chưa có field price
             }
-            
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        
+
         return productRepository.findAll(spec, pageable);
     }
 
@@ -116,8 +117,7 @@ public class ProductService {
         return productRepository.findByProductId(productId);
     }
 
-    // Lấy tất cả category IDs
-    public List<Long> getAllCategoryIds() {
-        return productRepository.findAllCategoryIds();
+    public List<Category> getAllCategoryIds() {
+        return productRepository.findAllCategories();
     }
 }

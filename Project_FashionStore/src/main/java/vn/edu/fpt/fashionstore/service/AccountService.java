@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @Service
 public class AccountService {
-    
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -33,7 +33,7 @@ public class AccountService {
 
     // Khai báo Enum hoặc Constant
     public static final String ROLE_CUSTOMER = "Customer";
-    
+
     /**
      * Xác thực đăng nhập
      * @param username - username hoặc email
@@ -54,11 +54,11 @@ public class AccountService {
         // 2. Kiểm tra password
         // Xử lý cả plain text và hashed passwords
         boolean passwordValid = false;
-        
+
         if (account.getPassword() == null) {
             return null; // Tài khoản này chỉ dùng login qua Google
         }
-        
+
         // Thử verify với BCrypt trước (cho passwords đã được mã hóa)
         try {
             passwordValid = passwordEncoder.matches(password, account.getPassword());
@@ -78,28 +78,28 @@ public class AccountService {
 
         return account;
     }
-    
+
     /**
      * Tìm account theo username
      */
     public Optional<Account> findByUsername(String username) {
         return accountRepository.findByUsername(username);
     }
-    
+
     /**
      * Tìm account theo email
      */
     public Optional<Account> findByEmail(String email) {
         return accountRepository.findByEmail(email);
     }
-    
+
     /**
      * Lưu account mới (đăng ký)
      */
     public Account saveAccount(Account account) {
         return accountRepository.save(account);
     }
-    
+
 
     /**
      * Kiểm tra email đã tồn tại chưa
@@ -107,7 +107,7 @@ public class AccountService {
     public boolean existsByEmail(String email) {
         return accountRepository.existsByEmail(email);
     }
-    
+
     /**
      * Đăng ký tài khoản mới
      * @param email - Email

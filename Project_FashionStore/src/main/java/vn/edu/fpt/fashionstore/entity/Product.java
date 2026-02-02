@@ -2,6 +2,8 @@ package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "Product")
 public class Product {
@@ -9,34 +11,40 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
     private Long productId;
-    
+
     @Column(name = "product_name", nullable = false)
     private String productName;
-    
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
-    
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @Column(name = "account_id", nullable = false)
     private Long accountId;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductVariant> variants;
+
+    public List<ProductVariant> getVariants() {
+        return variants;
+    }
+
+    public void setVariants(List<ProductVariant> variants) {
+        this.variants = variants;
+    }
 
     public Product() {
     }
 
-    public Product(String productName, String description, Long categoryId, Long accountId) {
-        this.productName = productName;
-        this.description = description;
-        this.categoryId = categoryId;
-        this.accountId = accountId;
-    }
-
-    public Product(Long productId, String productName, String description, Long categoryId, Long accountId) {
+    public Product(Long productId, String productName, String description,
+                   Category category, Long accountId) {
         this.productId = productId;
         this.productName = productName;
         this.description = description;
-        this.categoryId = categoryId;
+        this.category = category;
         this.accountId = accountId;
     }
 
@@ -64,12 +72,12 @@ public class Product {
         this.description = description;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public Long getAccountId() {
