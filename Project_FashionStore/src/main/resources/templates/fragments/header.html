@@ -7,14 +7,14 @@
 <!-- Header Fragment -->
 <nav class="navbar navbar-expand-lg fixed-top" th:fragment="header">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/}">FashionStore</a>
+        <a class="navbar-brand" th:href="@{/home}">FashionStore</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                    <a class="nav-link" th:href="@{/home}">Trang chủ</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link" th:href="@{/products}">Sản phẩm <i class="bi bi-chevron-down ms-1" style="font-size: 0.8rem;"></i></a>
@@ -100,24 +100,25 @@
                 
                 <!-- Khi đã login: Hiển thị icon user với dropdown -->
                 <div th:if="${session.user != null}" class="user-dropdown-wrapper">
-                    <a href="#" style="text-decoration: none; color: inherit; cursor: pointer;">
+                    <a href="#" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                         <i class="bi bi-person nav-icon"></i>
+                        <span th:text="${session.userName != null ? session.userName : session.user}"
+                              style="font-weight: 500; font-size: 0.9rem;"></span>
                     </a>
+
                     <div class="user-dropdown">
-                        <!-- Admin Panel - Chỉ hiện cho ADMIN -->
                         <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item" style="background: linear-gradient(135deg, #48BB78, #38A169); color: white;">
                             <i class="bi bi-shield-fill-check"></i>
                             <span>Admin Panel</span>
                         </a>
                         <div th:if="${session.userRole == 'ADMIN'}" class="user-dropdown-divider"></div>
-                        
-                        <!-- Staff Panel - Chỉ hiện cho STAFF -->
+
                         <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
                             <i class="bi bi-shield-check"></i>
                             <span>Staff Panel</span>
                         </a>
                         <div th:if="${session.userRole == 'STAFF'}" class="user-dropdown-divider"></div>
-                        
+
                         <a th:href="@{/profile}" class="user-dropdown-item">
                             <i class="bi bi-person-circle"></i>
                             <span>Thông tin tài khoản</span>
