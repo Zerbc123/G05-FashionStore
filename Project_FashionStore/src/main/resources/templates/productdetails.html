@@ -326,81 +326,81 @@
             margin-bottom: 0.5rem;
             line-height: 1.2;
         }
-        
+
         .product-meta {
             margin-bottom: 1rem;
         }
-        
+
         .product-rating {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .rating-stars {
             color: #FFC107;
             font-size: 1rem;
         }
-        
+
         .rating-text {
             font-weight: 600;
             color: var(--dark-text);
         }
-        
+
         .rating-count {
             color: #6c757d;
             font-size: 0.9rem;
         }
-        
+
         .review-link {
             color: var(--primary-color);
             text-decoration: none;
             font-size: 0.9rem;
             margin-left: 0.5rem;
         }
-        
+
         .review-link:hover {
             text-decoration: underline;
         }
-        
+
         .product-price-section {
             margin-bottom: 1.5rem;
             display: flex;
             align-items: baseline;
             gap: 1rem;
         }
-        
+
         .current-price {
             display: flex;
             align-items: baseline;
         }
-        
+
         .price-symbol {
             font-size: 1.2rem;
             color: var(--primary-color);
             font-weight: 600;
         }
-        
+
         .price-value {
             font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary-color);
         }
-        
+
         .original-price {
             display: flex;
             align-items: baseline;
             position: relative;
         }
-        
+
         .original-price .price-symbol,
         .original-price span {
             color: #6c757d;
             font-size: 1rem;
             text-decoration: line-through;
         }
-        
+
         .discount-badge {
             background: #28a745;
             color: white;
@@ -411,7 +411,7 @@
             text-decoration: none;
             margin-left: 0.5rem;
         }
-        
+
         .product-description {
             color: #495057;
             line-height: 1.6;
@@ -421,17 +421,17 @@
             border-radius: 10px;
             border-left: 4px solid var(--primary-color);
         }
-        
+
         .product-features {
             margin-bottom: 1.5rem;
         }
-        
+
         .features-list {
             list-style: none;
             padding: 0;
             margin: 0.5rem 0;
         }
-        
+
         .features-list li {
             padding: 0.25rem 0;
             color: #495057;
@@ -445,13 +445,13 @@
             display: flex;
             align-items: center;
         }
-        
+
         .size-options {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .size-btn {
             width: 50px;
             height: 50px;
@@ -465,38 +465,38 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .size-btn:hover {
             border-color: var(--primary-color);
             transform: translateY(-2px);
         }
-        
+
         .size-btn.active {
             background: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
         }
-        
+
         .size-guide {
             margin-top: 0.5rem;
         }
-        
+
         .size-guide a {
             color: var(--primary-color);
             text-decoration: none;
             font-size: 0.9rem;
         }
-        
+
         .size-guide a:hover {
             text-decoration: underline;
         }
-        
+
         .color-options {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
         }
-        
+
         .color-btn {
             width: 40px;
             height: 40px;
@@ -506,24 +506,24 @@
             transition: all 0.3s ease;
             position: relative;
         }
-        
+
         .color-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        
+
         .color-btn.active {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color);
         }
-        
+
         .quantity-selector {
             display: flex;
             align-items: center;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .quantity-btn {
             width: 40px;
             height: 40px;
@@ -537,12 +537,12 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .quantity-btn:hover {
             border-color: var(--primary-color);
             color: var(--primary-color);
         }
-        
+
         .quantity-input {
             width: 80px;
             height: 40px;
@@ -551,19 +551,19 @@
             border-radius: 8px;
             font-weight: 600;
         }
-        
+
         .quantity-input:focus {
             outline: none;
             border-color: var(--primary-color);
         }
-        
+
         .product-info-extra {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .info-item {
             display: flex;
             align-items: center;
@@ -571,11 +571,11 @@
             font-size: 0.9rem;
             color: #495057;
         }
-        
+
         .info-item:last-child {
             margin-bottom: 0;
         }
-        
+
         .info-item i {
             font-size: 1.1rem;
             width: 20px;
@@ -818,7 +818,7 @@
                 <li class="breadcrumb-item active" th:text="${product.productName}">Product Name</li>
             </ol>
         </nav>
-        
+
         <div class="row">
             <div class="col-lg-6">
                 <div class="product-images">
@@ -841,7 +841,7 @@
                             <small class="text-muted ms-2">SKU: <span th:text="'PRD' + ${#strings.padLeft((product?.productId ?: 4).toString(), 5, '0')}">Product ID</span></small>
                         </div>
                     </div>
-                    
+
                     <div class="product-rating">
                         <div class="rating-stars">
                             <i class="bi bi-star-fill"></i>
@@ -870,7 +870,7 @@
                     <div class="product-description" th:text="${product?.description ?: 'Classic cotton white shirt for formal occasions. Made from premium quality cotton with a comfortable fit and elegant design.'}">
                         Classic cotton white shirt for formal occasions. Made from premium quality cotton with a comfortable fit and elegant design.
                     </div>
-                    
+
                     <div class="product-features">
                         <h6><i class="bi bi-check-circle-fill text-success me-2"></i>Đặc điểm nổi bật:</h6>
                         <ul class="features-list">
@@ -1045,32 +1045,32 @@ const productVariants = [
     { variant_id: 5, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'S', size_id: 2, price: 29.99, stock: 40, image_url: '/images/black_shirt_s.jpg' },
     { variant_id: 6, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'M', size_id: 3, price: 29.99, stock: 40, image_url: '/images/black_shirt_m.jpg' },
     { variant_id: 7, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'L', size_id: 4, price: 29.99, stock: 40, image_url: '/images/black_shirt_l.jpg' },
-    
+
     // Navy Blue Suit (product_id = 5)
     { variant_id: 8, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'M', size_id: 3, price: 199.99, stock: 20, image_url: '/images/navy_suit_m.jpg' },
     { variant_id: 9, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'L', size_id: 4, price: 199.99, stock: 20, image_url: '/images/navy_suit_l.jpg' },
     { variant_id: 10, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'XL', size_id: 5, price: 199.99, stock: 15, image_url: '/images/navy_suit_xl.jpg' },
-    
+
     // Gray Wool Sweater (product_id = 6)
     { variant_id: 11, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'XS', size_id: 2, price: 59.99, stock: 30, image_url: '/images/gray_sweater_xs.jpg' },
     { variant_id: 12, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'S', size_id: 3, price: 59.99, stock: 40, image_url: '/images/gray_sweater_s.jpg' },
     { variant_id: 13, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'M', size_id: 4, price: 59.99, stock: 40, image_url: '/images/gray_sweater_m.jpg' },
     { variant_id: 14, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'L', size_id: 5, price: 59.99, stock: 35, image_url: '/images/gray_sweater_l.jpg' },
     { variant_id: 15, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'XL', size_id: 6, price: 59.99, stock: 25, image_url: '/images/gray_sweater_xl.jpg' },
-    
+
     // Polo Shirt Red (product_id = 7)
     { variant_id: 16, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'S', size_id: 2, price: 39.99, stock: 45, image_url: '/images/red_polo_s.jpg' },
     { variant_id: 17, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'M', size_id: 3, price: 39.99, stock: 45, image_url: '/images/red_polo_m.jpg' },
     { variant_id: 18, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'L', size_id: 4, price: 39.99, stock: 45, image_url: '/images/red_polo_l.jpg' },
     { variant_id: 19, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'XL', size_id: 5, price: 39.99, stock: 30, image_url: '/images/red_polo_xl.jpg' },
-    
+
     // Floral Summer Dress (product_id = 16)
     { variant_id: 20, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'XS', size_id: 8, price: 79.99, stock: 25, image_url: '/images/floral_dress_xs.jpg' },
     { variant_id: 21, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'S', size_id: 9, price: 79.99, stock: 35, image_url: '/images/floral_dress_s.jpg' },
     { variant_id: 22, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'M', size_id: 10, price: 79.99, stock: 35, image_url: '/images/floral_dress_m.jpg' },
     { variant_id: 23, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'L', size_id: 11, price: 79.99, stock: 30, image_url: '/images/floral_dress_l.jpg' },
     { variant_id: 24, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'XL', size_id: 12, price: 79.99, stock: 20, image_url: '/images/floral_dress_xl.jpg' },
-    
+
     // Dress Shoes Black (product_id = 40)
     { variant_id: 25, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '36', size_id: 14, price: 129.99, stock: 40, image_url: '/images/black_dress_shoes_36.jpg' },
     { variant_id: 26, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '37', size_id: 15, price: 129.99, stock: 50, image_url: '/images/black_dress_shoes_37.jpg' },
@@ -1082,7 +1082,7 @@ const productVariants = [
     { variant_id: 32, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '43', size_id: 21, price: 129.99, stock: 30, image_url: '/images/black_dress_shoes_43.jpg' },
     { variant_id: 33, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '44', size_id: 22, price: 129.99, stock: 30, image_url: '/images/black_dress_shoes_44.jpg' },
     { variant_id: 34, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '45', size_id: 23, price: 129.99, stock: 20, image_url: '/images/black_dress_shoes_45.jpg' },
-    
+
     // Watch Silver (product_id = 15)
     { variant_id: 35, product_id: 15, color_id: 12, color_name: 'Silver', color_code: '#C0C0C0', size_name: 'One Size', size_id: 24, price: 299.99, stock: 50, image_url: '/images/silver_watch.jpg' }
 ];
@@ -1096,17 +1096,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Try to get product ID from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const productIdFromUrl = urlParams.get('id');
-    
+
     // Try to get product ID from Thymeleaf model
     const productIdFromModel = /*[[${product?.productId}]]*/ null;
-    
+
     // Use the most appropriate product ID
     if (productIdFromModel) {
         currentProductId = productIdFromModel;
     } else if (productIdFromUrl) {
         currentProductId = parseInt(productIdFromUrl);
     }
-    
+
     console.log('Loading product variants for product ID:', currentProductId);
     loadProductVariants(currentProductId);
 });
@@ -1116,7 +1116,7 @@ function loadProductVariants(productId) {
     console.log('Loading variants for product ID:', productId);
     const variants = productVariants.filter(v => v.product_id === productId);
     console.log('Found variants:', variants.length);
-    
+
     if (variants.length === 0) {
         console.log('No variants found, loading default product (ID: 4)');
         // Load default product if no variants found
@@ -1127,11 +1127,11 @@ function loadProductVariants(productId) {
         }
         return;
     }
-    
+
     // Get unique sizes and colors
     const sizes = [...new Set(variants.map(v => JSON.stringify({size_name: v.size_name, size_id: v.size_id})))];
     const colors = [...new Set(variants.map(v => JSON.stringify({color_name: v.color_name, color_code: v.color_code, color_id: v.color_id})))];
-    
+
     // Populate size options
     const sizeOptionsContainer = document.getElementById('sizeOptions');
     sizeOptionsContainer.innerHTML = '';
@@ -1145,7 +1145,7 @@ function loadProductVariants(productId) {
         btn.onclick = () => selectSize(sizeData.size_name, sizeData.size_id);
         sizeOptionsContainer.appendChild(btn);
     });
-    
+
     // Populate color options
     const colorOptionsContainer = document.getElementById('colorOptions');
     colorOptionsContainer.innerHTML = '';
@@ -1161,7 +1161,7 @@ function loadProductVariants(productId) {
         btn.onclick = () => selectColor(colorData.color_name, colorData.color_id);
         colorOptionsContainer.appendChild(btn);
     });
-    
+
     // Select first variant by default
     if (variants.length > 0) {
         selectVariant(variants[0]);
@@ -1172,7 +1172,7 @@ function loadProductVariants(productId) {
 function selectSize(sizeName, sizeId) {
     document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.size-btn[data-size="${sizeName}"]`).classList.add('active');
-    
+
     updateSelectedVariant();
 }
 
@@ -1180,7 +1180,7 @@ function selectSize(sizeName, sizeId) {
 function selectColor(colorName, colorId) {
     document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.color-btn[data-color="${colorName}"]`).classList.add('active');
-    
+
     updateSelectedVariant();
 }
 
@@ -1188,15 +1188,15 @@ function selectColor(colorName, colorId) {
 function updateSelectedVariant() {
     const selectedSize = document.querySelector('.size-btn.active');
     const selectedColor = document.querySelector('.color-btn.active');
-    
+
     if (!selectedSize || !selectedColor) return;
-    
-    const variant = productVariants.find(v => 
+
+    const variant = productVariants.find(v =>
         v.product_id === currentProductId &&
         v.size_name === selectedSize.dataset.size &&
         v.color_name === selectedColor.dataset.color
     );
-    
+
     if (variant) {
         selectVariant(variant);
     }
@@ -1205,16 +1205,16 @@ function updateSelectedVariant() {
 // Select a specific variant
 function selectVariant(variant) {
     selectedVariant = variant;
-    
+
     // Update price
     const priceValue = document.querySelector('.price-value');
     if (priceValue) {
         priceValue.textContent = (variant.price * 1000).toLocaleString('vi-VN');
     }
-    
+
     // Update stock information
     updateStockInfo(variant.stock);
-    
+
     // Update main image if available
     const mainImage = document.getElementById('mainImage');
     if (mainImage && variant.image_url) {
@@ -1228,7 +1228,7 @@ function updateStockInfo(stock) {
     const outOfStock = document.getElementById('outOfStock');
     const stockText = document.getElementById('stockText');
     const addToCartBtn = document.querySelector('.add-to-cart-btn');
-    
+
     if (stock > 0) {
         inStock.classList.remove('d-none');
         outOfStock.classList.add('d-none');
@@ -1273,17 +1273,17 @@ document.querySelector('.add-to-cart-btn').addEventListener('click', function() 
     const selectedSize = document.querySelector('.size-btn.active');
     const selectedColor = document.querySelector('.color-btn.active');
     const quantity = document.getElementById('quantity').value;
-    
+
     if (!selectedSize || !selectedColor) {
         alert('Vui lòng chọn size và màu sắc');
         return;
     }
-    
+
     if (!selectedVariant || selectedVariant.stock < quantity) {
         alert('Sản phẩm không đủ hàng');
         return;
     }
-    
+
     // Here you would typically add the item to cart via AJAX
     console.log('Adding to cart:', {
         variant: selectedVariant,
@@ -1291,10 +1291,10 @@ document.querySelector('.add-to-cart-btn').addEventListener('click', function() 
         size: selectedSize.dataset.size,
         color: selectedColor.dataset.color
     });
-    
+
     this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Đã thêm vào giỏ hàng';
     this.classList.add('btn-success');
-    
+
     setTimeout(() => {
         this.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Thêm Vào Giỏ Hàng';
         this.classList.remove('btn-success');

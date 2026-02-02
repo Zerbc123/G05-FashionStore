@@ -57,8 +57,10 @@ public class HomeController {
             session.setAttribute("userRole", roleName);
 
             // 3. KIỂM TRA THÔNG TIN (Dành cho User Google)
-            // Thay vì dùng biến isGoogleLogin, ta check password là "OAUTH2_USER" cho chắc chắn
-            boolean isOAuthUser = "OAUTH2_USER".equals(account.getPassword());
+            // Kiểm tra nếu là OAuth2 user bằng cách xem password là null hoặc không có hash prefix
+            boolean isOAuthUser = account.getPassword() == null ||
+                    account.getPassword().equals("OAUTH2_USER") ||
+                    !account.getPassword().startsWith("$2");
 
             if (isOAuthUser && "Customer".equalsIgnoreCase(roleName)) {
                 boolean hasNoAddress = true;
