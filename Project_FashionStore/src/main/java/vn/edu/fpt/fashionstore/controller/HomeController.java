@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
@@ -33,26 +35,23 @@ public class HomeController {
 
     @GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
-        String email = null;
-        boolean isGoogleLogin = false;
+        // 1. Lấy email từ Session hoặc Google
+        String email = (String) session.getAttribute("user");
 
-        // 1. ƯU TIÊN GOOGLE PRINCIPAL NẾU CÓ (Để verify real-time)
-        if (principal != null) {
+        if (email == null && principal != null) {
             email = principal.getAttribute("email");
             isGoogleLogin = true;
             // Luôn cập nhật session với email mới từ Google
             session.setAttribute("user", email);
         }
-        // 2. Nếu không có Google principal thì lấy từ session (Login thường)
-        else {
-            email = (String) session.getAttribute("user");
-        }
 
         if (email == null) return "redirect:/login";
 
+        // 2. Tìm tài khoản trong DB
         Optional<Account> accountOpt = accountService.findByEmail(email);
 
         if (accountOpt.isPresent()) {
+            // --- HÀNH ĐỘNG: LOGIN (Đã có tài khoản) ---
             Account account = accountOpt.get();
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
 
@@ -66,25 +65,35 @@ public class HomeController {
             session.setAttribute("userName", account.getFullName());
             session.setAttribute("userRole", roleName);
 
+            // 3. KIỂM TRA THÔNG TIN (Dành cho User Google)
+            // Thay vì dùng biến isGoogleLogin, ta check password là "OAUTH2_USER" cho chắc chắn
+            boolean isOAuthUser = "OAUTH2_USER".equals(account.getPassword());
+
+            if (isOAuthUser && "Customer".equalsIgnoreCase(roleName)) {
+                boolean hasNoAddress = true;
+                if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
+                    String addr = account.getCustomers().get(0).getAddress();
+                    if (addr != null && !addr.trim().isEmpty()) {
+                        hasNoAddress = false;
+                    }
+                }
+
+                // Nếu thiếu Phone hoặc Address thì bắt điền (dù là login lần 1 hay lần n)
+                if (account.getPhone() == null || hasNoAddress) {
+                    return "redirect:/edit-profile?firstLogin=true";
+                }
+            }
+
             model.addAttribute("userName", account.getFullName());
-            return "page";
+            return "page"; // Đăng nhập thành công, vào trang chủ
         }
-        // TRƯỜNG HỢP ACCOUNT KHÔNG TỒN TẠI TRONG DB - ĐĂNG KÝ MỚI CHO GOOGLE USER
         else if (principal != null) {
-            // Đăng ký tài khoản mới cho Google user
-            Account newAccount = accountService.registerAccount(email, "OAUTH2_USER", principal.getAttribute("name"), "");
-            session.setAttribute("user", email); // Lưu session ngay sau khi đăng ký
-            session.setAttribute("userName", newAccount.getFullName());
-            session.setAttribute("userRole", "Customer");
-            
-            model.addAttribute("userName", newAccount.getFullName());
-            return "page"; // Vào thẳng trang home
-        }
-        // Trường hợp login thường nhưng account không tồn tại
-        else {
-            // Clear session và redirect về login
-            session.invalidate();
-            return "redirect:/login?error=session_expired";
+            // --- HÀNH ĐỘNG: REGISTER (Chưa có tài khoản) ---
+            // Email Google này chưa có trong DB -> Tự động tạo Acc
+            accountService.registerAccount(email, "OAUTH2_USER", principal.getAttribute("name"), "");
+
+            // Tạo xong thì dắt đi điền SĐT và Địa chỉ luôn
+            return "redirect:/edit-profile?firstLogin=true";
         }
     }
 
@@ -248,35 +257,52 @@ public class HomeController {
                                  @RequestParam String phone,
                                  @RequestParam String password,
                                  @RequestParam String confirmPassword,
-                                 Model model) {
+                                 HttpSession session,
+                                 RedirectAttributes ra) {
 
+        // 1. Kiểm tra mật khẩu khớp nhau
         if (!password.equals(confirmPassword)) {
-            model.addAttribute("error", "Mật khẩu xác nhận không khớp!");
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp!");
             return "redirect:/register";
         }
 
-        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        if (!email.matches(emailRegex)) {
-            model.addAttribute("error", "Định dạng email không hợp lệ!");
+        // 2. Kiểm tra định dạng Email (Regex)
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            ra.addFlashAttribute("error", "Email không đúng định dạng!");
             return "redirect:/register";
         }
 
-        String fullName = firstName.trim() + " " + lastName.trim();
-
-        //Chuẩn hóa số điện thoại
+        // 3. Chuẩn hóa và kiểm tra SĐT
         String cleanPhone = phone.replaceAll("[^0-9]", "");
         if (cleanPhone.length() < 10 || cleanPhone.length() > 11) {
-            model.addAttribute("error", "Số điện thoại phải từ 10-11 số!");
+            ra.addFlashAttribute("error", "Số điện thoại phải từ 10-11 số!");
             return "redirect:/register";
         }
 
+        // 4. Kiểm tra trùng Email/SĐT trong DB (Sử dụng Service)
+        if (accountService.findByEmail(email).isPresent()) {
+            ra.addFlashAttribute("error", "Email này đã được đăng ký!");
+            return "redirect:/register";
+        }
+
+        // Nếu Service của ông có hàm check phone thì thêm vào
+        // if (accountService.existsByPhone(cleanPhone)) { ... }
+
+        String fullName = firstName.trim() + " " + lastName.trim();
         Account newAccount = accountService.registerAccount(email, password, fullName, cleanPhone);
 
         if (newAccount != null) {
-            model.addAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
+            // Đăng ký thành công -> Tự động đăng nhập (SecurityContextHolder)
+            session.setAttribute("user", newAccount.getEmail());
+            session.setAttribute("userName", newAccount.getFullName());
+
+            Authentication auth = new UsernamePasswordAuthenticationToken(
+                    newAccount.getEmail(), null, Collections.emptyList());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            return "redirect:/home";
         } else {
-            model.addAttribute("error", "Email đã tồn tại trên hệ thống!");
+            ra.addFlashAttribute("error", "Lỗi hệ thống, không thể tạo tài khoản!");
             return "redirect:/register";
         }
     }

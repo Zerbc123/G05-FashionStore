@@ -125,7 +125,6 @@
                            placeholder="Enter your password" required
                            oninvalid="this.setCustomValidity('Mật khẩu không được để trống')"
                            oninput="this.setCustomValidity('')">
-                    <i class="bi bi-eye toggle-icon"></i>
                 </div>
             </div>
 
@@ -137,12 +136,16 @@
                 <a href="#" class="forgot-password">Forgot Password?</a>
             </div>
 
-            <a th:href="@{/oauth2/authorization/google}" class="btn-login" style="text-decoration: none; display: inline-block; text-align: center;">
-                <i class="bi bi-google"></i> Login with Google
-            </a>
+            <button type="submit" class="btn-login" style="border: none;">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </button>
         </form>
 
         <div class="divider">or</div>
+
+        <a th:href="@{/oauth2/authorization/google}" class="social-btn" style="text-decoration: none;">
+            <i class="bi bi-google"></i> Login with Google
+        </a>
 
         <div class="register-link">
             Don't have an account? <a th:href="@{/register}">Register here</a>
