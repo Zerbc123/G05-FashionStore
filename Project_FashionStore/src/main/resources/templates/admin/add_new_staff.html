@@ -122,7 +122,7 @@
 
     <!-- Page Title -->
     <div class="mb-8">
-        <button onclick="window.location.href='staff_list.html'" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
+        <button th:onclick="|window.location.href='@{/admin/staff}'|" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
             <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
         </button>
         <h1 class="text-3xl font-heading font-bold text-text-main">Thêm nhân viên mới</h1>
@@ -132,44 +132,48 @@
 
     <!-- Add Staff Form Card -->
     <div class="form-card">
-        <form id="add-staff-form" onsubmit="handleCreateStaff(event)">
+        <form id="add-staff-form" th:action="@{/admin/staff/create}" method="post" th:object="${account}">
+            <div th:if="${error}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm" th:text="${error}"></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
                 <!-- Full Name -->
                 <div class="input-group">
                     <label for="fullname">Full Name</label>
-                    <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" required>
+                    <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
+                </div>
+
+                <!-- Username -->
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="Nhập tên đăng nhập" th:field="*{username}" autocomplete="new-password" required>
                 </div>
 
                 <!-- Role Dropdown -->
                 <div class="input-group">
                     <label for="role">Role</label>
-                    <select id="role" class="form-input" required>
+                    <select id="role" name="roleId" class="form-input" required>
                         <option value="" disabled selected>Chọn vai trò</option>
-                        <option value="Sales">Nhân viên bán hàng (Sales)</option>
-                        <option value="Stock">Quản lý kho (Stock)</option>
-                        <option value="Support">Hỗ trợ khách hàng (Support)</option>
-                        <option value="Manager">Quản lý cửa hàng (Manager)</option>
+                        <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}">ROLE</option>
                     </select>
                 </div>
 
                 <!-- Email -->
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" class="form-input" placeholder="example@fashionstore.com" required>
+                    <input type="email" id="email" class="form-input" placeholder="example@fashionstore.com" th:field="*{email}" required>
                 </div>
 
                 <!-- Phone Number -->
                 <div class="input-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" class="form-input" placeholder="09xx xxx xxx" required>
+                    <input type="tel" id="phone" class="form-input" placeholder="09xx xxx xxx" th:field="*{phone}" required>
                 </div>
 
                 <!-- Password -->
                 <div class="input-group md:col-span-2">
                     <label for="password">Initial Password</label>
                     <div class="relative">
-                        <input type="password" id="password" class="form-input pr-12" placeholder="Thiết lập mật khẩu ban đầu" required>
+                        <input type="password" id="password" class="form-input pr-12" placeholder="Thiết lập mật khẩu ban đầu" th:field="*{password}" required>
                         <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition">
                             <i class="fa-solid fa-eye text-sm"></i>
                         </button>
@@ -181,7 +185,7 @@
 
             <!-- Form Actions -->
             <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-8 border-t border-divider">
-                <button type="button" onclick="window.location.href='staff_list.html'" class="w-full sm:w-auto px-10 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
+                <button type="button" th:onclick="|window.location.href='@{/admin/staff}'|" class="w-full sm:w-auto px-10 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
                     Cancel
                 </button>
                 <button type="submit" class="w-full sm:w-auto px-12 py-3 bg-admin-gradient text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm">
@@ -198,19 +202,12 @@
 </footer>
 
 <script>
-    function handleCreateStaff(event) {
-        event.preventDefault();
-
-        const fullname = document.getElementById('fullname').value;
-        const role = document.getElementById('role').value;
-        const email = document.getElementById('email').value;
-
-        // Simulate account creation
-        alert(`Thành công! Tài khoản nhân viên cho ${fullname} (${role}) đã được tạo.\nMột email xác nhận đã được gửi đến ${email}.`);
-
-        // Navigate back to list
-        window.location.href = 'staff_list.html';
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    if (usernameField.value === 'admin') {
+        usernameField.value = '';
     }
+});
 </script>
 
 </body>

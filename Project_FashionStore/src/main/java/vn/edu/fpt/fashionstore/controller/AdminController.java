@@ -120,24 +120,14 @@ public class AdminController {
         return "editprofile";
     }
 
-    // Quản lý nhân viên
-    @GetMapping("/staff")
-    public String staff(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Staff Management");
-        return "admin/view_staff";
-    }
     
     // Thêm nhân viên mới
-    @GetMapping("/staff/add")
+    @GetMapping("/staff/add_old")
     public String addStaff(HttpSession session, Model model) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Add New Staff");
-        return "admin/add_new_staff";
+        return "redirect:/admin/staff/create";
     }
     
     // Xem chi tiết nhân viên
@@ -146,9 +136,7 @@ public class AdminController {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Staff Details");
-        model.addAttribute("staffId", id);
-        return "admin/view_staff_details";
+        return "redirect:/admin/staff/details/" + id;
     }
     
     // Hủy/Xóa nhân viên

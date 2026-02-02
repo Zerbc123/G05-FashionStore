@@ -92,11 +92,15 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <div class="relative">
-                <input type="text" placeholder="Tìm kiếm nhân viên..." class="pl-10 pr-4 py-2.5 rounded-xl border border-divider focus:outline-none focus:border-primary w-64 text-sm transition shadow-sm">
+            <form th:action="@{/admin/staff}" method="get" class="relative">
+                <input type="text" 
+                       name="keyword" 
+                       th:value="${keyword}"
+                       placeholder="Tìm kiếm nhân viên..." 
+                       class="pl-10 pr-4 py-2.5 rounded-xl border border-divider focus:outline-none focus:border-primary w-64 text-sm transition shadow-sm">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
-            </div>
-            <a th:href="@{/admin/staff/add}" class="bg-admin-gradient text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2 no-underline">
+            </form>
+            <a th:href="@{/admin/staff/create}" class="bg-admin-gradient text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2 no-underline">
                 <i class="fa-solid fa-plus"></i> Thêm nhân viên
             </a>
         </div>
@@ -115,91 +119,29 @@
             </tr>
             </thead>
             <tbody class="divide-y divide-divider">
-            <!-- Staff Row 1 -->
-            <tr class="hover:bg-secondary-bg/50 transition-colors group">
+            <tr class="hover:bg-secondary-bg/50 transition-colors group" th:each="s : ${staffPage.content}">
                 <td class="px-6 py-4">
-                    <span class="font-mono text-xs font-bold text-primary">STF-2024-001</span>
-                </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">HT</div>
-                        <span class="text-sm font-medium text-text-main">Lê Hoàng Thành</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-text-muted">thanh.le@fashionstore.com</td>
-                <td class="px-6 py-4">
-                    <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <a th:href="@{/admin/staffdetails/1}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
-                        View Detail
-                    </a>
-                </td>
-            </tr>
-
-            <!-- Staff Row 2 -->
-            <tr class="hover:bg-secondary-bg/50 transition-colors">
-                <td class="px-6 py-4">
-                    <span class="font-mono text-xs font-bold text-primary">STF-2024-002</span>
+                    <span class="font-mono text-xs font-bold text-primary" th:text="${'ACC-' + s.accountId}">ACC-1</span>
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">MA</div>
-                        <span class="text-sm font-medium text-text-main">Trần Minh Anh</span>
+                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs" th:text="${s.fullName != null and !#strings.isEmpty(s.fullName) ? #strings.substring(s.fullName,0,1) : 'S'}">S</div>
+                        <span class="text-sm font-medium text-text-main" th:text="${s.fullName}">Tên nhân viên</span>
                     </div>
                 </td>
-                <td class="px-6 py-4 text-sm text-text-muted">minhanh.tran@fashionstore.com</td>
+                <td class="px-6 py-4 text-sm text-text-muted" th:text="${s.email}">email</td>
                 <td class="px-6 py-4">
-                    <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+                    <span class="status-badge" 
+      th:classappend="${s.status}=='ACTIVE' ? ' bg-green-100 text-green-700' : 
+                       (${s.status}=='LOCKED' ? ' bg-red-100 text-red-700' : ' bg-yellow-100 text-yellow-700')" 
+      th:text="${s.status}=='ACTIVE' ? 'Đang hoạt động' : 
+                  (${s.status}=='LOCKED' ? 'Đã khóa' : 'Nghỉ phép')">Đang hoạt động</span>
                 </td>
-                <td class="px-6 py-4 text-right">
-                    <a th:href="@{/admin/staffdetails/2}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
-                        View Detail
-                    </a>
-                </td>
-            </tr>
-
-            <!-- Staff Row 3 -->
-            <tr class="hover:bg-secondary-bg/50 transition-colors">
-                <td class="px-6 py-4">
-                    <span class="font-mono text-xs font-bold text-primary">STF-2023-089</span>
-                </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-text-muted/10 flex items-center justify-center text-text-muted font-bold text-xs">QL</div>
-                        <span class="text-sm font-medium text-text-main">Phạm Quốc Long</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-text-muted">long.pham@fashionstore.com</td>
-                <td class="px-6 py-4">
-                    <span class="status-badge bg-danger text-red-700">Đã khóa</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <a th:href="@{/admin/staffdetails/3}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
-                        View Detail
-                    </a>
-                </td>
-            </tr>
-
-            <!-- Staff Row 4 -->
-            <tr class="hover:bg-secondary-bg/50 transition-colors">
-                <td class="px-6 py-4">
-                    <span class="font-mono text-xs font-bold text-primary">STF-2024-015</span>
-                </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">DN</div>
-                        <span class="text-sm font-medium text-text-main">Ngô Diệu Nhi</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-text-muted">nhi.ngo@fashionstore.com</td>
-                <td class="px-6 py-4">
-                    <span class="status-badge bg-warning text-yellow-700">Nghỉ phép</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <a th:href="@{/admin/staffdetails/4}" class="px-4 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">
-                        View Detail
-                    </a>
+                <td class="px-6 py-4 text-right space-x-2">
+                    <a th:href="@{'/admin/staff/details/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">Chi tiết</a>
+                    <a th:if="${s.status}=='ACTIVE'" th:href="@{'/admin/staff/lock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-yellow-500 text-yellow-600 text-xs font-bold rounded-lg hover:bg-yellow-500 hover:text-white transition shadow-sm inline-block no-underline">Khoá</a>
+                    <a th:if="${s.status}=='LOCKED' or ${s.status}=='LEAVE'" th:href="@{'/admin/staff/unlock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-green-600 text-green-700 text-xs font-bold rounded-lg hover:bg-green-600 hover:text-white transition shadow-sm inline-block no-underline">Mở khoá</a>
+                    <a th:href="@{'/admin/staff/delete/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-red-500 text-red-600 text-xs font-bold rounded-lg hover:bg-red-500 hover:text-white transition shadow-sm inline-block no-underline" onclick="return confirm('Xác nhận xóa nhân viên này?');">Xóa</a>
                 </td>
             </tr>
             </tbody>
@@ -207,13 +149,45 @@
 
         <!-- Pagination Section -->
         <div class="px-6 py-5 flex items-center justify-between bg-white">
-            <p class="text-xs text-text-muted font-medium">Hiển thị 1 - 4 trong tổng số 12 nhân viên</p>
+            <p class="text-xs text-text-muted font-medium" 
+               th:text="'Hiển thị ' + ${staffPage.size * staffPage.number + 1} + ' - ' + ${#numbers.formatDecimal(staffPage.size * staffPage.number + staffPage.numberOfElements, 0, 0)} + ' trong tổng số ' + ${staffPage.totalElements} + ' nhân viên'">
+               Hiển thị 1 - 5 trong tổng số 0 nhân viên
+            </p>
             <div class="flex items-center gap-2">
-                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-                <button class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white text-xs font-bold shadow-sm">1</button>
-                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold">2</button>
-                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold">3</button>
-                <button class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                <!-- Previous -->
+                <a th:if="${currentPage > 0}" 
+                   th:href="@{/admin/staff(page=${currentPage - 1}, size=${staffPage.size}, keyword=${keyword})}" 
+                   class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition no-underline">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </a>
+                <button th:unless="${currentPage > 0}" 
+                        class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted opacity-50 cursor-not-allowed" 
+                        disabled>
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
+                
+                <!-- Page Numbers -->
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <a th:if="${i != currentPage}" 
+                       th:href="@{/admin/staff(page=${i}, size=${staffPage.size}, keyword=${keyword})}" 
+                       class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold no-underline"
+                       th:text="${i + 1}">1</a>
+                    <button th:unless="${i != currentPage}" 
+                            class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white text-xs font-bold shadow-sm"
+                            th:text="${i + 1}">1</button>
+                </th:block>
+                
+                <!-- Next -->
+                <a th:if="${currentPage < totalPages - 1}" 
+                   th:href="@{/admin/staff(page=${currentPage + 1}, size=${staffPage.size}, keyword=${keyword})}" 
+                   class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition no-underline">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </a>
+                <button th:unless="${currentPage < totalPages - 1}" 
+                        class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted opacity-50 cursor-not-allowed" 
+                        disabled>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
             </div>
         </div>
     </div>

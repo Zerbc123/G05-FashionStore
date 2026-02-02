@@ -118,7 +118,7 @@
 
     <!-- Back Button & Page Title -->
     <div class="mb-8">
-        <button onclick="window.location.href='staff_list.html'" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
+        <button th:onclick="|window.location.href='@{/admin/staff}'|" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
             <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
         </button>
         <div class="flex items-center justify-between">
@@ -127,10 +127,10 @@
                 <div class="w-12 h-1 bg-primary mt-2"></div>
             </div>
             <div class="flex gap-2">
-                <button class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-primary hover:border-primary transition shadow-sm">
+                <a th:href="@{'/admin/staff/edit/' + ${staff.accountId}}" class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-primary hover:border-primary transition shadow-sm inline-flex items-center justify-center">
                     <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-                <a href="/fashionstore/admin/cancel_staff" class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-red-500 hover:border-red-500 transition shadow-sm inline-flex items-center justify-center">
+                </a>
+                <a th:href="@{'/admin/staff/delete/' + ${staff.accountId}}" class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-red-500 hover:border-red-500 transition shadow-sm inline-flex items-center justify-center" onclick="return confirm('Xác nhận xóa nhân viên này?');">
                     <i class="fa-solid fa-trash-can"></i>
                 </a>
             </div>
@@ -143,14 +143,18 @@
         <div class="flex flex-col md:flex-row items-center gap-8 mb-12 pb-8 border-b border-divider">
             <div class="relative">
                 <div class="w-32 h-32 rounded-3xl bg-secondary-bg flex items-center justify-center text-primary text-4xl font-heading font-bold border border-primary/20">
-                    HT
+                    <span th:text="${staff.fullName != null and !#strings.isEmpty(staff.fullName) ? #strings.substring(staff.fullName,0,1) : 'S'}">S</span>
                 </div>
                 <div class="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-green-500 border-4 border-white"></div>
             </div>
             <div class="text-center md:text-left">
-                <h2 class="text-2xl font-bold text-text-main mb-1">Lê Hoàng Thành</h2>
-                <p class="text-primary font-mono text-sm font-bold tracking-wider mb-3">ID: STF-2024-001</p>
-                <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+                <h2 class="text-2xl font-bold text-text-main mb-1" th:text="${staff.fullName}">Tên nhân viên</h2>
+                <p class="text-primary font-mono text-sm font-bold tracking-wider mb-3" th:text="${'ID: ACC-' + staff.accountId}">ID: ACC-1</p>
+                <span class="status-badge" 
+      th:classappend="${staff.status}=='ACTIVE' ? ' bg-green-100 text-green-700' : 
+                       (${staff.status}=='LOCKED' ? ' bg-red-100 text-red-700' : ' bg-yellow-100 text-yellow-700')" 
+      th:text="${staff.status}=='ACTIVE' ? 'Đang hoạt động' : 
+                  (${staff.status}=='LOCKED' ? 'Đã khóa' : 'Nghỉ phép')">Đang hoạt động</span>
             </div>
         </div>
 
@@ -160,15 +164,15 @@
             <div class="space-y-8">
                 <div>
                     <p class="label-text">Họ và Tên</p>
-                    <p class="value-text">Lê Hoàng Thành</p>
+                    <p class="value-text" th:text="${staff.fullName}">Tên nhân viên</p>
                 </div>
                 <div>
                     <p class="label-text">Email cá nhân</p>
-                    <p class="value-text">thanh.le@fashionstore.com</p>
+                    <p class="value-text" th:text="${staff.email}">email</p>
                 </div>
                 <div>
                     <p class="label-text">Số điện thoại</p>
-                    <p class="value-text">0901 234 567</p>
+                    <p class="value-text" th:text="${staff.phone}">phone</p>
                 </div>
             </div>
 
@@ -176,24 +180,18 @@
             <div class="space-y-8">
                 <div>
                     <p class="label-text">Vai trò / Chức vụ</p>
-                    <p class="value-text">Nhân viên bán hàng (Sales Associate)</p>
-                </div>
-                <div>
-                    <p class="label-text">Ngày gia nhập</p>
-                    <p class="value-text">15 Tháng 01, 2024</p>
+                    <p class="value-text" th:text="${staff.role != null ? staff.role.roleName : ''}">ROLE</p>
                 </div>
                 <div>
                     <p class="label-text">Trạng thái tài khoản</p>
-                    <p class="value-text flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Đã xác thực người dùng
-                    </p>
+                    <p class="value-text" th:text="${staff.status}">ACTIVE</p>
                 </div>
             </div>
         </div>
 
         <!-- Action Area -->
         <div class="mt-12 pt-8 border-t border-divider flex justify-end">
-            <button onclick="window.location.href='staff_list.html'" class="px-8 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
+            <button th:onclick="|window.location.href='@{/admin/staff}'|" class="px-8 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
                 Quay lại
             </button>
         </div>
