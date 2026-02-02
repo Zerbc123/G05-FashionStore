@@ -334,14 +334,13 @@
 
             <div class="form-group">
                 <label for="phone"><i class="bi bi-telephone"></i> Phone Number</label>
-                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+84 123 456 789" required>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="0123 456 789" required>
             </div>
 
             <div class="form-group">
                 <label for="password"><i class="bi bi-lock"></i> Password</label>
                 <div class="password-toggle">
                     <input type="password" class="form-control" id="password" name="password" placeholder="Create a strong password" required>
-                    <i class="bi bi-eye toggle-icon" onclick="togglePassword('password')"></i>
                 </div>
             </div>
 
@@ -349,7 +348,6 @@
                 <label for="confirmPassword"><i class="bi bi-lock-fill"></i> Confirm Password</label>
                 <div class="password-toggle">
                     <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required>
-                    <i class="bi bi-eye toggle-icon" onclick="togglePassword('confirmPassword')"></i>
                 </div>
             </div>
 
@@ -367,13 +365,10 @@
 
         <div class="divider">or</div>
 
-        <div class="social-login">
-            <button class="social-btn">
+        <div class="social-login" style="display: block;">
+            <a th:href="@{/oauth2/authorization/google}" class="social-btn" style="width: 100%; text-decoration: none; color: inherit; display: flex; align-items: center; justify-content: center;">
                 <i class="bi bi-google"></i> Google
-            </button>
-            <button class="social-btn">
-                <i class="bi bi-facebook"></i> Facebook
-            </button>
+            </a>
         </div>
 
         <div class="login-link">

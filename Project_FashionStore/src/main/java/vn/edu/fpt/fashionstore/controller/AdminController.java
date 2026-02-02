@@ -14,7 +14,7 @@ public class AdminController {
     // Kiểm tra quyền truy cập ADMIN
     private boolean isAdmin(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "ADMIN".equals(role);
+        return "Admin".equals(role);
     }
 
     // Trang Admin View chính
