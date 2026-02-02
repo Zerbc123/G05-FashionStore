@@ -107,7 +107,7 @@ public class AccountService {
             return null;
         }
 
-        // Logic tạo username... (giữ nguyên của ông)
+        // 1. Tạo Username
         String baseUsername = email.split("@")[0];
         String finalUsername = baseUsername;
         int count = 1;
@@ -115,35 +115,49 @@ public class AccountService {
             finalUsername = baseUsername + count++;
         }
 
-        // SỬA CHỖ NÀY: Kiểm tra phone trước khi parse
+        // 2. Xử lý Phone
         Integer phoneNumber = null;
         if (phone != null && !phone.trim().isEmpty()) {
             try {
-                // Loại bỏ tất cả ký tự không phải số trước khi parse
                 String cleanPhone = phone.replaceAll("[^0-9]", "");
                 if (!cleanPhone.isEmpty()) {
-                    // Lưu ý: Nếu vẫn dùng Integer, số 0 ở đầu sẽ mất.
-                    // Tốt nhất nên đổi field Phone trong Entity thành String.
                     phoneNumber = Integer.parseInt(cleanPhone);
                 }
             } catch (NumberFormatException e) {
-                phoneNumber = null; // Nếu quá lớn hoặc lỗi thì để null cho an toàn
+                phoneNumber = null;
             }
         }
 
+        // 3. Khởi tạo Account
         Account newAccount = new Account();
         newAccount.setUsername(finalUsername);
         newAccount.setEmail(email);
         newAccount.setPassword(password);
         newAccount.setFullName(fullName);
-        newAccount.setPhone(phoneNumber); // Gán số đã xử lý
+        newAccount.setPhone(phoneNumber);
         newAccount.setStatus("active");
 
         Role customerRole = roleRepository.findByRoleName("Customer")
                 .orElseGet(() -> roleRepository.findById(3).orElse(null));
         newAccount.setRole(customerRole);
 
-        return accountRepository.save(newAccount);
+        // Lưu Account trước
+        Account savedAccount = accountRepository.save(newAccount);
+
+        // --- ĐOẠN MỚI THÊM: TẠO CUSTOMER ĐỒNG BỘ ---
+        if (customerRole != null && "Customer".equalsIgnoreCase(customerRole.getRoleName())) {
+            Customer customer = new Customer();
+            customer.setAccount(savedAccount); // Link tới Account vừa tạo
+            customer.setFullName(fullName);
+            customer.setEmail(email);
+            customer.setPhone(phoneNumber); // Đồng bộ số điện thoại sang bảng Customer
+            customer.setCreatedDate(new Date());
+
+            customerRepository.save(customer); // Lưu vào bảng Customer
+        }
+        // ------------------------------------------
+
+        return savedAccount;
     }
 
     @Transactional
