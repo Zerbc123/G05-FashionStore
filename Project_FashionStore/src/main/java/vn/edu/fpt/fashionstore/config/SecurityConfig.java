@@ -29,22 +29,23 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // CẤP QUYỀN TRUY CẬP FILE TĨNH (CSS, JS, IMAGES) - Cực kỳ quan trọng
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        // 1. Tài nguyên tĩnh: Luôn cho phép để giao diện không bị vỡ
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/vendor/**").permitAll()
 
-                        // CÁC TRANG CÔNG KHAI
-                        .requestMatchers("/", "/home", "/login", "/register", "/products/**", "/product-details/**", "/profile/**").permitAll()
+                        // 2. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
+                        .requestMatchers("/", "/home", "/products/**", "/product-details/**", "/search/**").permitAll()
 
-                        // 1. CHẶN: Chỉ giỏ hàng và thanh toán mới cần Login
-                        .requestMatchers("/cart/**", "/checkout/**", "/order/**").authenticated()
+                        // 3. Auth pages: Trang login/register
+                        .requestMatchers("/login", "/register").permitAll()
 
-                        // 2. CÒN LẠI: Cho phép hết (để tránh lỗi load tài nguyên ngầm)
+                        // 4. CHẶN: Chỉ khi thao tác với Giỏ hàng, Thanh toán, và Profile cá nhân mới yêu cầu Login
+                        // Lưu ý: "/cart/**" sẽ chặn cả trang xem giỏ hàng và API thêm vào giỏ
+                        .requestMatchers("/cart/**", "/checkout/**", "/order/**", "/profile/**").authenticated()
+
+                        // 5. Các request khác (nếu có)
                         .anyRequest().permitAll()
                 )
-                // Disable Spring Security form login to use custom login
-                .formLogin(form -> form
-                        .disable()
-                )
+                .formLogin(form -> form.disable()) // Vẫn dùng Custom Login của bạn
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .defaultSuccessUrl("/home", true)

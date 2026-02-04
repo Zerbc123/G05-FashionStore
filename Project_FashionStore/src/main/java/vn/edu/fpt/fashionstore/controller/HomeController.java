@@ -3,6 +3,7 @@ package vn.edu.fpt.fashionstore.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,9 @@ public class HomeController {
 
     private final AccountService accountService;
 
+    @Autowired
+    private org.springframework.mail.javamail.JavaMailSender mailSender;
+
     public HomeController(AccountService accountService) {
         this.accountService = accountService;
     }
@@ -43,7 +47,12 @@ public class HomeController {
             session.setAttribute("user", email);
         }
 
-        if (email == null) return "redirect:/login";
+        // --- SỬA TẠI ĐÂY ---
+        if (email == null) {
+            // Nếu là Guest (chưa login), cho họ xem trang chủ luôn
+            model.addAttribute("userName", "Guest");
+            return "page";
+        }
 
         // 2. Tìm tài khoản trong DB
         Optional<Account> accountOpt = accountService.findByEmail(email);
@@ -98,10 +107,6 @@ public class HomeController {
         return "login";
     }
 
-    @GetMapping(value = "/register")
-    public String registerPage(){
-        return "register";
-    }
 
     @GetMapping(value = "/cart")
     public String cartPage(){
@@ -232,8 +237,9 @@ public class HomeController {
         return "change_password";
     }
 
-    // Xử lý đăng ký
-    @PostMapping(value = "/register")
+
+
+    @PostMapping("/register")
     public String handleRegister(@RequestParam String firstName,
                                  @RequestParam String lastName,
                                  @RequestParam String email,
@@ -243,51 +249,48 @@ public class HomeController {
                                  HttpSession session,
                                  RedirectAttributes ra) {
 
-        // 1. Kiểm tra mật khẩu khớp nhau
+        // 1. Kiểm tra mật khẩu khớp
         if (!password.equals(confirmPassword)) {
             ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp!");
             return "redirect:/register";
         }
 
-        // 2. Kiểm tra định dạng Email (Regex)
-        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            ra.addFlashAttribute("error", "Email không đúng định dạng!");
-            return "redirect:/register";
-        }
-
-        // 3. Chuẩn hóa và kiểm tra SĐT
-        String cleanPhone = phone.replaceAll("[^0-9]", "");
-        if (cleanPhone.length() < 10 || cleanPhone.length() > 11) {
-            ra.addFlashAttribute("error", "Số điện thoại phải từ 10-11 số!");
-            return "redirect:/register";
-        }
-
-        // 4. Kiểm tra trùng Email/SĐT trong DB (Sử dụng Service)
+        // 2. Kiểm tra email đã tồn tại chưa
         if (accountService.findByEmail(email).isPresent()) {
             ra.addFlashAttribute("error", "Email này đã được đăng ký!");
             return "redirect:/register";
         }
 
-        // Nếu Service của ông có hàm check phone thì thêm vào
-        // if (accountService.existsByPhone(cleanPhone)) { ... }
+        // 3. Tạo OTP ngẫu nhiên (6 số)
+        String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
 
-        String fullName = firstName.trim() + " " + lastName.trim();
-        Account newAccount = accountService.registerAccount(email, password, fullName, cleanPhone);
+        // 4. LƯU TẤT CẢ THÔNG TIN VÀO SESSION
+        // Chúng ta lưu riêng rẽ để tí nữa lấy ra truyền vào hàm registerAccount
+        session.setAttribute("tempFirstName", firstName);
+        session.setAttribute("tempLastName", lastName);
+        session.setAttribute("tempEmail", email);
+        session.setAttribute("tempPhone", phone);
+        session.setAttribute("tempPass", password);
+        session.setAttribute("otpCode", otp);
 
-        if (newAccount != null) {
-            // Đăng ký thành công -> Tự động đăng nhập (SecurityContextHolder)
-            session.setAttribute("user", newAccount.getEmail());
-            session.setAttribute("userName", newAccount.getFullName());
+        // CHÈN THÊM DÒNG NÀY: Lưu thời điểm tạo OTP (miligiây)
+        session.setAttribute("otpTimestamp", System.currentTimeMillis());
 
-            Authentication auth = new UsernamePasswordAuthenticationToken(
-                    newAccount.getEmail(), null, Collections.emptyList());
-            SecurityContextHolder.getContext().setAuthentication(auth);
-
-            return "redirect:/home";
-        } else {
-            ra.addFlashAttribute("error", "Lỗi hệ thống, không thể tạo tài khoản!");
+        // 5. GỬI EMAIL
+        try {
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Mã xác nhận đăng ký - Fashion Store");
+            message.setText("Chào " + firstName + ",\n\nMã OTP để hoàn tất đăng ký tài khoản của bạn là: " + otp);
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Lỗi gửi mail: " + e.getMessage());
             return "redirect:/register";
         }
+
+        // Chuyển sang trang nhập OTP
+        return "redirect:/verify-otp";
     }
 
     @PostMapping("/update-profile")
@@ -308,6 +311,86 @@ public class HomeController {
         accountService.updateProfile(email, fullName, phone, address, gender, dateOfBirth);
 
         return "redirect:/home";
+    }
+
+    @PostMapping("/verify-otp")
+    public String handleVerifyOtp(@RequestParam String otp, HttpSession session, RedirectAttributes ra) {
+        String serverOtp = (String) session.getAttribute("otpCode");
+        Long otpTimestamp = (Long) session.getAttribute("otpTimestamp");
+
+        // 1. KIỂM TRA HẾT HẠN (60000ms = 1 phút)
+        if (otpTimestamp == null || (System.currentTimeMillis() - otpTimestamp) > 30000) {
+            // Xóa các session tạm để giải phóng bộ nhớ
+            session.removeAttribute("otpCode");
+            session.removeAttribute("otpTimestamp");
+
+            ra.addFlashAttribute("error", "Mã OTP đã hết hạn (30 giây). Vui lòng thực hiện đăng ký lại!");
+            return "redirect:/register";
+        }
+
+        // 2. KIỂM TRA MÃ ĐÚNG/SAI
+        if (serverOtp != null && serverOtp.equals(otp)) {
+            // OTP ĐÚNG -> Lấy thông tin từ session ra để tạo account thực sự
+            String firstName = (String) session.getAttribute("tempFirstName");
+            String lastName = (String) session.getAttribute("tempLastName");
+            String email = (String) session.getAttribute("tempEmail");
+            String phone = (String) session.getAttribute("tempPhone");
+            String password = (String) session.getAttribute("tempPass");
+
+            String fullName = firstName.trim() + " " + lastName.trim();
+
+            // GỌI SERVICE ĐỂ LƯU VÀO DB
+            vn.edu.fpt.fashionstore.entity.Account newAccount = accountService.registerAccount(email, password, fullName, phone);
+
+            if (newAccount != null) {
+                // Đăng ký thành công -> Tự động đăng nhập luôn cho user
+                session.setAttribute("user", newAccount.getEmail());
+                session.setAttribute("userName", newAccount.getFullName());
+
+                Authentication auth = new UsernamePasswordAuthenticationToken(
+                        newAccount.getEmail(), null, java.util.Collections.emptyList());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                // Xóa sạch sẽ các session tạm sau khi hoàn tất
+                session.removeAttribute("otpCode");
+                session.removeAttribute("otpTimestamp"); // Xóa luôn timestamp
+                session.removeAttribute("tempFirstName");
+                session.removeAttribute("tempLastName");
+                session.removeAttribute("tempEmail");
+                session.removeAttribute("tempPhone");
+                session.removeAttribute("tempPass");
+
+                return "redirect:/home";
+            } else {
+                ra.addFlashAttribute("error", "Lỗi hệ thống khi tạo tài khoản!");
+                return "redirect:/register";
+            }
+        } else {
+            ra.addFlashAttribute("error", "Mã OTP không chính xác, vui lòng kiểm tra lại!");
+            return "redirect:/verify-otp";
+        }
+    }
+
+    // THÊM HÀM NÀY VÀO ĐỂ HIỂN THỊ TRANG NHẬP OTP
+    @GetMapping("/verify-otp")
+    public String viewOtpPage(HttpSession session) {
+        // Kiểm tra xem có đang trong quá trình đăng ký không (tránh người dùng gõ bừa link)
+        if (session.getAttribute("otpCode") == null) {
+            return "redirect:/register";
+        }
+        return "verifyOTP"; // Tên file HTML của bạn (verify-otp.html)
+    }
+
+    // 1. Trang đăng ký sạch sẽ ban đầu (Không có thông báo lỗi)
+    @GetMapping("/register")
+    public String registerPage() {
+        return "register";
+    }
+
+    @GetMapping("/register-expired")
+    public String registerExpiredPage(Model model) {
+        model.addAttribute("error", "Mã xác thực đã hết hạn sau 30 giây. Vui lòng đăng ký lại!");
+        return "register";
     }
 
 }
