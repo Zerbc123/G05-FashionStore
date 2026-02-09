@@ -71,6 +71,7 @@ public class ProductController {
         // DATA CHO VIEW
         // =========================
         model.addAttribute("products", productPage.getContent());
+        model.addAttribute("allProducts", productService.getAllProductsWithVariants());
         model.addAttribute("currentPage", productPage.getNumber());
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("totalItems", productPage.getTotalElements());
