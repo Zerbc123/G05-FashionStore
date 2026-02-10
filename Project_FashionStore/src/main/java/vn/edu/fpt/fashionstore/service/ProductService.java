@@ -2,16 +2,17 @@ package vn.edu.fpt.fashionstore.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.Product;
+import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
 
 import jakarta.persistence.criteria.Predicate;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -119,5 +120,11 @@ public class ProductService {
 
     public List<Category> getAllCategoryIds() {
         return productRepository.findAllCategories();
+    }
+
+    // Hiện sản phẩm bán chạy
+    public List<ProductRepository.ProductHomeInfo> getHomeProducts() {
+        // Gọi thẳng hàm tối ưu trong Repository, không cần xử lý thủ công nữa
+        return productRepository.getAllProductHome();
     }
 }

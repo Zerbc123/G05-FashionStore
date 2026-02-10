@@ -13,28 +13,43 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
 public class HomeController {
 
     private final AccountService accountService;
+    private final ProductService productService;
+    private final ProductRepository productRepository;
 
-    public HomeController(AccountService accountService) {
+    public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
         this.accountService = accountService;
+        this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     @GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
+        // --- ĐOẠN CODE LẤY SẢN PHẨM BÁN CHẠY---
+        // Gọi hàm lấy dữ liệu giao diện
+        List<ProductRepository.ProductHomeInfo> products = productRepository.getAllProductHome();
+
+        // Đẩy sang Thymeleaf
+        model.addAttribute("products", products);
+
         // 1. Lấy email từ Session hoặc Google
         String email = (String) session.getAttribute("user");
 
@@ -108,10 +123,6 @@ public class HomeController {
         return "cart"; // Trả về cart.html
     }
 
-    @GetMapping(value = "/product-details")
-    public String productDetailsPage(){
-        return "productdetails"; // Trả về productdetails.html
-    }
 
     @GetMapping("/profile")
     public String viewProfilePage(HttpSession session, Model model) {
