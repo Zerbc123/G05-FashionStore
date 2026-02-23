@@ -98,12 +98,14 @@
                 </div>
 
                 <form th:action="@{/cart/add}" method="POST">
+                    <input type="hidden" name="productId" th:value="${product.productId}">
+                    
                     <div class="mb-4">
                         <label class="option-title">CHỌN SIZE:</label>
                         <div class="size-selector">
-                            <label th:each="v : ${product.variants}">
-                                <input type="radio" name="variantId" th:value="${v.variantId}" required>
-                                <span class="size-label" th:text="${v.categorySize.sizeName}">S</span>
+                            <label th:each="size : ${uniqueSizes}">
+                                <input type="radio" name="sizeId" th:value="${size.categorySizeId}" required>
+                                <span class="size-label" th:text="${size.sizeName}">S</span>
                             </label>
                         </div>
                     </div>
@@ -111,14 +113,17 @@
                     <div class="mb-4">
                         <label class="option-title">MÀU SẮC:</label>
                         <div class="color-selector">
-                            <label th:each="v : ${product.variants}">
-                                <input type="radio" name="variantId" th:value="${v.variantId}">
-                                <span class="color-label" th:style="'background-color:' + ${v.color.colorName}"></span>
+                            <label th:each="color : ${uniqueColors}" class="d-inline-flex align-items-center me-3 mb-2">
+                                <input type="radio" name="colorId" th:value="${color.colorId}" required>
+                                <span class="color-label" th:style="'background-color:' + ${color.colorCode}"></span>
+                                <span class="color-name ms-2" th:text="${color.colorName}">Màu</span>
                             </label>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-add-cart"><i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG</button>
+                    <button type="submit" class="btn-add-cart">
+                        <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+                    </button>
                 </form>
             </div>
         </div>

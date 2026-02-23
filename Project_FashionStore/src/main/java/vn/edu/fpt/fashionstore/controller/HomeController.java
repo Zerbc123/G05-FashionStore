@@ -108,11 +108,6 @@ public class HomeController {
     }
 
 
-    @GetMapping(value = "/cart")
-    public String cartPage(){
-        return "cart"; // Trả về cart.html
-    }
-
 
     @GetMapping("/profile")
     public String viewProfilePage(HttpSession session, Model model) {

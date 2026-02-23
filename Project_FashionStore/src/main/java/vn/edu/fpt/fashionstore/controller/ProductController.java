@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.entity.Category;
+import vn.edu.fpt.fashionstore.entity.CategorySize;
+import vn.edu.fpt.fashionstore.entity.Color;
 import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/products")
@@ -116,8 +119,23 @@ public class ProductController {
             return "redirect:/products";
         }
 
+        // Lấy danh sách size và màu không trùng lặp
+        List<CategorySize> uniqueSizes = product.getVariants().stream()
+                .map(v -> v.getCategorySize())
+                .filter(size -> size != null)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Color> uniqueColors = product.getVariants().stream()
+                .map(v -> v.getColor())
+                .filter(color -> color != null)
+                .distinct()
+                .collect(Collectors.toList());
+
         model.addAttribute("product", product);
         model.addAttribute("variants", product.getVariants());
+        model.addAttribute("uniqueSizes", uniqueSizes);
+        model.addAttribute("uniqueColors", uniqueColors);
 
         return "productdetails";
     }
