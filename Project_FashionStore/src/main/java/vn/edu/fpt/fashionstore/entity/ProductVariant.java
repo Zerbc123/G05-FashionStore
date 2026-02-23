@@ -1,9 +1,11 @@
 package vn.edu.fpt.fashionstore.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "ProductVariant")
+@Table(name = "ProductVariant", schema = "dbo")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProductVariant {
 
     @Id

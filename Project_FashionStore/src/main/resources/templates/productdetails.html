@@ -300,17 +300,30 @@
         }
 
         .thumbnail {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             object-fit: cover;
-            border-radius: 10px;
+            border: 2px solid transparent;
+            border-radius: 8px;
             cursor: pointer;
-            border: 3px solid transparent;
             transition: all 0.3s ease;
         }
 
-        .thumbnail:hover, .thumbnail.active {
+        .thumbnail.active {
             border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .thumbnail-container {
+            display: inline-block;
+            margin: 5px;
+            text-align: center;
+        }
+
+        .variant-info {
+            font-size: 0.7rem;
+            margin-top: 2px;
+            color: #666;
         }
 
         .product-info {
@@ -822,12 +835,29 @@
         <div class="row">
             <div class="col-lg-6">
                 <div class="product-images">
-                    <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600" alt="Product" class="main-image" id="mainImage">
+                    <!-- Main Image - Support both local and external URLs -->
+                    <img th:src="${selectedVariant != null and selectedVariant.imageUrl != null ? 
+                                (selectedVariant.imageUrl.startsWith('http') ? selectedVariant.imageUrl : 
+                                 (selectedVariant.imageUrl.startsWith('/') ? selectedVariant.imageUrl : '/images/products/' + selectedVariant.imageUrl)) : 
+                                'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&h=800&fit=crop'}" 
+                         th:alt="${product?.productName ?: 'Product Image'}" 
+                         class="main-image" 
+                         id="mainImage">
+                    
+                    <!-- Thumbnail Images - Show all variants -->
                     <div class="thumbnail-images">
-                        <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=150" class="thumbnail active" onclick="changeImage(this.src)">
-                        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=150" class="thumbnail" onclick="changeImage(this.src)">
-                        <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=150" class="thumbnail" onclick="changeImage(this.src)">
-                        <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=150" class="thumbnail" onclick="changeImage(this.src)">
+                        <div th:each="variant : ${variants}" class="thumbnail-container">
+                            <img th:src="${variant.imageUrl != null ? 
+                                        (variant.imageUrl.startsWith('http') ? variant.imageUrl : 
+                                         (variant.imageUrl.startsWith('/') ? variant.imageUrl : '/images/products/' + variant.imageUrl)) : 
+                                        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=150&h=150&fit=crop'}"
+                                 th:alt="${variant.color != null ? variant.color.colorName : 'Product'}"
+                                 th:class="${variant.variantId == (selectedVariant != null ? selectedVariant.variantId : variants[0]?.variantId) ? 'thumbnail active' : 'thumbnail'}">
+                            <div class="variant-info" 
+                                 th:text="${variant.color != null and variant.categorySize != null ? variant.color.colorName + ' - ' + variant.categorySize.sizeName : 'Variant'}">
+                                 Đen - L
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -837,7 +867,7 @@
                     <div class="product-header">
                         <h1 class="product-title" th:text="${product?.productName ?: 'Classic White Shirt'}">Classic White Shirt</h1>
                         <div class="product-meta">
-                            <span class="badge bg-primary" th:text="${product?.categoryId == 1 ? 'Men''s Fashion' : product?.categoryId == 2 ? 'Women''s Fashion' : product?.categoryId == 3 ? 'Accessories' : 'Shoes'}">Men's Fashion</span>
+                            <span class="badge bg-primary" th:text="${product?.category?.categoryName ?: 'Unknown'}">Men's Fashion</span>
                             <small class="text-muted ms-2">SKU: <span th:text="'PRD' + ${#strings.padLeft((product?.productId ?: 4).toString(), 5, '0')}">Product ID</span></small>
                         </div>
                     </div>
@@ -858,11 +888,11 @@
                     <div class="product-price-section">
                         <div class="current-price">
                             <span class="price-symbol">₫</span>
-                            <span class="price-value" th:text="${#numbers.formatDecimal(299000, 0, 'POINT')}">299.000</span>
+                            <span class="price-value" th:text="${selectedVariant != null ? #numbers.formatDecimal(selectedVariant.price * 1000, 0, 'POINT') : #numbers.formatDecimal(299000, 0, 'POINT')}">299.000</span>
                         </div>
                         <div class="original-price">
                             <span class="price-symbol">₫</span>
-                            <span th:text="${#numbers.formatDecimal(399000, 0, 'POINT')}">399.000</span>
+                            <span th:text="${selectedVariant != null ? #numbers.formatDecimal(selectedVariant.price * 1000 * 1.33, 0, 'POINT') : #numbers.formatDecimal(399000, 0, 'POINT')}">399.000</span>
                             <span class="discount-badge">-25%</span>
                         </div>
                     </div>
@@ -881,51 +911,74 @@
                         </ul>
                     </div>
 
-                    <div class="size-selector">
-                        <div class="selector-title">
-                            <i class="bi bi-rulers me-2"></i>Chọn Size:
+                    <form method="GET" th:action="@{/products/detail(id=${product.productId})}">
+                        <input type="hidden" name="id" th:value="${product.productId}">
+                        
+                        <div class="size-selector">
+                            <div class="selector-title">
+                                <i class="bi bi-rulers me-2"></i>Chọn Size:
+                            </div>
+                            <div class="size-options">
+                                <div th:each="size : ${#sets.toSet(#lists.emptyList().addAll(variants.![#this.categorySize]))}" 
+                                     th:if="${size != null}"
+                                     class="form-check form-check-inline" style="margin-right: 1rem;">
+                                    <input class="form-check-input" type="radio" name="selectedSize" 
+                                           th:id="'size' + ${size.categorySizeId}"
+                                           th:value="${size.sizeName}"
+                                           th:checked="${param.selectedSize != null ? param.selectedSize == size.sizeName : sizeStat.first}"
+                                           onchange="this.form.submit()">
+                                    <label class="form-check-label" th:for="'size' + ${size.categorySizeId}"
+                                           th:text="${size.sizeName}">S</label>
+                                </div>
+                            </div>
+                            <div class="size-guide">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
+                                    <i class="bi bi-info-circle me-1"></i>Hướng dẫn chọn size
+                                </a>
+                            </div>
                         </div>
-                        <div class="size-options" id="sizeOptions">
-                            <!-- Sizes will be populated by JavaScript -->
-                        </div>
-                        <div class="size-guide">
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
-                                <i class="bi bi-info-circle me-1"></i>Hướng dẫn chọn size
-                            </a>
-                        </div>
-                    </div>
 
-                    <div class="color-selector">
-                        <div class="selector-title">
-                            <i class="bi bi-palette me-2"></i>Chọn Màu:
+                        <div class="color-selector">
+                            <div class="selector-title">
+                                <i class="bi bi-palette me-2"></i>Chọn Màu:
+                            </div>
+                            <div class="color-options">
+                                <div th:each="color : ${#sets.toSet(#lists.emptyList().addAll(variants.![#this.color]))}" 
+                                     th:if="${color != null}"
+                                     class="form-check form-check-inline" style="margin-right: 1rem;">
+                                    <input class="form-check-input" type="radio" name="selectedColor" 
+                                           th:id="'color' + ${color.colorId}"
+                                           th:value="${color.colorName}"
+                                           th:checked="${param.selectedColor != null ? param.selectedColor == color.colorName : colorStat.first}"
+                                           onchange="this.form.submit()">
+                                    <label class="form-check-label" th:for="'color' + ${color.colorId}"
+                                           th:text="${color.colorName}">White</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="color-options" id="colorOptions">
-                            <!-- Colors will be populated by JavaScript -->
-                        </div>
-                    </div>
 
-                    <!-- Stock Information -->
-                    <div class="stock-info" id="stockInfo" style="margin-bottom: 1rem;">
-                        <div class="alert alert-success" id="inStock">
-                            <i class="bi bi-check-circle me-2"></i>
-                            <span id="stockText">Còn hàng</span>
+                        <!-- Stock Information -->
+                        <div class="stock-info" style="margin-bottom: 1rem;">
+                            <div th:if="${selectedVariant == null or selectedVariant.stock > 0}" class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span th:text="${selectedVariant == null ? 'Còn hàng' : 'Còn ' + selectedVariant.stock + ' sản phẩm'}">Còn hàng</span>
+                            </div>
+                            <div th:if="${selectedVariant != null and selectedVariant.stock <= 0}" class="alert alert-danger">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hết hàng
+                            </div>
                         </div>
-                        <div class="alert alert-danger d-none" id="outOfStock">
-                            <i class="bi bi-x-circle me-2"></i>
-                            Hết hàng
-                        </div>
-                    </div>
 
-                    <div class="quantity-selector">
-                        <div class="selector-title">
-                            <i class="bi bi-cart3 me-2"></i>Số Lượng:
+                        <div class="quantity-selector">
+                            <div class="selector-title">
+                                <i class="bi bi-cart3 me-2"></i>Số Lượng:
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <input type="number" name="quantity" class="quantity-input" th:value="${quantity}" min="1" 
+                                       th:max="${selectedVariant != null ? selectedVariant.stock : 10}">
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
-                            <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10">
-                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
-                        </div>
-                    </div>
+                    </form>
 
                     <div class="product-info-extra">
                         <div class="info-item">
@@ -984,7 +1037,7 @@
                         <li>Đường may tỉ mỉ, chắc chắn</li>
                         <li>Không xù lông, không phai màu</li>
                         <li>Dễ giặt, dễ bảo quản</li>
-                        <li>Danh mục: <span th:text="${product.categoryId == 1 ? 'Men''s Fashion' : product.categoryId == 2 ? 'Women''s Fashion' : product.categoryId == 3 ? 'Accessories' : 'Shoes'}">Category</span></li>
+                        <li>Danh mục: <span th:text="${product.category?.categoryName ?: 'Unknown'}">Category</span></li>
                         <li>Mã sản phẩm: <span th:text="${product.productId}">Product ID</span></li>
                     </ul>
                 </div>
@@ -1033,276 +1086,5 @@
 <!-- Footer -->
 <div th:replace="~{fragments/footer :: footer}"></div>
 
-<!-- Custom JavaScript -->
-<script>
-// Hardcoded product variant data
-const productVariants = [
-    // Classic White Shirt (product_id = 4)
-    { variant_id: 1, product_id: 4, color_id: 1, color_name: 'White', color_code: '#FFFFFF', size_name: 'S', size_id: 2, price: 29.99, stock: 50, image_url: '/images/white_shirt_s.jpg' },
-    { variant_id: 2, product_id: 4, color_id: 1, color_name: 'White', color_code: '#FFFFFF', size_name: 'M', size_id: 3, price: 29.99, stock: 50, image_url: '/images/white_shirt_m.jpg' },
-    { variant_id: 3, product_id: 4, color_id: 1, color_name: 'White', color_code: '#FFFFFF', size_name: 'L', size_id: 4, price: 29.99, stock: 50, image_url: '/images/white_shirt_l.jpg' },
-    { variant_id: 4, product_id: 4, color_id: 1, color_name: 'White', color_code: '#FFFFFF', size_name: 'XL', size_id: 5, price: 29.99, stock: 30, image_url: '/images/white_shirt_xl.jpg' },
-    { variant_id: 5, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'S', size_id: 2, price: 29.99, stock: 40, image_url: '/images/black_shirt_s.jpg' },
-    { variant_id: 6, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'M', size_id: 3, price: 29.99, stock: 40, image_url: '/images/black_shirt_m.jpg' },
-    { variant_id: 7, product_id: 4, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: 'L', size_id: 4, price: 29.99, stock: 40, image_url: '/images/black_shirt_l.jpg' },
-
-    // Navy Blue Suit (product_id = 5)
-    { variant_id: 8, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'M', size_id: 3, price: 199.99, stock: 20, image_url: '/images/navy_suit_m.jpg' },
-    { variant_id: 9, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'L', size_id: 4, price: 199.99, stock: 20, image_url: '/images/navy_suit_l.jpg' },
-    { variant_id: 10, product_id: 5, color_id: 8, color_name: 'Navy', color_code: '#000080', size_name: 'XL', size_id: 5, price: 199.99, stock: 15, image_url: '/images/navy_suit_xl.jpg' },
-
-    // Gray Wool Sweater (product_id = 6)
-    { variant_id: 11, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'XS', size_id: 2, price: 59.99, stock: 30, image_url: '/images/gray_sweater_xs.jpg' },
-    { variant_id: 12, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'S', size_id: 3, price: 59.99, stock: 40, image_url: '/images/gray_sweater_s.jpg' },
-    { variant_id: 13, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'M', size_id: 4, price: 59.99, stock: 40, image_url: '/images/gray_sweater_m.jpg' },
-    { variant_id: 14, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'L', size_id: 5, price: 59.99, stock: 35, image_url: '/images/gray_sweater_l.jpg' },
-    { variant_id: 15, product_id: 6, color_id: 7, color_name: 'Gray', color_code: '#808080', size_name: 'XL', size_id: 6, price: 59.99, stock: 25, image_url: '/images/gray_sweater_xl.jpg' },
-
-    // Polo Shirt Red (product_id = 7)
-    { variant_id: 16, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'S', size_id: 2, price: 39.99, stock: 45, image_url: '/images/red_polo_s.jpg' },
-    { variant_id: 17, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'M', size_id: 3, price: 39.99, stock: 45, image_url: '/images/red_polo_m.jpg' },
-    { variant_id: 18, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'L', size_id: 4, price: 39.99, stock: 45, image_url: '/images/red_polo_l.jpg' },
-    { variant_id: 19, product_id: 7, color_id: 3, color_name: 'Red', color_code: '#FF0000', size_name: 'XL', size_id: 5, price: 39.99, stock: 30, image_url: '/images/red_polo_xl.jpg' },
-
-    // Floral Summer Dress (product_id = 16)
-    { variant_id: 20, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'XS', size_id: 8, price: 79.99, stock: 25, image_url: '/images/floral_dress_xs.jpg' },
-    { variant_id: 21, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'S', size_id: 9, price: 79.99, stock: 35, image_url: '/images/floral_dress_s.jpg' },
-    { variant_id: 22, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'M', size_id: 10, price: 79.99, stock: 35, image_url: '/images/floral_dress_m.jpg' },
-    { variant_id: 23, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'L', size_id: 11, price: 79.99, stock: 30, image_url: '/images/floral_dress_l.jpg' },
-    { variant_id: 24, product_id: 16, color_id: 5, color_name: 'Green', color_code: '#008000', size_name: 'XL', size_id: 12, price: 79.99, stock: 20, image_url: '/images/floral_dress_xl.jpg' },
-
-    // Dress Shoes Black (product_id = 40)
-    { variant_id: 25, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '36', size_id: 14, price: 129.99, stock: 40, image_url: '/images/black_dress_shoes_36.jpg' },
-    { variant_id: 26, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '37', size_id: 15, price: 129.99, stock: 50, image_url: '/images/black_dress_shoes_37.jpg' },
-    { variant_id: 27, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '38', size_id: 16, price: 129.99, stock: 50, image_url: '/images/black_dress_shoes_38.jpg' },
-    { variant_id: 28, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '39', size_id: 17, price: 129.99, stock: 50, image_url: '/images/black_dress_shoes_39.jpg' },
-    { variant_id: 29, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '40', size_id: 18, price: 129.99, stock: 50, image_url: '/images/black_dress_shoes_40.jpg' },
-    { variant_id: 30, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '41', size_id: 19, price: 129.99, stock: 40, image_url: '/images/black_dress_shoes_41.jpg' },
-    { variant_id: 31, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '42', size_id: 20, price: 129.99, stock: 40, image_url: '/images/black_dress_shoes_42.jpg' },
-    { variant_id: 32, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '43', size_id: 21, price: 129.99, stock: 30, image_url: '/images/black_dress_shoes_43.jpg' },
-    { variant_id: 33, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '44', size_id: 22, price: 129.99, stock: 30, image_url: '/images/black_dress_shoes_44.jpg' },
-    { variant_id: 34, product_id: 40, color_id: 2, color_name: 'Black', color_code: '#000000', size_name: '45', size_id: 23, price: 129.99, stock: 20, image_url: '/images/black_dress_shoes_45.jpg' },
-
-    // Watch Silver (product_id = 15)
-    { variant_id: 35, product_id: 15, color_id: 12, color_name: 'Silver', color_code: '#C0C0C0', size_name: 'One Size', size_id: 24, price: 299.99, stock: 50, image_url: '/images/silver_watch.jpg' }
-];
-
-// Current state
-let selectedVariant = null;
-let currentProductId = 4; // Default to Classic White Shirt
-
-// Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
-    // Try to get product ID from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const productIdFromUrl = urlParams.get('id');
-
-    // Try to get product ID from Thymeleaf model
-    const productIdFromModel = /*[[${product?.productId}]]*/ null;
-
-    // Use the most appropriate product ID
-    if (productIdFromModel) {
-        currentProductId = productIdFromModel;
-    } else if (productIdFromUrl) {
-        currentProductId = parseInt(productIdFromUrl);
-    }
-
-    console.log('Loading product variants for product ID:', currentProductId);
-    loadProductVariants(currentProductId);
-});
-
-// Load variants for a specific product
-function loadProductVariants(productId) {
-    console.log('Loading variants for product ID:', productId);
-    const variants = productVariants.filter(v => v.product_id === productId);
-    console.log('Found variants:', variants.length);
-
-    if (variants.length === 0) {
-        console.log('No variants found, loading default product (ID: 4)');
-        // Load default product if no variants found
-        const defaultVariants = productVariants.filter(v => v.product_id === 4);
-        if (defaultVariants.length > 0) {
-            currentProductId = 4;
-            loadProductVariants(4);
-        }
-        return;
-    }
-
-    // Get unique sizes and colors
-    const sizes = [...new Set(variants.map(v => JSON.stringify({size_name: v.size_name, size_id: v.size_id})))];
-    const colors = [...new Set(variants.map(v => JSON.stringify({color_name: v.color_name, color_code: v.color_code, color_id: v.color_id})))];
-
-    // Populate size options
-    const sizeOptionsContainer = document.getElementById('sizeOptions');
-    sizeOptionsContainer.innerHTML = '';
-    sizes.forEach((size, index) => {
-        const sizeData = JSON.parse(size);
-        const btn = document.createElement('button');
-        btn.className = 'size-btn' + (index === 0 ? ' active' : '');
-        btn.textContent = sizeData.size_name;
-        btn.dataset.size = sizeData.size_name;
-        btn.dataset.sizeId = sizeData.size_id;
-        btn.onclick = () => selectSize(sizeData.size_name, sizeData.size_id);
-        sizeOptionsContainer.appendChild(btn);
-    });
-
-    // Populate color options
-    const colorOptionsContainer = document.getElementById('colorOptions');
-    colorOptionsContainer.innerHTML = '';
-    colors.forEach((color, index) => {
-        const colorData = JSON.parse(color);
-        const btn = document.createElement('button');
-        btn.className = 'color-btn' + (index === 0 ? ' active' : '');
-        btn.style.background = colorData.color_code;
-        btn.style.border = colorData.color_code === '#FFFFFF' ? '2px solid #ddd' : 'none';
-        btn.title = colorData.color_name;
-        btn.dataset.color = colorData.color_name;
-        btn.dataset.colorId = colorData.color_id;
-        btn.onclick = () => selectColor(colorData.color_name, colorData.color_id);
-        colorOptionsContainer.appendChild(btn);
-    });
-
-    // Select first variant by default
-    if (variants.length > 0) {
-        selectVariant(variants[0]);
-    }
-}
-
-// Select size
-function selectSize(sizeName, sizeId) {
-    document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.size-btn[data-size="${sizeName}"]`).classList.add('active');
-
-    updateSelectedVariant();
-}
-
-// Select color
-function selectColor(colorName, colorId) {
-    document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.color-btn[data-color="${colorName}"]`).classList.add('active');
-
-    updateSelectedVariant();
-}
-
-// Update selected variant based on current selections
-function updateSelectedVariant() {
-    const selectedSize = document.querySelector('.size-btn.active');
-    const selectedColor = document.querySelector('.color-btn.active');
-
-    if (!selectedSize || !selectedColor) return;
-
-    const variant = productVariants.find(v =>
-        v.product_id === currentProductId &&
-        v.size_name === selectedSize.dataset.size &&
-        v.color_name === selectedColor.dataset.color
-    );
-
-    if (variant) {
-        selectVariant(variant);
-    }
-}
-
-// Select a specific variant
-function selectVariant(variant) {
-    selectedVariant = variant;
-
-    // Update price
-    const priceValue = document.querySelector('.price-value');
-    if (priceValue) {
-        priceValue.textContent = (variant.price * 1000).toLocaleString('vi-VN');
-    }
-
-    // Update stock information
-    updateStockInfo(variant.stock);
-
-    // Update main image if available
-    const mainImage = document.getElementById('mainImage');
-    if (mainImage && variant.image_url) {
-        mainImage.src = variant.image_url;
-    }
-}
-
-// Update stock information
-function updateStockInfo(stock) {
-    const inStock = document.getElementById('inStock');
-    const outOfStock = document.getElementById('outOfStock');
-    const stockText = document.getElementById('stockText');
-    const addToCartBtn = document.querySelector('.add-to-cart-btn');
-
-    if (stock > 0) {
-        inStock.classList.remove('d-none');
-        outOfStock.classList.add('d-none');
-        stockText.textContent = `Còn hàng (${stock} sản phẩm)`;
-        addToCartBtn.disabled = false;
-        addToCartBtn.style.opacity = '1';
-    } else {
-        inStock.classList.add('d-none');
-        outOfStock.classList.remove('d-none');
-        addToCartBtn.disabled = true;
-        addToCartBtn.style.opacity = '0.5';
-    }
-}
-
-// Quantity controls
-function increaseQuantity() {
-    const input = document.getElementById('quantity');
-    const maxValue = selectedVariant ? selectedVariant.stock : 10;
-    if (parseInt(input.value) < maxValue) {
-        input.value = parseInt(input.value) + 1;
-    }
-}
-
-function decreaseQuantity() {
-    const input = document.getElementById('quantity');
-    if (parseInt(input.value) > 1) {
-        input.value = parseInt(input.value) - 1;
-    }
-}
-
-// Image change function
-function changeImage(src) {
-    document.getElementById('mainImage').src = src;
-    document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
-    });
-    event.target.classList.add('active');
-}
-
-// Add to cart functionality
-document.querySelector('.add-to-cart-btn').addEventListener('click', function() {
-    const selectedSize = document.querySelector('.size-btn.active');
-    const selectedColor = document.querySelector('.color-btn.active');
-    const quantity = document.getElementById('quantity').value;
-
-    if (!selectedSize || !selectedColor) {
-        alert('Vui lòng chọn size và màu sắc');
-        return;
-    }
-
-    if (!selectedVariant || selectedVariant.stock < quantity) {
-        alert('Sản phẩm không đủ hàng');
-        return;
-    }
-
-    // Here you would typically add the item to cart via AJAX
-    console.log('Adding to cart:', {
-        variant: selectedVariant,
-        quantity: quantity,
-        size: selectedSize.dataset.size,
-        color: selectedColor.dataset.color
-    });
-
-    this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Đã thêm vào giỏ hàng';
-    this.classList.add('btn-success');
-
-    setTimeout(() => {
-        this.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Thêm Vào Giỏ Hàng';
-        this.classList.remove('btn-success');
-    }, 2000);
-});
-</script>
-
-<!-- Bootstrap JS (required for responsive navigation) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
