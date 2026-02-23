@@ -11,7 +11,7 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column (name = "category_id")
-    private int cateId;
+    private int categoryId;
 
     @Column (name = "category_name")
     private String categoryName;
@@ -22,17 +22,17 @@ public class Category {
     public Category() {
     }
 
-    public Category(int cateId, String categoryName) {
-        this.cateId = cateId;
+    public Category(int categoryId, String categoryName) {
+        this.categoryId = categoryId;
         this.categoryName = categoryName;
     }
 
-    public int getCateId() {
-        return cateId;
+    public int getCategoryId() {
+        return categoryId;
     }
 
-    public void setCateId(int cateId) {
-        this.cateId = cateId;
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getCategoryName() {

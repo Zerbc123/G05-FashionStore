@@ -5,15 +5,16 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.fashionstore.entity.Category;
+import vn.edu.fpt.fashionstore.entity.CategorySize;
+import vn.edu.fpt.fashionstore.entity.Color;
 import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/products")
@@ -22,9 +23,10 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // =========================
-    // LIST PRODUCT
-    // =========================
+    // ========================================================================
+    // 1. DANH SÁCH SẢN PHẨM (LIST)
+    // URL: /products
+    // ========================================================================
     @GetMapping
     public String showProducts(
             @RequestParam(required = false) String keyword,
@@ -40,50 +42,37 @@ public class ProductController {
             @RequestParam(defaultValue = "12") int pageSize,
             Model model) {
 
-        // Sort
-        Sort.Direction sortDirection =
-                direction.equalsIgnoreCase("desc")
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
-
+        // 1. Xử lý sắp xếp
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
 
+        // 2. Gọi Service lấy dữ liệu
         Page<Product> productPage;
-
-        // Có filter/search thì gọi search
-        if (hasFilter(keyword, categoryId, size, color, stockStatus, minPrice, maxPrice)) {
-            productPage = productService.searchAndFilterProducts(
-                    keyword, categoryId, size, color, stockStatus, minPrice, maxPrice, pageable
-            );
+        if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
+            productPage = productService.searchAndFilterProducts(keyword, categoryId, size, minPrice, maxPrice, pageable);
         } else {
             productPage = productService.getAllProducts(pageable);
         }
 
-        // Nếu page vượt quá total page → quay về page 0
+        // 3. Xử lý trường hợp trang trống (khi đang ở trang 2 mà lọc ra ít kết quả)
         if (page > 0 && productPage.isEmpty() && productPage.getTotalElements() > 0) {
             pageable = PageRequest.of(0, pageSize, Sort.by(sortDirection, sort));
-            if (hasFilter(keyword, categoryId, size, color, stockStatus, minPrice, maxPrice)) {
-                productPage = productService.searchAndFilterProducts(
-                        keyword, categoryId, size, color, stockStatus, minPrice, maxPrice, pageable
-                );
+            if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
+                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, minPrice, maxPrice, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
         }
 
-        // =========================
-        // DATA CHO VIEW
-        // =========================
+        // 4. Đẩy dữ liệu ra View
         model.addAttribute("products", productPage.getContent());
+        model.addAttribute("allProducts", productService.getAllProductsWithVariants());
         model.addAttribute("currentPage", productPage.getNumber());
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("totalItems", productPage.getTotalElements());
         model.addAttribute("pageSize", pageSize);
-
         model.addAttribute("sort", sort);
         model.addAttribute("direction", direction);
-
-        // giữ filter
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategoryId", categoryId);
         model.addAttribute("selectedSize", size);
@@ -92,95 +81,79 @@ public class ProductController {
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
 
-        // category cho filter
-        List<Category> categoryIds = productService.getAllCategoryIds();
-        model.addAttribute("categoryIds", categoryIds);
+        List<Category> categories = productService.getAllCategoryIds();
+        model.addAttribute("categoryIds", categories); // Lưu ý: View đang dùng tên biến 'categoryIds'
 
-        // Hiển thị "Showing x – y of z"
         long total = productPage.getTotalElements();
         int start = total == 0 ? 0 : productPage.getNumber() * pageSize + 1;
         int end = Math.min(start + productPage.getNumberOfElements() - 1, (int) total);
-
         model.addAttribute("startItem", start);
         model.addAttribute("endItem", end);
 
         return "list";
     }
 
-    // =========================
-    // PRODUCT DETAILS
-    // =========================
-    @GetMapping("/detail")
-    @Transactional(readOnly = true)
+    // ========================================================================
+    // 2. CHI TIẾT SẢN PHẨM
+    // URL: /products/detail/{id}
+    // ========================================================================
+    @GetMapping("/detail/{id}")
     public String productDetails(
-            @RequestParam("id") Long productId,
-            @RequestParam(required = false) String selectedSize,
-            @RequestParam(required = false) String selectedColor,
-            @RequestParam(required = false) Integer quantity,
+            @PathVariable("id") Long id,
+            @RequestParam(name = "colorId", required = false) Integer colorId,
+            @RequestParam(name = "sizeId", required = false) Integer sizeId,
             Model model) {
 
-        Product product = productService.getProductById(productId);
-
+        Product product = productService.getProductById(id);
         if (product == null) {
             return "redirect:/products";
         }
 
+        List<vn.edu.fpt.fashionstore.entity.ProductVariant> variants = product.getVariants();
+
+        // Lấy danh sách Size/Màu duy nhất
+        List<CategorySize> uniqueSizes = variants.stream()
+                .map(vn.edu.fpt.fashionstore.entity.ProductVariant::getCategorySize)
+                .filter(size -> size != null)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Color> uniqueColors = variants.stream()
+                .map(vn.edu.fpt.fashionstore.entity.ProductVariant::getColor)
+                .filter(color -> color != null)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Xác định biến thể được chọn
+        vn.edu.fpt.fashionstore.entity.ProductVariant selectedVariant = null;
+
+        if (colorId != null && sizeId != null) {
+            selectedVariant = variants.stream()
+                    .filter(v -> v.getColor().getColorId() == colorId &&
+                            v.getCategorySize().getCategorySizeId() == sizeId)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Mặc định biến thể đầu tiên
+        if (selectedVariant == null && !variants.isEmpty()) {
+            selectedVariant = variants.get(0);
+        }
+
         model.addAttribute("product", product);
         model.addAttribute("variants", product.getVariants());
-        model.addAttribute("quantity", quantity != null ? quantity : 1);
-        
-        // Debug: Print variants info
-        System.out.println("=== DEBUG PRODUCT DETAILS ===");
-        System.out.println("Product ID: " + productId);
-        System.out.println("Product Name: " + product.getProductName());
-        System.out.println("Category: " + (product.getCategory() != null ? product.getCategory().getCategoryName() : "NULL"));
-        System.out.println("Number of variants: " + product.getVariants().size());
-        
-        // Find selected variant based on size and color
-        if (selectedSize != null && selectedColor != null) {
-            System.out.println("Looking for variant - Size: " + selectedSize + ", Color: " + selectedColor);
-            for (ProductVariant variant : product.getVariants()) {
-                System.out.println("Variant ID: " + variant.getVariantId());
-                System.out.println("  CategorySize: " + (variant.getCategorySize() != null ? variant.getCategorySize().getSizeName() : "NULL"));
-                System.out.println("  Color: " + (variant.getColor() != null ? variant.getColor().getColorName() : "NULL"));
-                System.out.println("  Price: " + variant.getPrice());
-                System.out.println("  Stock: " + variant.getStock());
-                System.out.println("  Image URL: " + variant.getImageUrl());
-                
-                if (variant.getCategorySize() != null && variant.getColor() != null &&
-                    variant.getCategorySize().getSizeName().equals(selectedSize) &&
-                    variant.getColor().getColorName().equals(selectedColor)) {
-                    model.addAttribute("selectedVariant", variant);
-                    System.out.println("Found matching variant!");
-                    break;
-                }
-            }
-        } else {
-            System.out.println("No selectedSize or selectedColor provided");
-            // If no selection, use first variant as default
-            if (!product.getVariants().isEmpty()) {
-                ProductVariant firstVariant = product.getVariants().get(0);
-                model.addAttribute("selectedVariant", firstVariant);
-                System.out.println("Using first variant as default");
-                System.out.println("Default Image URL: " + firstVariant.getImageUrl());
-            }
-        }
+        model.addAttribute("uniqueSizes", uniqueSizes);
+        model.addAttribute("uniqueColors", uniqueColors);
+        model.addAttribute("selectedVariant", selectedVariant);
 
         return "productdetails";
     }
 
-    // =========================
-    // CHECK FILTER
-    // =========================
-    private boolean hasFilter(String keyword, Long categoryId, String size, String color, String stockStatus,
-                              Double minPrice, Double maxPrice) {
-
-        return (keyword != null && !keyword.isBlank())
-                || categoryId != null
-                || (size != null && !size.isBlank())
-                || (color != null && !color.isBlank())
-                || (stockStatus != null && !stockStatus.isBlank())
-                || minPrice != null
-                || maxPrice != null;
+    // ========================================================================
+    // 3. HÀM PHỤ TRỢ (CHECK FILTER)
+    // ========================================================================
+    private boolean hasFilter(String keyword, Long categoryId, String size, Double minPrice, Double maxPrice) {
+        return (keyword != null && !keyword.isBlank()) || categoryId != null ||
+                (size != null && !size.isBlank()) || minPrice != null || maxPrice != null;
     }
 }

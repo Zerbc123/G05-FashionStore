@@ -1,10 +1,10 @@
 package vn.edu.fpt.fashionstore.service;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +16,8 @@ import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,6 +33,11 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<Product> getAllProducts(Pageable pageable) {
         return productRepository.findAll(pageable);
+    }
+    
+    // Lấy tất cả sản phẩm với variants (cho hiển thị)
+    public List<Product> getAllProductsWithVariants() {
+        return productRepository.findAllWithVariants();
     }
 
     // Tìm kiếm sản phẩm theo tên
@@ -83,135 +88,58 @@ public class ProductService {
         return productRepository.findAll(spec, pageable);
     }
 
-    // Lọc sản phẩm theo nhiều tiêu chí
-    public Page<Product> filterProducts(Long categoryId, String size, String color, String stockStatus, Double minPrice, Double maxPrice, Pageable pageable) {
-        Specification<Product> spec = (root, query, criteriaBuilder) -> {
-            java.util.List<Predicate> predicates = new java.util.ArrayList<>();
-
-            // Lọc theo danh mục
-            if (categoryId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("category").get("cateId"), categoryId));
-            }
-
-            // Lọc theo size (nếu có field size trong entity)
-            if (size != null && !size.trim().isEmpty()) {
-                // predicates.add(criteriaBuilder.equal(root.get("size"), size));
-                // Tạm thời bỏ qua vì entity Product chưa có field size
-            }
-
-            // Lọc theo màu sắc
-            if (color != null && !color.trim().isEmpty()) {
-                // Join với ProductVariant để filter theo color
-                Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.LEFT);
-                predicates.add(criteriaBuilder.equal(variantJoin.get("color").get("colorName"), color));
-            }
-
-            // Lọc theo trạng thái stock
-            if (stockStatus != null && !stockStatus.trim().isEmpty()) {
-                // Join với ProductVariant để filter theo stock
-                Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.LEFT);
-                switch (stockStatus) {
-                    case "in-stock":
-                        predicates.add(criteriaBuilder.greaterThanOrEqualTo(variantJoin.get("stock"), 10));
-                        break;
-                    case "low-stock":
-                        predicates.add(criteriaBuilder.and(
-                            criteriaBuilder.greaterThan(variantJoin.get("stock"), 0),
-                            criteriaBuilder.lessThan(variantJoin.get("stock"), 10)
-                        ));
-                        break;
-                    case "out-of-stock":
-                        predicates.add(criteriaBuilder.lessThanOrEqualTo(variantJoin.get("stock"), 0));
-                        break;
-                }
-            }
-
-            // Lọc theo giá tối thiểu (nếu có field price trong entity)
-            if (minPrice != null) {
-                // predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
-                // Tạm thời bỏ qua vì entity Product chưa có field price
-            }
-
-            // Lọc theo giá tối đa (nếu có field price trong entity)
-            if (maxPrice != null) {
-                // predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
-                // Tạm thời bỏ qua vì entity Product chưa có field price
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-        return productRepository.findAll(spec, pageable);
-    }
-
-    // Tìm kiếm và lọc kết hợp
-    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size, String color, String stockStatus, Double minPrice, Double maxPrice, Pageable pageable) {
+    // Tối ưu hàm Search và Filter để lấy thông tin từ bảng Variant (Price, Size)
+    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size,
+                                                 Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
-            java.util.List<Predicate> predicates = new java.util.ArrayList<>();
+            query.distinct(true); // Tránh trùng lặp sản phẩm khi join nhiều variant
+            List<Predicate> predicates = new ArrayList<>();
 
-            // Tìm kiếm theo tên
-            if (keyword != null && !keyword.trim().isEmpty()) {
+            // Thực hiện JOIN giữa Product và ProductVariant
+            // Dựa trên quan hệ OneToMany trong Entity [cite: 17]
+            Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
+
+            // 1. Tìm theo tên sản phẩm
+            if (keyword != null && !keyword.isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("productName")), "%" + keyword.toLowerCase() + "%"));
             }
 
-            // Áp dụng các bộ lọc
+            // 2. Lọc theo danh mục (category_id) [cite: 10]
             if (categoryId != null) {
-                predicates.add(cb.equal(root.get("category").get("cateId"), categoryId));
+                predicates.add(cb.equal(root.get("category").get("categoryId"), categoryId));
             }
 
-            // Lọc theo size (nếu có field size trong entity)
-            if (size != null && !size.trim().isEmpty()) {
-                // predicates.add(cb.equal(root.get("size"), size));
-                // Tạm thời bỏ qua vì entity Product chưa có field size
+            // 3. Lọc theo Size (phải join qua bảng Category_Size) [cite: 6, 17]
+            if (size != null && !size.isBlank()) {
+                predicates.add(cb.equal(variants.get("categorySize").get("sizeName"), size));
             }
 
-            // Lọc theo giá (nếu có field price trong entity)
+            // 4. Lọc theo khoảng giá (nằm ở bảng ProductVariant) [cite: 11]
             if (minPrice != null) {
-                // predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
-                // Tạm thời bỏ qua vì entity Product chưa có field price
+                predicates.add(cb.greaterThanOrEqualTo(variants.get("price"), minPrice));
             }
-
             if (maxPrice != null) {
-                // predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
-                // Tạm thời bỏ qua vì entity Product chưa có field price
+                predicates.add(cb.lessThanOrEqualTo(variants.get("price"), maxPrice));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-
         return productRepository.findAll(spec, pageable);
     }
 
-    // Lấy sản phẩm theo ID
-    @Transactional(readOnly = true)
+    // Sửa lỗi trong ảnh bạn gửi
     public Product getProductById(Long productId) {
-        try {
-            Product product = entityManager.find(Product.class, productId);
-            if (product != null) {
-                // Initialize collections to avoid lazy loading issues
-                product.getVariants().size(); // Force initialization
-                if (product.getCategory() != null) {
-                    product.getCategory().getCategoryName(); // Force initialization
-                }
-                // Initialize variant relationships
-                for (ProductVariant variant : product.getVariants()) {
-                    if (variant.getCategorySize() != null) {
-                        variant.getCategorySize().getSizeName();
-                    }
-                    if (variant.getColor() != null) {
-                        variant.getColor().getColorName();
-                    }
-                }
-            }
-            return product;
-        } catch (Exception e) {
-            System.err.println("Error loading product: " + e.getMessage());
-            e.printStackTrace();
-            // Fallback to repository method
-            return productRepository.findByProductId(productId);
-        }
+        // Đảm bảo tên phương thức này giống hệt tên trong Repository
+        return productRepository.findByProductIdWithVariants(productId);
     }
 
     public List<Category> getAllCategoryIds() {
         return productRepository.findAllCategories();
+    }
+
+    // Hiện sản phẩm bán chạy
+    public List<ProductRepository.ProductHomeInfo> getHomeProducts() {
+        // Gọi thẳng hàm tối ưu trong Repository, không cần xử lý thủ công nữa
+        return productRepository.getAllProductHome();
     }
 }

@@ -450,6 +450,7 @@
         }
 
         .continue-shopping {
+            display: block;
             width: 100%;
             background: white;
             border: 2px solid var(--primary-color);
@@ -459,10 +460,13 @@
             font-weight: 600;
             transition: all 0.3s ease;
             margin-top: 1rem;
+            text-align: center;
+            text-decoration: none;
         }
 
         .continue-shopping:hover {
             background: var(--light-bg);
+            color: var(--primary-color);
         }
 
         .empty-cart {
@@ -553,82 +557,56 @@
     <div class="container">
         <h1 class="page-title">Giỏ Hàng Của Bạn</h1>
 
-        <div class="row">
+        <!-- Check if cart is empty -->
+        <div th:if="${#lists.isEmpty(cartItems)}" class="text-center py-5">
+            <div class="empty-cart">
+                <i class="bi bi-cart-x empty-cart-icon"></i>
+                <h3>Giỏ hàng của bạn đang trống</h3>
+                <p class="text-muted">Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm!</p>
+                <a th:href="@{/products}" class="btn btn-primary mt-3">
+                    <i class="bi bi-arrow-left me-2"></i>Tiếp Tục Mua Sắm
+                </a>
+            </div>
+        </div>
+
+        <!-- Cart Items Section -->
+        <div th:if="${!#lists.isEmpty(cartItems)}" class="row">
             <div class="col-lg-8">
-                <!-- Cart Item 1 -->
-                <div class="cart-item">
+                <!-- Cart Items -->
+                <div th:each="item : ${cartItems}" class="cart-item">
                     <div class="row align-items-center">
                         <div class="col-md-2">
-                            <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400" alt="Product" class="cart-item-image">
+                            <img th:src="${item.productVariant.imageUrl}" 
+                                 th:alt="${item.productVariant.product.productName}" 
+                                 class="cart-item-image"
+                                 onerror="this.src='https://via.placeholder.com/120'">
                         </div>
                         <div class="col-md-4">
-                            <h3 class="cart-item-name">Áo Thun Basic Trắng</h3>
-                            <p class="text-muted mb-0">Size: M | Màu: Trắng</p>
+                            <h3 class="cart-item-name" th:text="${item.productVariant.product.productName}">Tên sản phẩm</h3>
+                            <p class="text-muted mb-0">
+                                Size: <span th:text="${item.productVariant.categorySize?.sizeName ?: 'N/A'}">M</span> | 
+                                Màu: <span th:text="${item.productVariant.color?.colorName ?: 'N/A'}">Trắng</span>
+                            </p>
                         </div>
                         <div class="col-md-3">
-                            <div class="quantity-control">
-                                <button class="quantity-btn">-</button>
-                                <input type="number" class="quantity-input" value="1" min="1">
-                                <button class="quantity-btn">+</button>
-                            </div>
+                            <form th:action="@{/cart/update}" method="POST" class="quantity-control">
+                                <input type="hidden" name="cartItemId" th:value="${item.cartItemId}">
+                                <button type="submit" name="action" value="decrease" class="quantity-btn">-</button>
+                                <input type="number" class="quantity-input" th:value="${item.quantity}" min="1" readonly>
+                                <button type="submit" name="action" value="increase" class="quantity-btn">+</button>
+                            </form>
                         </div>
                         <div class="col-md-2">
-                            <p class="cart-item-price mb-0">299.000đ</p>
+                            <p class="cart-item-price mb-0" 
+                               th:text="${#numbers.formatDecimal(item.productVariant.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</p>
                         </div>
                         <div class="col-md-1 text-end">
-                            <button class="remove-btn"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Cart Item 2 -->
-                <div class="cart-item">
-                    <div class="row align-items-center">
-                        <div class="col-md-2">
-                            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400" alt="Product" class="cart-item-image">
-                        </div>
-                        <div class="col-md-4">
-                            <h3 class="cart-item-name">Áo Hoodie Oversize</h3>
-                            <p class="text-muted mb-0">Size: L | Màu: Đen</p>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="quantity-control">
-                                <button class="quantity-btn">-</button>
-                                <input type="number" class="quantity-input" value="2" min="1">
-                                <button class="quantity-btn">+</button>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="cart-item-price mb-0">998.000đ</p>
-                        </div>
-                        <div class="col-md-1 text-end">
-                            <button class="remove-btn"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Cart Item 3 -->
-                <div class="cart-item">
-                    <div class="row align-items-center">
-                        <div class="col-md-2">
-                            <img src="https://images.unsplash.com/photo-1542272454315-7ad9f8a1e3e7?w=400" alt="Product" class="cart-item-image">
-                        </div>
-                        <div class="col-md-4">
-                            <h3 class="cart-item-name">Quần Jean Skinny</h3>
-                            <p class="text-muted mb-0">Size: 30 | Màu: Xanh</p>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="quantity-control">
-                                <button class="quantity-btn">-</button>
-                                <input type="number" class="quantity-input" value="1" min="1">
-                                <button class="quantity-btn">+</button>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="cart-item-price mb-0">599.000đ</p>
-                        </div>
-                        <div class="col-md-1 text-end">
-                            <button class="remove-btn"><i class="bi bi-trash"></i></button>
+                            <form th:action="@{/cart/remove}" method="POST" style="display: inline;">
+                                <input type="hidden" name="cartItemId" th:value="${item.cartItemId}">
+                                <button type="submit" class="remove-btn" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -636,26 +614,22 @@
 
             <!-- Cart Summary -->
             <div class="col-lg-4">
-                <div class="cart-summary">
+                <div class="cart-summary" th:if="${!#lists.isEmpty(cartItems)}">
                     <h2 class="summary-title">Tổng Đơn Hàng</h2>
                     <div class="summary-row">
                         <span>Tạm tính:</span>
-                        <span>1.896.000đ</span>
+                        <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <div class="summary-row">
                         <span>Phí vận chuyển:</span>
                         <span>30.000đ</span>
                     </div>
                     <div class="summary-row">
-                        <span>Giảm giá:</span>
-                        <span class="text-success">-100.000đ</span>
-                    </div>
-                    <div class="summary-row">
                         <span>Tổng cộng:</span>
-                        <span>1.826.000đ</span>
+                        <span th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <button class="checkout-btn"><i class="bi bi-credit-card me-2"></i>Thanh Toán</button>
-                    <button class="continue-shopping"><i class="bi bi-arrow-left me-2"></i>Tiếp Tục Mua Sắm</button>
+                    <a th:href="@{/products}" class="continue-shopping"><i class="bi bi-arrow-left me-2"></i>Tiếp Tục Mua Sắm</a>
                 </div>
             </div>
         </div>

@@ -336,7 +336,7 @@
 
                 <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
                     <div th:each="product : ${products}" class="product-card">
-                        <a th:href="@{/products/detail(id=${product.productId})}" class="product-image-link">
+                        <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
                             <div class="product-image-placeholder">
                                 <i class="bi bi-image"></i>
                             </div>
@@ -346,16 +346,16 @@
                         </div>
                         <div class="product-info">
                             <h6>
-                                <a th:href="@{/products/detail(id=${product.productId})}" 
+                                <a th:href="@{/products/detail/{id}(id=${product.productId})}" 
                                    class="product-name-link" th:text="${product.productName}">Product Name</a>
                             </h6>
                             <p class="text-muted" th:text="${#strings.abbreviate(product.description, 50)}">Description</p>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge bg-primary" th:text="${product.category != null ? product.category.categoryName : 'Unknown'}">Category</span>
+                                <span class="badge bg-primary" th:text="${product.category != null ? product.category.categoryName : 'No Category'}">Category</span>
                                 <small class="text-muted" th:text="'ID: ' + ${product.productId}">ID</small>
                             </div>
                             <div class="mt-2">
-                                <a th:href="@{/products/detail(id=${product.productId})}" 
+                                <a th:href="@{/products/detail/{id}(id=${product.productId})}" 
                                    class="btn btn-outline-primary btn-sm">View Details</a>
                             </div>
                         </div>

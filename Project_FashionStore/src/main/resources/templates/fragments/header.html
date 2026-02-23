@@ -85,7 +85,7 @@
                 <i class="bi bi-search nav-icon"></i>
                 <a th:href="@{/cart}" style="position: relative; text-decoration: none; color: inherit;">
                     <i class="bi bi-cart3 nav-icon"></i>
-                    <span class="cart-badge">3</span>
+                    <span class="cart-badge" th:if="${session.cartCount != null and session.cartCount > 0}" th:text="${session.cartCount}">0</span>
                 </a>
                 
                 <!-- Khi chưa login: Hiển thị 2 nút -->
