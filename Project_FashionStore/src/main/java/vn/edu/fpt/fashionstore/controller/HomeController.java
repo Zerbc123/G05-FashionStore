@@ -14,31 +14,50 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
+import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.service.CartService;
+import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
 public class HomeController {
 
     private final AccountService accountService;
+    private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Autowired
     private org.springframework.mail.javamail.JavaMailSender mailSender;
+    
+    @Autowired
+    private CartService cartService;
 
-    public HomeController(AccountService accountService) {
+    public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
         this.accountService = accountService;
+        this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     @GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
+        // Gọi hàm lấy dữ liệu giao diện
+        List<ProductRepository.ProductHomeInfo> products = productRepository.getAllProductHome();
+
+        // Đẩy sang Thymeleaf
+        model.addAttribute("products", products);
+
         // 1. Lấy email từ Session hoặc Google
         String email = (String) session.getAttribute("user");
 
@@ -64,6 +83,9 @@ public class HomeController {
 
             session.setAttribute("userName", account.getFullName());
             session.setAttribute("userRole", roleName);
+            
+            // Cập nhật số lượng giỏ hàng vào session
+            updateCartCountForCustomer(session, account);
 
             // 3. KIỂM TRA THÔNG TIN (Dành cho User Google)
             // Kiểm tra nếu là OAuth2 user bằng cách xem password là null hoặc không có hash prefix
@@ -106,8 +128,6 @@ public class HomeController {
 
         return "login";
     }
-
-
 
     @GetMapping("/profile")
     public String viewProfilePage(HttpSession session, Model model) {
@@ -196,6 +216,9 @@ public class HomeController {
             session.setAttribute("user", account.getEmail());
             session.setAttribute("userRole", roleName);
             session.setAttribute("userName", account.getFullName());
+            
+            // Cập nhật số lượng giỏ hàng vào session
+            updateCartCountForCustomer(session, account);
 
             if ("Admin".equalsIgnoreCase(roleName)) return "redirect:/admin";
             if ("Staff".equalsIgnoreCase(roleName)) return "redirect:/staff";
@@ -382,6 +405,22 @@ public class HomeController {
     public String registerExpiredPage(Model model) {
         model.addAttribute("error", "Mã xác thực đã hết hạn sau 30 giây. Vui lòng đăng ký lại!");
         return "register";
+    }
+    
+    // Helper method để cập nhật cart count vào session
+    private void updateCartCountForCustomer(HttpSession session, Account account) {
+        try {
+            if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
+                Customer customer = account.getCustomers().get(0);
+                List<CartItem> cartItems = cartService.getCartItems(customer);
+                session.setAttribute("cartCount", cartItems.size());
+            } else {
+                session.setAttribute("cartCount", 0);
+            }
+        } catch (Exception e) {
+            // Nếu có lỗi, set cartCount = 0
+            session.setAttribute("cartCount", 0);
+        }
     }
 
 }

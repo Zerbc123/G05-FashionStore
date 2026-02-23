@@ -9,13 +9,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/cart")
@@ -26,29 +29,48 @@ public class CartController {
 
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @Autowired
+    private AccountRepository accountRepository;
 
-    // TODO: Thay thế hàm này bằng logic lấy customer thật từ Spring Security
-    private Customer getCurrentCustomer() {
-        // Giả sử customer có ID = 1 đã đăng nhập. 
-        // Lấy customer THẬT từ database thay vì tạo object mới
-        return customerRepository.findById(1)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+    // Lấy customer từ session
+    private Customer getCurrentCustomer(HttpSession session) {
+        String email = (String) session.getAttribute("user");
+        if (email == null) {
+            throw new RuntimeException("Bạn chưa đăng nhập!");
+        }
+        
+        Optional<Account> accountOpt = accountRepository.findByEmail(email);
+        if (accountOpt.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy tài khoản!");
+        }
+        
+        Account account = accountOpt.get();
+        if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
+            throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
+        }
+        
+        return account.getCustomers().get(0);
     }
 
     @GetMapping
     @Transactional(readOnly = true)
     public String viewCart(Model model, HttpSession session) {
-        Customer currentCustomer = getCurrentCustomer();
-        List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
-        double total = cartService.getCartTotal(cartItems);
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            double total = cartService.getCartTotal(cartItems);
 
-        model.addAttribute("cartItems", cartItems);
-        model.addAttribute("total", total);
-        
-        // Cập nhật số lượng giỏ hàng vào session
-        session.setAttribute("cartCount", cartItems.size());
-        
-        return "cart";
+            model.addAttribute("cartItems", cartItems);
+            model.addAttribute("total", total);
+            
+            // Cập nhật số lượng giỏ hàng vào session
+            session.setAttribute("cartCount", cartItems.size());
+            
+            return "cart";
+        } catch (RuntimeException e) {
+            return "redirect:/login";
+        }
     }
 
     @PostMapping("/add")
@@ -59,13 +81,13 @@ public class CartController {
                             HttpSession session,
                             RedirectAttributes redirectAttributes) {
         try {
-            Customer currentCustomer = getCurrentCustomer();
+            Customer currentCustomer = getCurrentCustomer(session);
             // Tìm variant dựa trên productId, sizeId và colorId
             Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
             
             if (variantId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
-                return "redirect:/products/detail?id=" + productId;
+                return "redirect:/products/detail/" + productId;
             }
             
             cartService.addToCart(currentCustomer, variantId, quantity);
@@ -76,6 +98,7 @@ public class CartController {
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/login";
         }
         return "redirect:/cart";
     }
@@ -103,7 +126,7 @@ public class CartController {
             cartService.updateQuantity(cartItemId, newQuantity);
             
             // Cập nhật số lượng giỏ hàng
-            updateCartCount(session, getCurrentCustomer());
+            updateCartCount(session, getCurrentCustomer(session));
             
             redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật giỏ hàng!");
         } catch (RuntimeException e) {
@@ -120,7 +143,7 @@ public class CartController {
             cartService.removeFromCart(cartItemId);
             
             // Cập nhật số lượng giỏ hàng
-            updateCartCount(session, getCurrentCustomer());
+            updateCartCount(session, getCurrentCustomer(session));
             
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm khỏi giỏ hàng!");
         } catch (RuntimeException e) {
