@@ -103,15 +103,6 @@
                 </a>
             </div>
 
-            <!-- Stats -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <div class="stats-value" th:text="${#lists.size(categories)}">0</div>
-                        <div class="stats-label">Tổng Danh Mục</div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Error message -->
             <div th:if="${error}" class="alert alert-danger">
