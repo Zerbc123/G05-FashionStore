@@ -16,4 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Category> findAllCategories();
 
     Product findByProductId(Long productId);
+
+    //METHOD ĐỂ CHECK TRƯỚC KHI DELETE CATEGORY
+    boolean existsByCategory_CateId(int cateId);
 }
