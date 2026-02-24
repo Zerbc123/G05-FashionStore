@@ -36,11 +36,27 @@ public class ProductController {
             @RequestParam(required = false) String stockStatus,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String priceRange,
             @RequestParam(defaultValue = "productName") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
             Model model) {
+
+        // Xử lý priceRange để chuyển thành minPrice và maxPrice
+        String currentPriceRange = "";
+        if (priceRange != null && !priceRange.isBlank()) {
+            String[] prices = priceRange.split("-");
+            if (prices.length == 2) {
+                try {
+                    minPrice = Double.parseDouble(prices[0]);
+                    maxPrice = Double.parseDouble(prices[1]);
+                    currentPriceRange = priceRange;
+                } catch (NumberFormatException e) {
+                    // Ignore invalid format
+                }
+            }
+        }
 
         // 1. Xử lý sắp xếp
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -48,17 +64,45 @@ public class ProductController {
 
         // 2. Gọi Service lấy dữ liệu
         Page<Product> productPage;
-        if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
-            productPage = productService.searchAndFilterProducts(keyword, categoryId, size, minPrice, maxPrice, pageable);
+
+        // Debug: In ra các tham số nhận được từ UI
+        System.out.println("=== UI PARAMETERS ===");
+        System.out.println("keyword: " + keyword);
+        System.out.println("categoryId: " + categoryId);
+        System.out.println("size: " + size);
+        System.out.println("color: " + color);
+        System.out.println("minPrice: " + minPrice);
+        System.out.println("maxPrice: " + maxPrice);
+        System.out.println("priceRange: " + priceRange);
+        System.out.println("hasFilter: " + hasFilter(keyword, categoryId, size, color, minPrice, maxPrice));
+
+        // Chỉ gọi searchAndFilterProducts khi thực sự có filter
+        if (keyword != null && !keyword.isBlank() ||
+                categoryId != null ||
+                (size != null && !size.isBlank()) ||
+                (color != null && !color.isBlank()) ||
+                minPrice != null ||
+                maxPrice != null) {
+            System.out.println("Calling searchAndFilterProducts...");
+            productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
         } else {
+            System.out.println("Calling getAllProducts...");
             productPage = productService.getAllProducts(pageable);
         }
+
+        System.out.println("Result: " + productPage.getTotalElements() + " products found");
+        System.out.println("=== END UI PARAMETERS ===");
 
         // 3. Xử lý trường hợp trang trống (khi đang ở trang 2 mà lọc ra ít kết quả)
         if (page > 0 && productPage.isEmpty() && productPage.getTotalElements() > 0) {
             pageable = PageRequest.of(0, pageSize, Sort.by(sortDirection, sort));
-            if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
-                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, minPrice, maxPrice, pageable);
+            if (keyword != null && !keyword.isBlank() ||
+                    categoryId != null ||
+                    (size != null && !size.isBlank()) ||
+                    (color != null && !color.isBlank()) ||
+                    minPrice != null ||
+                    maxPrice != null) {
+                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -80,8 +124,9 @@ public class ProductController {
         model.addAttribute("stockStatus", stockStatus);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
+        model.addAttribute("priceRange", currentPriceRange);
 
-        List<Category> categories = productService.getAllCategoryIds();
+        List<Category> categories = productService.findAllCategories();
         model.addAttribute("categoryIds", categories); // Lưu ý: View đang dùng tên biến 'categoryIds'
 
         long total = productPage.getTotalElements();
@@ -150,10 +195,36 @@ public class ProductController {
     }
 
     // ========================================================================
+    // 4. DEBUG FILTER ENDPOINT
+    // URL: /products/debug
+    // ========================================================================
+    @GetMapping("/debug")
+    @ResponseBody
+    public String debugFilter(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String size,
+            @RequestParam(defaultValue = "0") int page) {
+        
+        Pageable pageable = PageRequest.of(page, 12);
+        Page<Product> result = productService.debugFilter(categoryId, color, size, pageable);
+        
+        return "Debug Filter Results:<br>" +
+               "Category ID: " + categoryId + "<br>" +
+               "Color: " + color + "<br>" +
+               "Size: " + size + "<br>" +
+               "Total Products Found: " + result.getTotalElements() + "<br>" +
+               "Products on Page: " + result.getContent().size() + "<br>" +
+               "Total Pages: " + result.getTotalPages() + "<br><br>" +
+               "<small>Check console for detailed step-by-step debugging</small>";
+    }
+
+    // ========================================================================
     // 3. HÀM PHỤ TRỢ (CHECK FILTER)
     // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String size, Double minPrice, Double maxPrice) {
+    private boolean hasFilter(String keyword, Long categoryId, String size, String color, Double minPrice, Double maxPrice) {
         return (keyword != null && !keyword.isBlank()) || categoryId != null ||
-                (size != null && !size.isBlank()) || minPrice != null || maxPrice != null;
+                (size != null && !size.isBlank()) || (color != null && !color.isBlank()) || 
+                minPrice != null || maxPrice != null;
     }
 }
