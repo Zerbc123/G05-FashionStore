@@ -628,7 +628,9 @@
                         <span>Tổng cộng:</span>
                         <span th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
-                    <button class="checkout-btn"><i class="bi bi-credit-card me-2"></i>Thanh Toán</button>
+                    <a th:href="@{/cart/checkout}" class="btn btn-primary w-100" style="background: var(--primary-color); border: none;">
+                        <i class="bi bi-credit-card me-2"></i> Thanh Toán
+                    </a>
                     <a th:href="@{/products}" class="continue-shopping"><i class="bi bi-arrow-left me-2"></i>Tiếp Tục Mua Sắm</a>
                 </div>
             </div>

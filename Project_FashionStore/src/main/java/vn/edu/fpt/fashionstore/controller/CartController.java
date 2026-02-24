@@ -157,4 +157,119 @@ public class CartController {
         List<CartItem> cartItems = cartService.getCartItems(customer);
         session.setAttribute("cartCount", cartItems.size());
     }
+
+    // =======================================================
+    // 1. MỞ TRANG CHECKOUT
+    // =======================================================
+    @GetMapping("/checkout")
+    @Transactional(readOnly = true)
+    public String checkoutPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+
+            // Nếu giỏ hàng trống thì không cho vào trang checkout
+            if (cartItems.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
+                return "redirect:/cart";
+            }
+
+            double total = cartService.getCartTotal(cartItems);
+
+            // Gửi dữ liệu ra cột bên phải
+            model.addAttribute("cartItems", cartItems);
+            model.addAttribute("total", total);
+
+            // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
+            model.addAttribute("fullName", currentCustomer.getFullName());
+            model.addAttribute("phone", currentCustomer.getPhone());
+            model.addAttribute("email", currentCustomer.getEmail());
+            model.addAttribute("address", currentCustomer.getAddress());
+
+            return "checkout";
+        } catch (RuntimeException e) {
+            return "redirect:/login";
+        }
+    }
+
+    // =======================================================
+    // 2. XỬ LÝ KHI BẤM NÚT "ĐẶT HÀNG" (MANUAL VALIDATION)
+    // =======================================================
+    @PostMapping("/checkout/place-order")
+    public String placeOrder(
+            @RequestParam(value = "fullName", defaultValue = "") String fullName,
+            @RequestParam(value = "phone", defaultValue = "") String phone,
+            @RequestParam(value = "address", defaultValue = "") String address,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
+            Model model,
+            HttpSession session) {
+
+        boolean hasError = false;
+
+        // Bắt lỗi: Tên rỗng hoặc chứa số/ký tự đặc biệt
+        if (fullName.trim().isEmpty()) {
+            model.addAttribute("errorFullName", "Vui lòng nhập họ và tên của bạn.");
+            hasError = true;
+        } else if (!fullName.matches("^[\\p{L}\\s]+$")) {
+            // Regex: \p{L} là chữ cái bất kỳ (hỗ trợ tiếng Việt), \s là khoảng trắng
+            model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái, không nhập số hay ký tự đặc biệt.");
+            hasError = true;
+        }
+
+        // Bắt lỗi: Số điện thoại
+        if (phone.trim().isEmpty() || !phone.matches("^0[0-9]{9}$")) {
+            model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (Bắt buộc 10 số và bắt đầu bằng 0).");
+            hasError = true;
+        }
+
+        // Bắt lỗi: Email (Bắt buộc nhập và phải có đuôi .com)
+        if (email == null || email.trim().isEmpty()) {
+            model.addAttribute("errorEmail", "Vui lòng nhập email.");
+            hasError = true;
+        } else if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.com$")) {
+            model.addAttribute("errorEmail", "Email không hợp lệ (Phải đúng định dạng và bắt buộc có đuôi .com).");
+            hasError = true;
+        }
+
+        // Bắt lỗi: Địa chỉ rỗng
+        if (address.trim().isEmpty()) {
+            model.addAttribute("errorAddress", "Vui lòng nhập chi tiết địa chỉ nhận hàng.");
+            hasError = true;
+        }
+
+        // Nếu có lỗi -> Phải Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
+        if (hasError) {
+            try {
+                Customer currentCustomer = getCurrentCustomer(session);
+                List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+                double total = cartService.getCartTotal(cartItems);
+
+                // Gửi lại data giỏ hàng
+                model.addAttribute("cartItems", cartItems);
+                model.addAttribute("total", total);
+
+                // Giữ nguyên chữ khách đã nhập
+                model.addAttribute("fullName", fullName);
+                model.addAttribute("phone", phone);
+                model.addAttribute("email", email);
+                model.addAttribute("address", address);
+                model.addAttribute("note", note);
+
+                return "checkout"; // Trả lại trang để khách sửa lỗi
+            } catch (Exception e) {
+                return "redirect:/login";
+            }
+        }
+
+        // TẠM THỜI: In ra console để biết form đã valid thành công
+        System.out.println(">>> ĐẶT HÀNG THÀNH CÔNG! <<<");
+        System.out.println("Tên: " + fullName + " | ĐC: " + address);
+
+        // Về sau bạn sẽ gọi OrderService ở đây để lưu vào DB.
+        // Tạm thời redirect về home để đỡ lỗi
+        return "redirect:/home";
+    }
 }
