@@ -182,7 +182,18 @@ public class CartController {
 
             // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
             model.addAttribute("fullName", currentCustomer.getFullName());
-            model.addAttribute("phone", currentCustomer.getPhone());
+            
+            // Format số điện thoại: thêm số 0 đầu nếu bị mất
+            String phoneStr = "";
+            if (currentCustomer.getPhone() != null) {
+                phoneStr = String.valueOf(currentCustomer.getPhone());
+                // Nếu số điện thoại có 9 chữ số thì thêm số 0 đầu
+                if (phoneStr.length() == 9) {
+                    phoneStr = "0" + phoneStr;
+                }
+            }
+            model.addAttribute("phone", phoneStr);
+            
             model.addAttribute("email", currentCustomer.getEmail());
             model.addAttribute("address", currentCustomer.getAddress());
 
@@ -263,11 +274,6 @@ public class CartController {
                 return "redirect:/login";
             }
         }
-
-        // TẠM THỜI: In ra console để biết form đã valid thành công
-        System.out.println(">>> ĐẶT HÀNG THÀNH CÔNG! <<<");
-        System.out.println("Tên: " + fullName + " | ĐC: " + address);
-
         // Về sau bạn sẽ gọi OrderService ở đây để lưu vào DB.
         // Tạm thời redirect về home để đỡ lỗi
         return "redirect:/home";

@@ -288,7 +288,21 @@ public class AccountService {
 
             return savedAccount;
         }
-        return existAccount.get();
+        // Account đã tồn tại: backfill Customer nếu thiếu
+        Account account = existAccount.get();
+        boolean isCustomerRole = account.getRole() != null &&
+                "Customer".equalsIgnoreCase(account.getRole().getRoleName());
+        boolean hasNoCustomer = account.getCustomers() == null || account.getCustomers().isEmpty();
+
+        if (isCustomerRole && hasNoCustomer) {
+            Customer customer = new Customer();
+            customer.setAccount(account);
+            customer.setFullName(fullName != null ? fullName : account.getFullName());
+            customer.setEmail(email);
+            customer.setCreatedDate(new Date());
+            customerRepository.save(customer);
+        }
+        return account;
     }
 
 }
