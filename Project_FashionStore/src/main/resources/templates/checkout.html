@@ -1,266 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FashionStore - Thanh toán</title>
+    <title>Thanh Toán - FashionStore</title>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            DEFAULT: '#F06292',
-                            light: '#F48FB1',
-                        },
-                        secondary: {
-                            bg: '#FFF5F7',
-                        },
-                        text: {
-                            main: '#2F2F2F',
-                            muted: '#7A7A7A',
-                        },
-                        divider: '#EAEAEA'
-                    },
-                    fontFamily: {
-                        heading: ['"Playfair Display"', 'serif'],
-                        body: ['"Poppins"', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
-                    },
-                    backgroundImage: {
-                        'btn-gradient': 'linear-gradient(135deg, #F06292 0%, #F48FB1 100%)',
-                    }
-                }
-            }
-        }
-    </script>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        :root { --primary-color: #FF6B9D; --secondary-color: #C44569; --bg-light: #fcfcfc; --dark-text: #2C3E50; }
+        body { background-color: var(--bg-light); padding-top: 100px; font-family: 'Poppins', sans-serif; color: var(--dark-text); }
+        .page-title { font-family: 'Playfair Display', serif; font-weight: 700; text-align: center; margin-bottom: 2rem; }
+        .checkout-box { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #f1f1f1; margin-bottom: 20px; }
+        .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #eee; }
+        .form-control { border-radius: 10px; padding: 12px 15px; border: 1px solid #e0e0e0; }
+        .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(255, 107, 157, 0.25); }
 
-        .custom-radio:checked + label {
-            border-color: #F06292;
-            background-color: #FFF5F7;
-        }
-        .custom-radio:checked + label i {
-            color: #F06292;
-        }
+        /* Custom Radio */
+        .custom-radio-card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 15px; }
+        .form-check-input:checked + .custom-radio-card { border-color: var(--primary-color); background-color: #fff0f5; box-shadow: 0 4px 10px rgba(255, 107, 157, 0.1); }
+        .form-check-input { display: none; }
+        .radio-circle { width: 20px; height: 20px; border: 2px solid #ccc; border-radius: 50%; display: inline-block; position: relative; }
+        .form-check-input:checked + .custom-radio-card .radio-circle::after { content: ''; width: 10px; height: 10px; background: var(--primary-color); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-        .step-active { color: #F06292; font-weight: 600; }
-        .step-inactive { color: #7A7A7A; }
+        .order-summary-box { position: sticky; top: 100px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .summary-total { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 2px dashed #eee; font-weight: 700; font-size: 1.2rem; color: var(--primary-color); }
+
+        .btn-checkout { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; transition: all 0.3s; margin-top: 20px;}
+        .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3); }
+        .product-mini-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
 
-<!-- CUSTOMER HEADER -->
-<header class="sticky top-0 z-50 bg-white shadow-soft">
-    <div class="container mx-auto px-6 max-w-[1320px] h-20 flex items-center justify-between">
-        <a href="index.html" class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-btn-gradient flex items-center justify-center text-white">
-                <i class="fa-solid fa-gem text-sm"></i>
-            </div>
-            <span class="text-2xl font-heading font-bold text-primary">FashionStore</span>
-        </a>
+<div th:replace="~{fragments/header :: header}"></div>
 
-        <nav class="hidden lg:flex items-center gap-8 text-sm font-medium text-text-main">
-            <a href="#" class="hover:text-primary transition">Trang chủ</a>
-            <a href="#" class="hover:text-primary transition">Sản phẩm</a>
-            <a href="#" class="hover:text-primary transition">Hàng mới</a>
-            <a href="#" class="hover:text-primary transition">Khuyến mãi</a>
-            <a href="#" class="hover:text-primary transition">Giới thiệu</a>
-            <a href="#" class="hover:text-primary transition">Liên hệ</a>
-        </nav>
+<main class="container mb-5">
+    <h2 class="page-title">Thanh Toán</h2>
 
-        <div class="flex items-center gap-5">
-            <button class="text-text-main hover:text-primary transition"><i class="fa-solid fa-magnifying-glass"></i></button>
-            <a href="cart.html" class="text-text-main hover:text-primary transition relative">
-                <i class="fa-solid fa-bag-shopping"></i>
-                <span class="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">3</span>
-            </a>
-            <button class="text-text-main hover:text-primary transition"><i class="fa-solid fa-circle-user text-xl"></i></button>
-        </div>
-    </div>
-</header>
-
-<main class="flex-grow py-12">
-    <div class="container mx-auto px-6 max-w-[1200px]">
-
-        <!-- Breadcrumb Steps -->
-        <div class="flex items-center justify-center gap-4 mb-12 text-sm uppercase tracking-widest">
-            <span class="step-inactive">Giỏ hàng</span>
-            <i class="fa-solid fa-chevron-right text-[10px] text-divider"></i>
-            <span class="step-active border-b-2 border-primary pb-1">Thanh toán</span>
-            <i class="fa-solid fa-chevron-right text-[10px] text-divider"></i>
-            <span class="step-inactive">Hoàn tất</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-
-            <!-- Left Column: Shipping & Payment -->
-            <div class="lg:col-span-7 space-y-8">
-
-                <!-- Customer Information -->
-                <section class="bg-white rounded-2xl p-8 shadow-soft">
-                    <h2 class="text-2xl font-heading font-bold mb-6 flex items-center gap-3">
-                        <i class="fa-solid fa-truck-dot text-primary text-lg"></i> Thông tin giao hàng
-                    </h2>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Họ và tên khách hàng</label>
-                            <input type="text" value="Nguyễn Thị Thanh Trúc" class="w-full px-4 py-3 rounded-xl border border-divider focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="Nhập tên của bạn">
+    <form th:action="@{/cart/checkout/place-order}" method="POST">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="checkout-box">
+                    <h4 class="section-title"><i class="bi bi-geo-alt me-2"></i>Thông Tin Giao Hàng</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label>Họ và Tên <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" th:value="${fullName}" class="form-control">
+                            <small class="text-danger" th:if="${errorFullName}" th:text="${errorFullName}"></small>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Số điện thoại</label>
-                                <input type="tel" value="0901 234 567" class="w-full px-4 py-3 rounded-xl border border-divider focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="Số điện thoại liên lạc">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Email (Tùy chọn)</label>
-                                <input type="email" value="truc.nguyen@example.com" class="w-full px-4 py-3 rounded-xl border border-divider focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="Email nhận thông báo">
-                            </div>
+                        <div class="col-md-6">
+                            <label>Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" th:value="${phone}" class="form-control">
+                            <small class="text-danger" th:if="${errorPhone}" th:text="${errorPhone}"></small>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Địa chỉ nhận hàng</label>
-                            <textarea rows="3" class="w-full px-4 py-3 rounded-xl border border-divider focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh</textarea>
+                        <div class="col-12">
+                            <label>Email</label>
+                            <input type="text" name="email" th:value="${email}" class="form-control">
+                            <small class="text-danger" th:if="${errorEmail}" th:text="${errorEmail}"></small>
+                        </div>
+
+                        <div class="col-12">
+                            <label>Địa chỉ nhận hàng chi tiết <span class="text-danger">*</span></label>
+                            <input type="text" name="address" th:value="${address}" class="form-control">
+                            <small class="text-danger" th:if="${errorAddress}" th:text="${errorAddress}"></small>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Ghi chú cho đơn hàng (Tùy chọn)</label>
+                            <textarea class="form-control" name="note" rows="2" placeholder="Giao trong giờ hành chính..." th:text="${note}"></textarea>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Payment Method -->
-                <section class="bg-white rounded-2xl p-8 shadow-soft">
-                    <h2 class="text-2xl font-heading font-bold mb-6 flex items-center gap-3">
-                        <i class="fa-solid fa-credit-card text-primary text-lg"></i> Phương thức thanh toán
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Bank Transfer -->
-                        <div>
-                            <input type="radio" name="payment" id="bank" class="hidden custom-radio" checked>
-                            <label for="bank" class="flex items-center gap-4 p-4 border border-divider rounded-xl cursor-pointer hover:border-primary transition">
-                                <div class="w-10 h-10 flex items-center justify-center text-xl text-text-muted">
-                                    <i class="fa-solid fa-building-columns"></i>
+                <div class="checkout-box">
+                    <h4 class="section-title"><i class="bi bi-truck me-2"></i>Phương Thức Giao Hàng</h4>
+                    <div class="d-flex flex-column gap-3">
+                        <label>
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="standard" checked onchange="updateTotal(30000)">
+                            <div class="custom-radio-card">
+                                <div class="radio-circle"></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">Giao hàng tiêu chuẩn - 30.000đ</div>
+                                    <div class="text-muted small">Nhận hàng trong 3-5 ngày làm việc</div>
                                 </div>
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="express" onchange="updateTotal(50000)">
+                            <div class="custom-radio-card">
+                                <div class="radio-circle"></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">Giao hàng hỏa tốc - 50.000đ</div>
+                                    <div class="text-muted small">Nhận hàng trong 1-2 ngày làm việc</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="checkout-box">
+                    <h4 class="section-title"><i class="bi bi-wallet2 me-2"></i>Phương Thức Thanh Toán</h4>
+                    <div class="d-flex flex-column gap-3">
+                        <label>
+                            <input type="radio" class="form-check-input" name="paymentMethod" value="COD" checked>
+                            <div class="custom-radio-card">
+                                <div class="radio-circle"></div>
                                 <div>
-                                    <p class="font-bold text-sm">Chuyển khoản</p>
-                                    <p class="text-[10px] text-text-muted uppercase tracking-tight">Ngân hàng nội địa</p>
+                                    <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
+                                    <div class="text-muted small">Thanh toán bằng tiền mặt khi shipper giao tới</div>
                                 </div>
-                            </label>
-                        </div>
+                            </div>
+                        </label>
 
-                        <!-- MoMo -->
-                        <div>
-                            <input type="radio" name="payment" id="momo" class="hidden custom-radio">
-                            <label for="momo" class="flex items-center gap-4 p-4 border border-divider rounded-xl cursor-pointer hover:border-primary transition">
-                                <div class="w-10 h-10 flex items-center justify-center text-xl text-text-muted">
-                                    <i class="fa-solid fa-wallet"></i>
-                                </div>
+                        <label>
+                            <input type="radio" class="form-check-input" name="paymentMethod" value="BANKING">
+                            <div class="custom-radio-card">
+                                <div class="radio-circle"></div>
                                 <div>
-                                    <p class="font-bold text-sm">Ví MoMo</p>
-                                    <p class="text-[10px] text-text-muted uppercase tracking-tight">Thanh toán điện tử</p>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Right Column: Order Summary -->
-            <div class="lg:col-span-5">
-                <div class="bg-white rounded-2xl p-8 shadow-soft sticky top-28">
-                    <h2 class="text-2xl font-heading font-bold mb-6 border-b border-divider pb-4">Tóm tắt đơn hàng</h2>
-
-                    <!-- Order Items List -->
-                    <div class="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
-                        <div class="flex gap-4">
-                            <div class="w-16 h-20 rounded-lg bg-secondary-bg overflow-hidden flex-shrink-0">
-                                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&q=80&w=200" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-grow">
-                                <h4 class="text-sm font-bold text-text-main line-clamp-1">Velvet Midi Dress</h4>
-                                <p class="text-[11px] text-text-muted">Size: M | Color: Bordeaux</p>
-                                <div class="flex justify-between items-center mt-1">
-                                    <span class="text-xs">x1</span>
-                                    <span class="text-sm font-semibold">$129.00</span>
+                                    <div class="fw-bold">Chuyển khoản qua ngân hàng (Banking)</div>
+                                    <div class="text-muted small">Chuyển khoản qua thẻ ATM / Internet Banking / Momo</div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="flex gap-4">
-                            <div class="w-16 h-20 rounded-lg bg-secondary-bg overflow-hidden flex-shrink-0">
-                                <img src="https://images.unsplash.com/photo-1539109132314-64775aee808a?auto=format&fit=crop&q=80&w=200" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-grow">
-                                <h4 class="text-sm font-bold text-text-main line-clamp-1">Floral Summer Maxi</h4>
-                                <p class="text-[11px] text-text-muted">Size: S | Color: Pastel Pink</p>
-                                <div class="flex justify-between items-center mt-1">
-                                    <span class="text-xs">x2</span>
-                                    <span class="text-sm font-semibold">$178.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Calculations -->
-                    <div class="space-y-3 border-t border-divider pt-6 mb-8">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-text-muted">Tạm tính</span>
-                            <span class="font-medium">$307.00</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-text-muted">Phí vận chuyển</span>
-                            <span class="text-green-600 font-medium">Miễn phí</span>
-                        </div>
-                        <div class="flex justify-between text-lg font-bold text-text-main pt-3 border-t border-divider">
-                            <span>Tổng cộng</span>
-                            <span class="text-primary">$307.00</span>
-                        </div>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="flex flex-col gap-3">
-                        <button onclick="handlePlaceOrder()" class="w-full py-4 bg-btn-gradient text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all uppercase tracking-wider text-sm">
-                            Đặt hàng ngay
-                        </button>
-                        <button onclick="window.location.href='cart.html'" class="w-full py-4 bg-white border border-divider text-text-muted rounded-xl font-semibold hover:bg-secondary-bg transition text-sm">
-                            Quay lại giỏ hàng
-                        </button>
-                    </div>
-
-                    <div class="mt-6 flex items-center justify-center gap-4 opacity-50 grayscale">
-                        <i class="fa-brands fa-cc-visa text-2xl"></i>
-                        <i class="fa-brands fa-cc-mastercard text-2xl"></i>
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                        </label>
                     </div>
                 </div>
             </div>
 
+            <div class="col-lg-4">
+                <div class="checkout-box order-summary-box">
+                    <h4 class="section-title">Chi Tiết Đơn Hàng</h4>
+
+                    <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                        <div class="d-flex gap-3 mb-3" th:each="item : ${cartItems}">
+                            <img th:src="${item.productVariant.imageUrl}" class="product-mini-img" onerror="this.src='https://placehold.co/60'">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-truncate" style="max-width: 180px;" th:text="${item.productVariant.product.productName}">Tên SP</div>
+                                <div class="text-muted small">
+                                    Size: <span th:text="${item.productVariant.categorySize.sizeName}"></span> |
+                                    Màu: <span th:text="${item.productVariant.color.colorName}"></span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span class="text-muted small" th:text="'x' + ${item.quantity}">x1</span>
+                                    <span class="fw-bold text-primary" th:text="${#numbers.formatDecimal(item.productVariant.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted">
+
+                    <div class="summary-item">
+                        <span class="text-muted">Tạm tính:</span>
+                        <span class="fw-bold" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="text-muted">Phí vận chuyển:</span>
+                        <span class="fw-bold" id="shippingFee">30.000đ</span>
+                    </div>
+
+                    <div class="summary-total">
+                        <span>Tổng thanh toán:</span>
+                        <span id="totalAmount" th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                    </div>
+
+                    <button type="submit" class="btn-checkout">ĐẶT HÀNG</button>
+                    <div class="text-center mt-3">
+                        <a th:href="@{/cart}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Quay lại giỏ hàng</a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
 </main>
 
-<footer class="bg-white border-t border-divider py-12 mt-12">
-    <div class="container mx-auto px-6 max-w-[1320px] text-center">
-        <p class="text-xs text-text-muted">&copy; 2024 FashionStore System. Thiết kế thanh lịch & Trải nghiệm cao cấp.</p>
-    </div>
-</footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+const subtotal = /*[[${total}]]*/ 0;
+
+function updateTotal(shippingFee) {
+    const total = subtotal + shippingFee;
+    document.getElementById('shippingFee').textContent = shippingFee.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
+}
+</script>
 
 </body>
 </html>

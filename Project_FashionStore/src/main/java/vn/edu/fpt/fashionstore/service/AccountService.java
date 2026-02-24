@@ -2,9 +2,9 @@ package vn.edu.fpt.fashionstore.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @Service
 public class AccountService {
-    
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -27,13 +27,13 @@ public class AccountService {
 
     @Autowired
     private RoleRepository roleRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     // Khai báo Enum hoặc Constant
     public static final String ROLE_CUSTOMER = "Customer";
-    
+
     /**
      * Xác thực đăng nhập
      * @param username - username hoặc email
@@ -51,10 +51,24 @@ public class AccountService {
 
         Account account = accountOpt.get();
 
-        // 2. Kiểm tra password với BCrypt
-        // Nếu dùng Google Login, password có thể null. Cần check null trước khi so sánh
-        if (account.getPassword() == null || !passwordEncoder.matches(password, account.getPassword())) {
-            return null; // Sai mật khẩu hoặc tài khoản này chỉ dùng login qua Google
+        // 2. Kiểm tra password
+        // Xử lý cả plain text và hashed passwords
+        boolean passwordValid = false;
+
+        if (account.getPassword() == null) {
+            return null; // Tài khoản này chỉ dùng login qua Google
+        }
+
+        // Thử verify với BCrypt trước (cho passwords đã được mã hóa)
+        try {
+            passwordValid = passwordEncoder.matches(password, account.getPassword());
+        } catch (Exception e) {
+            // Nếu có lỗi (có thể do password không được hash), thử so sánh plain text
+            passwordValid = account.getPassword().equals(password);
+        }
+
+        if (!passwordValid) {
+            return null; // Sai mật khẩu
         }
 
         // 3. Kiểm tra status (dùng .equalsIgnoreCase để tránh lỗi viết hoa/thường)
@@ -64,28 +78,28 @@ public class AccountService {
 
         return account;
     }
-    
+
     /**
      * Tìm account theo username
      */
     public Optional<Account> findByUsername(String username) {
         return accountRepository.findByUsername(username);
     }
-    
+
     /**
      * Tìm account theo email
      */
     public Optional<Account> findByEmail(String email) {
         return accountRepository.findByEmail(email);
     }
-    
+
     /**
      * Lưu account mới (đăng ký)
      */
     public Account saveAccount(Account account) {
         return accountRepository.save(account);
     }
-    
+
 
     /**
      * Kiểm tra email đã tồn tại chưa
@@ -93,7 +107,7 @@ public class AccountService {
     public boolean existsByEmail(String email) {
         return accountRepository.existsByEmail(email);
     }
-    
+
     /**
      * Đăng ký tài khoản mới
      * @param email - Email
@@ -132,7 +146,12 @@ public class AccountService {
         Account newAccount = new Account();
         newAccount.setUsername(finalUsername);
         newAccount.setEmail(email);
-        newAccount.setPassword(password);
+        // Hash password trước khi lưu
+        if (password != null && !password.equals("OAUTH2_USER")) {
+            newAccount.setPassword(passwordEncoder.encode(password));
+        } else {
+            newAccount.setPassword(password); // For OAuth2 users
+        }
         newAccount.setFullName(fullName);
         newAccount.setPhone(phoneNumber);
         newAccount.setStatus("active");
@@ -223,10 +242,10 @@ public class AccountService {
         vn.edu.fpt.fashionstore.entity.Account acc = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        // Trả về User của Spring Security với password đã được hash bằng BCrypt
+        // Trả về User của Spring Security
         return org.springframework.security.core.userdetails.User
                 .withUsername(acc.getEmail())
-                .password(acc.getPassword()) // Password đã được hash bằng BCrypt
+                .password(acc.getPassword()) // Vì dùng NoOp nên nó sẽ so sánh trực tiếp chữ thường
                 .roles("USER")
                 .build();
     }
@@ -269,7 +288,21 @@ public class AccountService {
 
             return savedAccount;
         }
-        return existAccount.get();
+        // Account đã tồn tại: backfill Customer nếu thiếu
+        Account account = existAccount.get();
+        boolean isCustomerRole = account.getRole() != null &&
+                "Customer".equalsIgnoreCase(account.getRole().getRoleName());
+        boolean hasNoCustomer = account.getCustomers() == null || account.getCustomers().isEmpty();
+
+        if (isCustomerRole && hasNoCustomer) {
+            Customer customer = new Customer();
+            customer.setAccount(account);
+            customer.setFullName(fullName != null ? fullName : account.getFullName());
+            customer.setEmail(email);
+            customer.setCreatedDate(new Date());
+            customerRepository.save(customer);
+        }
+        return account;
     }
 
 }
