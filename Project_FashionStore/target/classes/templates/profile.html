@@ -56,6 +56,20 @@
             <div class="underline"></div>
         </div>
 
+        <!-- Success Message -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; margin-bottom: 2rem;">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; margin-bottom: 2rem;">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="row">
             <div class="col-lg-4 mb-4">
                 <div class="profile-card">
@@ -132,7 +146,7 @@
                 <div class="profile-card">
                     <h4 style="margin-bottom: 1.5rem;">Account Settings</h4>
                     <div class="d-flex flex-wrap gap-3">
-                        <a th:href="@{/change-password}" class="settings-btn settings-btn-primary" style="text-decoration: none;">
+                        <a th:href="@{/customer/change-password}" class="settings-btn settings-btn-primary" style="text-decoration: none;">
                             <i class="bi bi-lock"></i> Change Password
                         </a>
 

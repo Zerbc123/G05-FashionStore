@@ -231,14 +231,6 @@ public class HomeController {
         return "redirect:/login?logout";
     }
 
-    @GetMapping("/change-password")
-    public String changePassword(HttpSession session, Model model) {
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "change_password";
-    }
-
     @PostMapping("/register")
     public String handleRegister(@RequestParam String firstName,
                                  @RequestParam String lastName,

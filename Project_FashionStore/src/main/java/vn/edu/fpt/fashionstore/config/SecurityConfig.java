@@ -33,19 +33,14 @@ public class SecurityConfig {
                         // 2. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
                         .requestMatchers("/", "/home", "/products/**", "/product-details/**", "/search/**").permitAll()
 
-                        // 3. Auth pages: Trang login/register/verify-otp/edit-profile
-                        .requestMatchers(
-                                "/login", "/register", "/verify-otp",
-                                "/customer/change-password", "/customer/profile"
-                        ).authenticated()
+                        // 3. Auth pages: Trang login/register/verify-otp không cần login
+                        .requestMatchers("/login", "/register", "/verify-otp").permitAll()
 
-                        .requestMatchers("/customer/**").authenticated()
+                        // 4. Admin và Staff routes: Cần đăng nhập qua Spring Security
+                        .requestMatchers("/admin/**", "/staff/**").authenticated()
 
-                        // 4. CHẶN: Chỉ khi thao tác với Giỏ hàng, Thanh toán, và Profile cá nhân mới yêu cầu Login
-                        // Lưu ý: "/cart/**" sẽ chặn cả trang xem giỏ hàng và API thêm vào giỏ
-                        .requestMatchers("/cart/**", "/checkout/**", "/order/**", "/profile/").authenticated()
-
-                        // 5. Các request khác (nếu có)
+                        // 5. Các route khác: Cho phép truy cập, controllers sẽ tự kiểm tra session
+                        // Vì app dùng custom session-based auth, không dùng Spring Security authentication
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable()); // Vẫn dùng Custom Login của bạn

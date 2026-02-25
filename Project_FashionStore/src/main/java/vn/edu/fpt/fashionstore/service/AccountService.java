@@ -44,7 +44,7 @@ public class AccountService {
      * @return Account nếu đăng nhập thành công, null nếu thất bại
      */
     public Account authenticate(String username, String password) {
-
+   
         // 1. Tìm account theo email
         Optional<Account> accountOpt = accountRepository.findByEmail(username);
 
@@ -53,7 +53,7 @@ public class AccountService {
         }
 
         Account account = accountOpt.get();
-
+    
         // 2. Kiểm tra password
         // Xử lý cả plain text và hashed passwords
         boolean passwordValid = false;
@@ -66,6 +66,7 @@ public class AccountService {
         try {
             passwordValid = passwordEncoder.matches(password, account.getPassword());
         } catch (Exception e) {
+            System.out.println("[DEBUG AUTH] BCrypt failed, trying plain text comparison");
             // Nếu có lỗi (có thể do password không được hash), thử so sánh plain text
             passwordValid = account.getPassword().equals(password);
         }
@@ -73,6 +74,7 @@ public class AccountService {
         if (!passwordValid) {
             return null; // Sai mật khẩu
         }
+
 
         // 3. Kiểm tra status (dùng .equalsIgnoreCase để tránh lỗi viết hoa/thường)
         if (!"Active".equalsIgnoreCase(account.getStatus())) {
@@ -315,6 +317,7 @@ public class AccountService {
      * @param newPassword - Mật khẩu mới
      * @return true nếu thành công, false nếu thất bại
      */
+    @Transactional
     public boolean changePassword(String email, String currentPassword, String newPassword) {
         try {
             // 1. Tìm account theo email

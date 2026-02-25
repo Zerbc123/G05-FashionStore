@@ -28,7 +28,7 @@ public class CustomerController {
         if (!isCustomer(session)) {
             return "redirect:/login";
         }
-        return "customer/customer_change_password";
+        return "change_password";
     }
 
     @PostMapping("/change-password")
@@ -65,10 +65,10 @@ public class CustomerController {
 
         if (success) {
             ra.addFlashAttribute("success", "Đổi mật khẩu thành công!");
-            return "redirect:/customer/profile";
+            return "redirect:/profile";
         } else {
             ra.addFlashAttribute("error", "Mật khẩu hiện tại không đúng!");
-            return "redirect:/templates/change-password";
+            return "redirect:/customer/change-password";
         }
     }
 }
