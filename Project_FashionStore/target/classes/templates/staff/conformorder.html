@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - Staff Panel</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5f6fa;
+            min-height: 100vh;
+        }
+
+        /* Staff Navbar */
+        /* Staff navbar styles được định nghĩa trong header fragment */
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 0;
+            margin-top: 80px; /* Tránh bị header che */
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            font-size: 2rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .stat-icon.pending { background: #fff3cd; color: #856404; }
+        .stat-icon.confirmed { background: #d4edda; color: #155724; }
+        .stat-icon.shipping { background: #cce5ff; color: #004085; }
+        .stat-icon.completed { background: #d1ecf1; color: #0c5460; }
+
+        .stat-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin: 0;
+        }
+
+        .stat-info p {
+            color: #636e72;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .filter-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        /* Order Card */
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .order-id {
+            font-weight: 700;
+            color: #2d3436;
+            font-size: 1.1rem;
+        }
+
+        .order-date {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.pending { background: #fff3cd; color: #856404; }
+        .badge.confirmed { background: #d4edda; color: #155724; }
+        .badge.shipping { background: #cce5ff; color: #004085; }
+        .badge.completed { background: #d1ecf1; color: #0c5460; }
+        .badge.cancelled { background: #f8d7da; color: #721c24; }
+
+        .order-customer {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .customer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .customer-info h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .customer-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        .order-items {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .order-item:not(:last-child) {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: #2d3436;
+        }
+
+        .item-quantity {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .total-label {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .total-amount {
+            font-weight: 700;
+            color: #11998e;
+            font-size: 1.3rem;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn-reject {
+            flex: 1;
+            padding: 12px;
+            background: #dc3545;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-view {
+            padding: 12px 20px;
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-view:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #636e72;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .order-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Staff Header -->
+<div th:replace="~{fragments/header :: staffheader}"></div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="bi bi-clipboard-check"></i> Order Confirmation</h1>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>12</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon confirmed">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>8</h3>
+                    <p>Confirmed</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon shipping">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>15</h3>
+                    <p>Shipping</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon completed">
+                    <i class="bi bi-check2-all"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>45</h3>
+                    <p>Completed Today</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrders('all')">
+                <i class="bi bi-list"></i> All Orders
+            </button>
+            <button class="filter-tab" onclick="filterOrders('pending')">
+                <i class="bi bi-clock"></i> Pending
+            </button>
+            <button class="filter-tab" onclick="filterOrders('confirmed')">
+                <i class="bi bi-check-circle"></i> Confirmed
+            </button>
+            <button class="filter-tab" onclick="filterOrders('shipping')">
+                <i class="bi bi-truck"></i> Shipping
+            </button>
+            <button class="filter-tab" onclick="filterOrders('completed')">
+                <i class="bi bi-check2-all"></i> Completed
+            </button>
+        </div>
+
+        <!-- Orders List -->
+        <div id="ordersList">
+            <!-- Order Card 1 - Pending -->
+            <div class="order-card" data-status="pending">
+                <div class="order-header">
+                    <div>
+                        <div class="order-id">#ORD-2024-001</div>
+                        <div class="order-date">Jan 23, 2026 - 10:30 AM</div>
+                    </div>
+                    <span class="badge pending">Pending</span>
+                </div>
+
+                <div class="order-customer">
+                    <div class="customer-avatar">JD</div>
+                    <div class="customer-info">
+                        <h6>John Doe</h6>
+                        <p><i class="bi bi-telephone"></i> +84 123 456 789</p>
+                        <p><i class="bi bi-geo-alt"></i> 123 Main St, Hanoi, Vietnam</p>
+                    </div>
+                </div>
+
+                <div class="order-items">
+                    <div class="order-item">
+                        <span class="item-name">Classic White T-Shirt</span>
+                        <span class="item-quantity">x2 - $59.98</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="item-name">Blue Denim Jeans</span>
+                        <span class="item-quantity">x1 - $79.99</span>
+                    </div>
+                </div>
+
+                <div class="order-total">
+                    <span class="total-label">Total Amount:</span>
+                    <span class="total-amount">$139.97</span>
+                </div>
+
+                <div class="order-actions">
+                    <button class="btn-confirm" onclick="confirmOrder('ORD-2024-001')">
+                        <i class="bi bi-check-circle"></i> Confirm Order
+                    </button>
+                    <button class="btn-reject" onclick="rejectOrder('ORD-2024-001')">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button class="btn-view" onclick="viewDetails('ORD-2024-001')">
+                        <i class="bi bi-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+
+            <!-- Order Card 2 - Pending -->
+            <div class="order-card" data-status="pending">
+                <div class="order-header">
+                    <div>
+                        <div class="order-id">#ORD-2024-002</div>
+                        <div class="order-date">Jan 23, 2026 - 11:15 AM</div>
+                    </div>
+                    <span class="badge pending">Pending</span>
+                </div>
+
+                <div class="order-customer">
+                    <div class="customer-avatar">JS</div>
+                    <div class="customer-info">
+                        <h6>Jane Smith</h6>
+                        <p><i class="bi bi-telephone"></i> +84 987 654 321</p>
+                        <p><i class="bi bi-geo-alt"></i> 456 Park Ave, Ho Chi Minh, Vietnam</p>
+                    </div>
+                </div>
+
+                <div class="order-items">
+                    <div class="order-item">
+                        <span class="item-name">Summer Dress</span>
+                        <span class="item-quantity">x1 - $89.99</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="item-name">Leather Handbag</span>
+                        <span class="item-quantity">x1 - $149.99</span>
+                    </div>
+                </div>
+
+                <div class="order-total">
+                    <span class="total-label">Total Amount:</span>
+                    <span class="total-amount">$239.98</span>
+                </div>
+
+                <div class="order-actions">
+                    <button class="btn-confirm" onclick="confirmOrder('ORD-2024-002')">
+                        <i class="bi bi-check-circle"></i> Confirm Order
+                    </button>
+                    <button class="btn-reject" onclick="rejectOrder('ORD-2024-002')">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button class="btn-view" onclick="viewDetails('ORD-2024-002')">
+                        <i class="bi bi-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+
+            <!-- Order Card 3 - Confirmed -->
+            <div class="order-card" data-status="confirmed">
+                <div class="order-header">
+                    <div>
+                        <div class="order-id">#ORD-2024-003</div>
+                        <div class="order-date">Jan 23, 2026 - 09:45 AM</div>
+                    </div>
+                    <span class="badge confirmed">Confirmed</span>
+                </div>
+
+                <div class="order-customer">
+                    <div class="customer-avatar">MB</div>
+                    <div class="customer-info">
+                        <h6>Mike Brown</h6>
+                        <p><i class="bi bi-telephone"></i> +84 555 123 456</p>
+                        <p><i class="bi bi-geo-alt"></i> 789 Oak St, Da Nang, Vietnam</p>
+                    </div>
+                </div>
+
+                <div class="order-items">
+                    <div class="order-item">
+                        <span class="item-name">Running Shoes</span>
+                        <span class="item-quantity">x1 - $129.99</span>
+                    </div>
+                </div>
+
+                <div class="order-total">
+                    <span class="total-label">Total Amount:</span>
+                    <span class="total-amount">$129.99</span>
+                </div>
+
+                <div class="order-actions">
+                    <button class="btn-view" onclick="viewDetails('ORD-2024-003')">
+                        <i class="bi bi-eye"></i> View Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (required for responsive navigation) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

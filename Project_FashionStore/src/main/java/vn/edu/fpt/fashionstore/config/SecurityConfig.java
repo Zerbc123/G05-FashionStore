@@ -34,11 +34,16 @@ public class SecurityConfig {
                         .requestMatchers("/", "/home", "/products/**", "/product-details/**", "/search/**").permitAll()
 
                         // 3. Auth pages: Trang login/register/verify-otp/edit-profile
-                        .requestMatchers("/login", "/register", "/verify-otp", "/edit-profile", "/update-profile").permitAll()
+                        .requestMatchers(
+                                "/login", "/register", "/verify-otp",
+                                "/customer/change-password", "/customer/profile"
+                        ).authenticated()
+
+                        .requestMatchers("/customer/**").authenticated()
 
                         // 4. CHẶN: Chỉ khi thao tác với Giỏ hàng, Thanh toán, và Profile cá nhân mới yêu cầu Login
                         // Lưu ý: "/cart/**" sẽ chặn cả trang xem giỏ hàng và API thêm vào giỏ
-                        .requestMatchers("/cart/**", "/checkout/**", "/order/**", "/profile/**").authenticated()
+                        .requestMatchers("/cart/**", "/checkout/**", "/order/**", "/profile/").authenticated()
 
                         // 5. Các request khác (nếu có)
                         .anyRequest().permitAll()

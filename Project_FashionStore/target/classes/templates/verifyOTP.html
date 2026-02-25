@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="30;url=/fashionstore/register-expired">
+    <title>Verify Email - Fashion Store</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        .register-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 40px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .register-left h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 20px; }
+        .register-right { padding: 60px 40px; }
+        .register-right h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 10px; color: #333; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 5px;
+            font-weight: 700;
+        }
+        .form-control:focus { border-color: #667eea; outline: none; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .btn-verify {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-verify:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+        .alert { padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; }
+        .alert-danger { background: #fee; color: #c33; border: 1px solid #fcc; }
+        .resend-link { text-align: center; margin-top: 25px; color: #666; font-size: 0.9rem; }
+        .resend-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .register-container { grid-template-columns: 1fr; }
+            .register-left { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <div class="register-left">
+        <div>
+            <h1>Almost There!</h1>
+            <p>We've sent a 6-digit code to your email. Please check your inbox.</p>
+            <svg class="illustration" viewBox="0 0 500 500" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 150 L400 150 L400 350 L100 350 Z" fill="none" stroke="white" stroke-width="10"/>
+                <path d="M100 150 L250 250 L400 150" fill="none" stroke="white" stroke-width="10"/>
+                <circle cx="250" cy="380" r="30" fill="white" opacity="0.3"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="register-right">
+        <h2>Verify Email</h2>
+        <p>Enter the OTP code to secure your account</p>
+
+        <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 10px 15px; margin-bottom: 20px; border-radius: 4px;">
+            <small style="color: #555; display: block;">
+                <i class="bi bi-clock-history"></i> Mã xác thực có hiệu lực trong <b>30 giây</b>.
+            </small>
+        </div>
+
+        <div class="alert alert-danger" th:if="${error}">
+            <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <form th:action="@{/verify-otp}" method="post">
+            <div class="form-group">
+                <label for="otp"><i class="bi bi-shield-check"></i> One-Time Password</label>
+                <input type="text"
+                       class="form-control"
+                       id="otp"
+                       name="otp"
+                       placeholder="000000"
+                       maxlength="6"
+                       required
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                <small class="text-muted mt-2 d-block">Check your spam folder if you don't see the email.</small>
+            </div>
+
+            <button type="submit" class="btn-verify">
+                <i class="bi bi-patch-check"></i> Verify & Complete
+            </button>
+        </form>
+
+        <div class="resend-link">
+            Didn't receive the code? <a href="#" onclick="alert('Please go back to Register to get a new code!')">Try again</a>
+        </div>
+
+        <div class="resend-link" style="margin-top: 10px;">
+            <a th:href="@{/register}" style="color: #666; font-weight: 400;">
+                <i class="bi bi-arrow-left"></i> Back to Register
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Customer Support - Staff</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f5f6fa; }
+        /* Staff navbar styles được định nghĩa trong header fragment */
+        .main-content { 
+            padding: 40px 0; 
+            margin-top: 80px; /* Tránh bị header che */
+        }
+        .page-header h1 { font-family: 'Playfair Display', serif; color: #2d3436; font-size: 2rem; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 3px 15px rgba(0,0,0,0.08); text-align: center; }
+        .stat-card h3 { font-size: 1.8rem; font-weight: 700; color: #2d3436; margin: 0; }
+        .stat-card p { color: #636e72; margin: 0; font-size: 0.85rem; }
+        .ticket-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .ticket-card h3 { font-family: 'Playfair Display', serif; color: #2d3436; margin-bottom: 20px; }
+        .ticket-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #f0f0f0; border-radius: 10px; margin-bottom: 15px; transition: all 0.3s; }
+        .ticket-item:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .ticket-info h6 { margin: 0; font-weight: 600; color: #2d3436; }
+        .ticket-info p { margin: 0; font-size: 0.85rem; color: #636e72; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .badge.open { background: #fff3cd; color: #856404; }
+        .badge.in-progress { background: #cce5ff; color: #004085; }
+        .badge.resolved { background: #d4edda; color: #155724; }
+        .btn-reply { padding: 8px 15px; background: #11998e; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-reply:hover { background: #0e7c6f; }
+    </style>
+</head>
+<body>
+<!-- Staff Header -->
+<div th:replace="~{fragments/header :: staffheader}"></div>
+<div class="main-content">
+    <div class="container">
+        <div class="page-header"><h1><i class="bi bi-headset"></i> Customer Support Tickets</h1></div>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>15</h3><p>Open Tickets</p></div>
+            <div class="stat-card"><h3>8</h3><p>In Progress</p></div>
+            <div class="stat-card"><h3>42</h3><p>Resolved Today</p></div>
+            <div class="stat-card"><h3>3.5h</h3><p>Avg Response</p></div>
+        </div>
+        <div class="ticket-card">
+            <h3>Active Support Tickets</h3>
+            <div class="ticket-item">
+                <div class="ticket-info">
+                    <h6>Ticket #SUP-145 - Order Not Received</h6>
+                    <p>Customer: John Doe | Created: 2 hours ago</p>
+                </div>
+                <div>
+                    <span class="badge open">Open</span>
+                    <button class="btn-reply ms-2"><i class="bi bi-reply"></i> Reply</button>
+                </div>
+            </div>
+            <div class="ticket-item">
+                <div class="ticket-info">
+                    <h6>Ticket #SUP-144 - Product Quality Issue</h6>
+                    <p>Customer: Jane Smith | Created: 5 hours ago</p>
+                </div>
+                <div>
+                    <span class="badge in-progress">In Progress</span>
+                    <button class="btn-reply ms-2"><i class="bi bi-reply"></i> Reply</button>
+                </div>
+            </div>
+            <div class="ticket-item">
+                <div class="ticket-info">
+                    <h6>Ticket #SUP-143 - Refund Request</h6>
+                    <p>Customer: Mike Brown | Created: 1 day ago</p>
+                </div>
+                <div>
+                    <span class="badge open">Open</span>
+                    <button class="btn-reply ms-2"><i class="bi bi-reply"></i> Reply</button>
+                </div>
+            </div>
+            <div class="ticket-item">
+                <div class="ticket-info">
+                    <h6>Ticket #SUP-142 - Size Exchange</h6>
+                    <p>Customer: Sarah Davis | Created: 1 day ago</p>
+                </div>
+                <div>
+                    <span class="badge resolved">Resolved</span>
+                    <button class="btn-reply ms-2"><i class="bi bi-eye"></i> View</button>
+                </div>
+            </div>
+            <div class="ticket-item">
+                <div class="ticket-info">
+                    <h6>Ticket #SUP-141 - Payment Issue</h6>
+                    <p>Customer: Robert Johnson | Created: 2 days ago</p>
+                </div>
+                <div>
+                    <span class="badge in-progress">In Progress</span>
+                    <button class="btn-reply ms-2"><i class="bi bi-reply"></i> Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

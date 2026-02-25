@@ -31,6 +31,9 @@ public class AccountService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+
+
     // Khai báo Enum hoặc Constant
     public static final String ROLE_CUSTOMER = "Customer";
 
@@ -303,6 +306,45 @@ public class AccountService {
             customerRepository.save(customer);
         }
         return account;
+    }
+
+    /**
+     * Đổi mật khẩu người dùng
+     * @param email - Email người dùng
+     * @param currentPassword - Mật khẩu hiện tại
+     * @param newPassword - Mật khẩu mới
+     * @return true nếu thành công, false nếu thất bại
+     */
+    public boolean changePassword(String email, String currentPassword, String newPassword) {
+        try {
+            // 1. Tìm account theo email
+            Optional<Account> accountOpt = accountRepository.findByEmail(email);
+            if (!accountOpt.isPresent()) {
+                return false;
+            }
+
+            Account account = accountOpt.get();
+
+            // 2. Kiểm tra mật khẩu hiện tại
+            if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+                return false;
+            }
+
+            // 3. Hash mật khẩu mới và lưu
+            account.setPassword(passwordEncoder.encode(newPassword));
+            accountRepository.save(account);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+    public Account getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email).orElse(null);
     }
 
 }
