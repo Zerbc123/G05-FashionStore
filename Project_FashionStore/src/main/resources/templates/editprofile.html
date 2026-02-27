@@ -53,6 +53,14 @@
                     Vui lòng cập nhật <strong>Số điện thoại</strong> và <strong>Địa chỉ</strong> để tiếp tục mua sắm!
                 </div>
 
+                <div class="alert alert-danger" th:if="${error}">
+                    <i class="bi bi-exclamation-circle me-2"></i> <span th:text="${error}"></span>
+                </div>
+
+                <div class="alert alert-success" th:if="${success}">
+                    <i class="bi bi-check-circle me-2"></i> <span th:text="${success}"></span>
+                </div>
+
                 <div class="profile-card">
                     <div class="avatar-upload">
                         <img th:src="${'https://ui-avatars.com/api/?name=' + account.fullName + '&background=random'}"
@@ -79,13 +87,18 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Số điện thoại *</label>
                                 <input type="tel" name="phone" class="form-control"
-                                       th:value="${account.phone != null && account.phone != 0 ? account.phone : ''}"
+                                       th:value="${account.phone != null && account.phone != '' ? account.phone : ''}"
                                        placeholder="Nhập số điện thoại" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ngày sinh</label>
-                                <input type="date" name="dateOfBirth" class="form-control" th:value="${customer.dateOfBirth}">
+                                <input type="date" name="dateOfBirth" id="dateOfBirth" class="form-control"
+                                       th:value="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'yyyy-MM-dd') : ''}"
+                                       min="1950-01-01"
+                                       max="[[${#dates.format(#dates.createNow(),'yyyy-MM-dd')}]]">
+                                <div id="dobError" class="text-danger small mt-1"></div>
                             </div>
+
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Giới tính</label>
@@ -96,29 +109,11 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Địa chỉ *</label>
-                            <textarea name="address" class="form-control" rows="3"
-                                      th:text="${customer.address}" placeholder="Nhập địa chỉ giao hàng của bạn" required></textarea>
+                            <!-- address fragment will populate hidden address and required selects -->
+                            <div th:replace="~{fragments/addressDropdown :: addressSelect(${customer.address})}"></div>
                         </div>
 
-                        <div th:if="${account.password != 'OAUTH2_USER'}">
-                            <hr class="my-4">
-                            <h3 class="section-title">Đổi Mật Khẩu</h3>
-                            <div class="mb-3">
-                                <label class="form-label">Mật khẩu hiện tại</label>
-                                <input type="password" name="currentPassword" class="form-control">
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mật khẩu mới</label>
-                                    <input type="password" name="newPassword" class="form-control">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Xác nhận mật khẩu</label>
-                                    <input type="password" name="confirmPassword" class="form-control">
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div class="text-center mt-4">
                             <button type="submit" class="save-btn">
@@ -155,6 +150,67 @@
         <div class="footer-bottom"><p>&copy; 2026 FashionStore. All rights reserved.</p></div>
     </div>
 </footer>
+
+<script>
+    (function(){
+        const dob = document.getElementById('dateOfBirth');
+        const err = document.getElementById('dobError');
+        if (!dob) return;
+        const minDate = new Date('1950-01-01');
+        const maxDate = new Date();
+        
+        function showError(msg) {
+            if (err) err.textContent = msg;
+        }
+
+        function validate() {
+            showError('');
+            const raw = dob.value;
+            if (!raw) return; // empty is allowed
+
+            // try built-in parser first
+            let d = dob.valueAsDate;
+            if (d && !isNaN(d.getTime())) {
+                // check bounds
+                if (d < minDate || d > maxDate) {
+                    showError('Năm sinh phải nằm trong khoảng 1950 đến hôm nay.');
+                    return false;
+                }
+                return true;
+            }
+
+            // if valueAsDate failed (e.g. crazy year like 200000), attempt simple year extraction
+            const m = raw.match(/(\d{4})/g);
+            if (m && m.length > 0) {
+                const year = parseInt(m[0],10);
+                const currentYear = maxDate.getFullYear();
+                if (year < 1950 || year > currentYear) {
+                    showError('Năm sinh phải nằm trong khoảng 1950 đến hôm nay.');
+                    return false;
+                }
+                // still accept if year is ok; we can't easily create a valid Date
+                return true;
+            }
+
+            // crap input that didn't parse
+            showError('Định dạng ngày sinh không hợp lệ.');
+            return false;
+        }
+
+        dob.addEventListener('input', validate);
+        dob.addEventListener('blur', validate);
+
+        // block form submit if invalid
+        const form = dob.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!validate()) {
+                    e.preventDefault();
+                }
+            });
+        }
+    })();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

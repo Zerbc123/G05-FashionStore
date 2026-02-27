@@ -169,12 +169,13 @@
                 <div class="input-group md:col-span-2">
                     <label for="password">Initial Password</label>
                     <div class="relative">
-                        <input type="password" id="password" class="form-input pr-12" placeholder="Thiết lập mật khẩu ban đầu" required>
+                        <input type="password" id="password" class="form-input pr-12" placeholder="6 ký tự chữ hoặc số" required
+                               pattern="^[A-Za-z0-9]{6}$" minlength="6" maxlength="6" title="Mật khẩu chỉ gồm 6 ký tự chữ và số">
                         <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition">
                             <i class="fa-solid fa-eye text-sm"></i>
                         </button>
                     </div>
-                    <p class="mt-2 text-[11px] text-text-muted italic">Mật khẩu nên bao gồm chữ cái, số và ký tự đặc biệt.</p>
+                    <p class="mt-2 text-[11px] text-text-muted italic">Mật khẩu bắt buộc đúng 6 ký tự chữ và số, không có ký tự đặc biệt.</p>
                 </div>
 
             </div>

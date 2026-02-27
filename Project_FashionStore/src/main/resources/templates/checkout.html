@@ -68,7 +68,7 @@
 
                         <div class="col-12">
                             <label>Địa chỉ nhận hàng chi tiết <span class="text-danger">*</span></label>
-                            <input type="text" name="address" th:value="${address}" class="form-control">
+                            <div th:replace="~{fragments/addressDropdown :: addressSelect(${address})}"></div>
                             <small class="text-danger" th:if="${errorAddress}" th:text="${errorAddress}"></small>
                         </div>
 

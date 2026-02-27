@@ -119,7 +119,7 @@
                         <div class="col-md-6">
                             <div class="info-item">
                                 <div class="info-label">Phone Number</div>
-                                <div class="info-value" th:text="${account.phone != null && account.phone != 0 ? '' + account.phone : 'Chưa cập nhật'}">0912345678</div>
+                                <div class="info-value" th:text="${account.phone != null && account.phone != '' ? account.phone : 'Chưa cập nhật'}">0912345678</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -128,12 +128,14 @@
                                 <div class="info-value" th:text="${customer.gender == true ? 'Nam' : 'Nữ'}">Giới tính</div>
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="info-item">
-                                <div class="info-label">Birthday</div>
-                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth, 'dd/MM/yyyy') : 'Not updated'}">Date</div>
+                                <div class="info-label">Date of Birth</div>
+                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="info-item">
                                 <div class="info-label">Default Address</div>

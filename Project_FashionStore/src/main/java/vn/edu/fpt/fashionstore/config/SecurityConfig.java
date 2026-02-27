@@ -36,8 +36,9 @@ public class SecurityConfig {
                         // 3. Auth pages: Trang login/register/verify-otp không cần login
                         .requestMatchers("/login", "/register", "/verify-otp").permitAll()
 
-                        // 4. Admin và Staff routes: Cần đăng nhập qua Spring Security
-                        .requestMatchers("/admin/**", "/staff/**").authenticated()
+                        // 4. Admin và Staff routes: Cho phép truy cập, controllers sẽ tự kiểm tra session
+                        // Vì app dùng custom session-based auth, không dùng Spring Security authentication
+                        .requestMatchers("/admin/**", "/staff/**").permitAll()
 
                         // 5. Các route khác: Cho phép truy cập, controllers sẽ tự kiểm tra session
                         // Vì app dùng custom session-based auth, không dùng Spring Security authentication

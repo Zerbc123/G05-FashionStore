@@ -124,10 +124,11 @@
                 <label for="password"><i class="bi bi-lock"></i> Password</label>
                 <div class="password-toggle">
 
-                    <!-- Password input - minimum 6 characters -->
+                    <!-- Password must be exactly 6 alphanumeric characters -->
                     <input type="password" class="form-control" id="password" name="password"
-                           placeholder="Enter your password (min 6 characters)" required
-                           minlength="6">
+                           placeholder="6 ký tự, chữ hoặc số" required
+                           pattern="^[A-Za-z0-9]{6}$" minlength="6" maxlength="6"
+                           title="Mật khẩu chỉ gồm 6 ký tự chữ và số" >
 
                 </div>
             </div>

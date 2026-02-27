@@ -8,8 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
 @Controller
@@ -117,6 +115,28 @@ public class AdminController {
         return "profile";
     }
 
+    // ======== ADMIN PROFILE ========
+
+    @GetMapping("/profile")
+    public String adminProfile(HttpSession session, Model model) {
+        if (!isAdmin(session)) return "redirect:/login";
+
+        String email = (String) session.getAttribute("user");
+        if (email == null) return "redirect:/login";
+
+        var admin = accountService.getAccountByEmail(email);
+
+        if (admin == null) {
+            model.addAttribute("error", "Không tìm thấy thông tin quản trị viên!");
+            return "admin/admin_profile";
+        }
+
+        model.addAttribute("title", "Admin Profile");
+        model.addAttribute("admin", admin);
+
+        return "admin/admin_profile";
+    }
+
     // Chỉnh sửa khách hàng
     @GetMapping("/customers/edit/{id}")
     public String editCustomer(@PathVariable String id, HttpSession session, Model model) {
@@ -178,56 +198,7 @@ public class AdminController {
         model.addAttribute("title", "Reports");
         return "admin/reports";
     }
-
-    // ==================== ADMIN CHANGE PASSWORD ====================
-
-    @GetMapping("/change-password")
-    public String adminChangePasswordPage(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Change Password");
-        return "admin/admin_change_password";
-    }
-
-    @PostMapping("/change-password")
-    public String adminHandleChangePassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
-            @RequestParam String confirmPassword,
-            HttpSession session,
-            RedirectAttributes ra) {
-
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        String email = (String) session.getAttribute("user");
-        if (email == null) {
-            return "redirect:/login";
-        }
-
-        // 1. Kiểm tra mật khẩu mới khớp nhau
-        if (!newPassword.equals(confirmPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu mới và xác nhận không khớp!");
-            return "redirect:/admin/change-password";
-        }
-
-        // 2. Giới hạn mật khẩu tối thiểu 6 ký tự
-        if (newPassword.length() < 6) {
-            ra.addFlashAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự!");
-            return "redirect:/admin/change-password";
-        }
-
-        // 3. Gọi service để đổi mật khẩu
-        boolean success = accountService.changePassword(email, currentPassword, newPassword);
-
-        if (success) {
-            ra.addFlashAttribute("success", "Đổi mật khẩu thành công!");
-            return "redirect:/admin/profile";
-        } else {
-            ra.addFlashAttribute("error", "Mật khẩu hiện tại không đúng!");
-            return "redirect:/admin/change-password";
-        }
-    }
 }
+
+    // password-change endpoints for admin have been removed per requirement
+    // (only customers may change their password now).}

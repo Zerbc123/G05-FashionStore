@@ -20,8 +20,8 @@ public class Account {
 
     @Column (name = "full_name")
     private String fullName;
-    // Trong file Account.java và Customer.java
-    private Integer phone; // Integer (Wrapper class) cho phép nhận giá trị null
+    // số điện thoại lưu dưới dạng chuỗi để giữ các ký tự 0 đầu
+    private String phone; // String có thể rỗng hoặc null
 
     @OneToMany (mappedBy = "account")
     private List<Customer> customers;
@@ -29,7 +29,7 @@ public class Account {
     public Account() {
     }
 
-    public Account(int accountId, String username, String password, String status, String email, Role role, String fullName, Integer phone) {
+    public Account(int accountId, String username, String password, String status, String email, Role role, String fullName, String phone) {
         this.accountId = accountId;
         this.username = username;
         this.password = password;
@@ -96,11 +96,11 @@ public class Account {
         this.fullName = fullName;
     }
 
-    public Integer getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Integer phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 

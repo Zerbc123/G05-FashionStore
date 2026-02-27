@@ -183,15 +183,9 @@ public class CartController {
             // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
             model.addAttribute("fullName", currentCustomer.getFullName());
             
-            // Format số điện thoại: thêm số 0 đầu nếu bị mất
-            String phoneStr = "";
-            if (currentCustomer.getPhone() != null) {
-                phoneStr = String.valueOf(currentCustomer.getPhone());
-                // Nếu số điện thoại có 9 chữ số thì thêm số 0 đầu
-                if (phoneStr.length() == 9) {
-                    phoneStr = "0" + phoneStr;
-                }
-            }
+            // Sử dụng chuỗi điện thoại trực tiếp (đã lưu với số 0 đầu nếu có)
+            String phoneStr = currentCustomer.getPhone();
+            if (phoneStr == null) phoneStr = "";
             model.addAttribute("phone", phoneStr);
             
             model.addAttribute("email", currentCustomer.getEmail());
@@ -245,9 +239,9 @@ public class CartController {
             hasError = true;
         }
 
-        // Bắt lỗi: Địa chỉ rỗng
-        if (address.trim().isEmpty()) {
-            model.addAttribute("errorAddress", "Vui lòng nhập chi tiết địa chỉ nhận hàng.");
+        // Bắt lỗi: Địa chỉ rỗng / định dạng
+        if (address.trim().isEmpty() || !vn.edu.fpt.fashionstore.util.AddressUtils.isValid(address)) {
+            model.addAttribute("errorAddress", "Địa chỉ không hợp lệ. Vui lòng chọn tỉnh/quận/xã và nhập số nhà, đường.");
             hasError = true;
         }
 

@@ -22,8 +22,8 @@ public class Customer {
     private Date createdDate;
 
     private String email;
-    // Trong file Account.java và Customer.java
-    private Integer phone; // Integer (Wrapper class) cho phép nhận giá trị null
+    // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
+    private String phone; // String có thể null
     private String address;
 
     @ManyToOne
@@ -33,7 +33,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, Integer phone, String address) {
+    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
@@ -92,11 +92,11 @@ public class Customer {
         this.email = email;
     }
 
-    public Integer getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Integer phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 

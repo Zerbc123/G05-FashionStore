@@ -44,15 +44,20 @@ public class AccountService {
      * @return Account nếu đăng nhập thành công, null nếu thất bại
      */
     public Account authenticate(String username, String password) {
-   
+        System.out.println("[DEBUG AUTH] Attempting login for: " + username);
+        
         // 1. Tìm account theo email
         Optional<Account> accountOpt = accountRepository.findByEmail(username);
 
         if (accountOpt.isEmpty()) {
+            System.out.println("[DEBUG AUTH] Email not found: " + username);
             return null; // Email không tồn tại
         }
 
         Account account = accountOpt.get();
+        System.out.println("[DEBUG AUTH] Account found - Email: " + account.getEmail());
+        System.out.println("[DEBUG AUTH] Account Role: " + (account.getRole() != null ? account.getRole().getRoleName() : "NULL"));
+        System.out.println("[DEBUG AUTH] Account Status: " + account.getStatus());
     
         // 2. Kiểm tra password
         // Xử lý cả plain text và hashed passwords
@@ -77,7 +82,9 @@ public class AccountService {
 
 
         // 3. Kiểm tra status (dùng .equalsIgnoreCase để tránh lỗi viết hoa/thường)
-        if (!"Active".equalsIgnoreCase(account.getStatus())) {
+        String accountStatus = account.getStatus();
+        if (accountStatus == null || !accountStatus.trim().equalsIgnoreCase("active")) {
+            System.out.println("[DEBUG AUTH] Account status: '" + accountStatus + "' - not active");
             return null; // Tài khoản bị khóa hoặc chưa kích hoạt
         }
 
@@ -134,15 +141,12 @@ public class AccountService {
             finalUsername = baseUsername + count++;
         }
 
-        // 2. Xử lý Phone
-        Integer phoneNumber = null;
+        // 2. Xử lý Phone (giữ dưới dạng chuỗi chỉ chứa chữ số)
+        String phoneNumber = null;
         if (phone != null && !phone.trim().isEmpty()) {
-            try {
-                String cleanPhone = phone.replaceAll("[^0-9]", "");
-                if (!cleanPhone.isEmpty()) {
-                    phoneNumber = Integer.parseInt(cleanPhone);
-                }
-            } catch (NumberFormatException e) {
+            // loại bỏ ký tự khác số để chuẩn hóa
+            phoneNumber = phone.replaceAll("[^0-9]", "");
+            if (phoneNumber.isEmpty()) {
                 phoneNumber = null;
             }
         }
@@ -189,13 +193,9 @@ public class AccountService {
         return accountRepository.findByEmail(email).map(account -> {
             // 1. Cập nhật thông tin vào bảng Account
             account.setFullName(fullName);
-            try {
-                // Loại bỏ ký tự không phải số trước khi parse
-                if (phone != null && !phone.isEmpty()) {
-                    account.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                }
-            } catch (Exception e) {
-                // Log lỗi nếu cần: System.out.println("Lỗi format số điện thoại");
+            // Loại bỏ ký tự không phải số để lưu chuỗi chỉ gồm số
+            if (phone != null && !phone.isEmpty()) {
+                account.setPhone(phone.replaceAll("[^0-9]", ""));
             }
 
             // Lưu Account trước để có ID ổn định
@@ -228,11 +228,9 @@ public class AccountService {
                 }    // <--- MỚI THÊM
                 customer.setDateOfBirth(dateOfBirth); // <--- MỚI THÊM
 
-                try {
-                    if (phone != null) {
-                        customer.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                    }
-                } catch (Exception e) {}
+                if (phone != null) {
+                    customer.setPhone(phone.replaceAll("[^0-9]", ""));
+                }
 
                 // Lưu bảng Customer
                 customerRepository.save(customer);

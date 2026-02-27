@@ -25,6 +25,9 @@ import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.util.PhoneUtils;
+import vn.edu.fpt.fashionstore.util.DateUtils;
+import vn.edu.fpt.fashionstore.util.AddressUtils;
 
 import java.util.Collections;
 import java.util.Date;
@@ -61,8 +64,14 @@ public class HomeController {
 
         if (email == null && principal != null) {
             email = principal.getAttribute("email");
-            isGoogleLogin = true;
             session.setAttribute("user", email);
+
+            Optional<Account> accOpt = accountService.findByEmail(email);
+            if (accOpt.isPresent()) {
+                Account acc = accOpt.get();
+                session.setAttribute("userRole", acc.getRole().getRoleName());
+                session.setAttribute("userName", acc.getFullName());
+            }
         }
 
         if (email == null) {
@@ -99,7 +108,8 @@ public class HomeController {
                     }
                 }
 
-                if (account.getPhone() == null || hasNoAddress) {
+                String ph = account.getPhone();
+                if (ph == null || ph.isEmpty() || hasNoAddress) {
                     return "redirect:/edit-profile?firstLogin=true";
                 }
             }
@@ -192,9 +202,9 @@ public class HomeController {
                               HttpSession session,
                               RedirectAttributes ra) {
 
-        // ⚠️ Thêm kiểm tra mật khẩu ≥ 6 ký tự (theo yêu cầu)
-        if (password.length() < 6) {
-            ra.addFlashAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
+        // validate password format (exactly 6 alphanumeric characters)
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
             return "redirect:/login";
         }
 
@@ -246,13 +256,18 @@ public class HomeController {
             return "redirect:/register";
         }
 
-        if (password.length() < 6) {
-            ra.addFlashAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
             return "redirect:/register";
         }
 
         if (accountService.findByEmail(email).isPresent()) {
             ra.addFlashAttribute("error", "Email này đã được đăng ký!");
+            return "redirect:/register";
+        }
+
+        if (!PhoneUtils.isValid(phone)) {
+            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
             return "redirect:/register";
         }
 
@@ -280,18 +295,36 @@ public class HomeController {
         return "redirect:/verify-otp";
     }
 
-    @PostMapping("/update-profile")
-    public String handleUpdateProfile(
+        @PostMapping("/update-profile")
+        public String handleUpdateProfile(
             @RequestParam String fullName,
             @RequestParam String phone,
             @RequestParam String address,
             @RequestParam String gender,
             @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
-            HttpSession session) {
+            HttpSession session,
+            RedirectAttributes ra) {
 
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
+        if (!PhoneUtils.isValid(phone)) {
+            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
+            return "redirect:/edit-profile";
+        }
+
+        // validate date of birth range (server-side) in addition to front-end min/max
+        if (!DateUtils.isValidDOB(dateOfBirth)) {
+            ra.addFlashAttribute("error", "Ngày sinh không hợp lệ. Vui lòng chọn ngày từ 01/01/1950 đến hôm nay.");
+            return "redirect:/edit-profile";
+        }
+
+        if (address == null || address.trim().isEmpty() || !AddressUtils.isValid(address)) {
+            ra.addFlashAttribute("error", "Địa chỉ không được để trống và phải chọn tỉnh/ huyện/ xã cùng số nhà.");
+            return "redirect:/edit-profile";
+        }
+
+        // phone and address both valid, combine is done on client side
         accountService.updateProfile(email, fullName, phone, address, gender, dateOfBirth);
 
         return "redirect:/home";
