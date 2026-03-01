@@ -39,6 +39,9 @@
         /* Buttons */
         .btn-add-cart { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; margin-top: 20px; transition: 0.3s; }
         .btn-add-cart:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3); }
+        
+        .btn-buy-now { background: linear-gradient(135deg, #ff6348, #ff4757); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 20px; transition: 0.3s; }
+        .btn-buy-now:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 67, 71, 0.3); }
 
         /* Tabs Section */
         .details-section { margin-top: 60px; border-top: 1px solid #eee; padding-top: 40px; }
@@ -121,9 +124,22 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-add-cart">
-                        <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
-                    </button>
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn-add-cart flex-fill">
+                            <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+                        </button>
+                        <button type="button" class="btn-buy-now flex-fill" onclick="buyNow()">
+                            <i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Form ẩn cho MUA NGAY -->
+                <form id="buyNowForm" th:action="@{/cart/buy-now}" method="POST" style="display: none;">
+                    <input type="hidden" name="productId" th:value="${product.productId}">
+                    <input type="hidden" name="sizeId" id="buyNowSizeId">
+                    <input type="hidden" name="colorId" id="buyNowColorId">
+                    <input type="hidden" name="quantity" value="1">
                 </form>
             </div>
         </div>
@@ -239,6 +255,32 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function buyNow() {
+    // Lấy size và color đã chọn
+    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+    const selectedColor = document.querySelector('input[name="colorId"]:checked');
+    
+    // Kiểm tra đã chọn size và color chưa
+    if (!selectedSize) {
+        alert('Vui lòng chọn size!');
+        return;
+    }
+    
+    if (!selectedColor) {
+        alert('Vui lòng chọn màu sắc!');
+        return;
+    }
+    
+    // Set giá trị vào form ẩn
+    document.getElementById('buyNowSizeId').value = selectedSize.value;
+    document.getElementById('buyNowColorId').value = selectedColor.value;
+    
+    // Submit form MUA NGAY
+    document.getElementById('buyNowForm').submit();
+}
+</script>
 
 </body>
 </html>

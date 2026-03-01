@@ -33,6 +33,33 @@
         .btn-checkout { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; transition: all 0.3s; margin-top: 20px;}
         .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3); }
         .product-mini-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+
+        /* Address Display Styles */
+        .address-display-section { margin-top: 10px; }
+        .current-address-card { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            border-radius: 10px; 
+            transition: all 0.3s ease;
+        }
+        .current-address-card:hover { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 2px 8px rgba(255, 107, 157, 0.1); 
+        }
+        .address-content { 
+            display: flex; 
+            align-items: center; 
+            flex: 1; 
+        }
+        .address-text { 
+            font-size: 0.95rem; 
+            color: #333; 
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -61,14 +88,20 @@
                         </div>
 
                         <div class="col-12">
-                            <label>Email</label>
-                            <input type="text" name="email" th:value="${email}" class="form-control">
-                            <small class="text-danger" th:if="${errorEmail}" th:text="${errorEmail}"></small>
-                        </div>
-
-                        <div class="col-12">
-                            <label>Địa chỉ nhận hàng chi tiết <span class="text-danger">*</span></label>
-                            <div th:replace="~{fragments/addressDropdown :: addressSelect(${address})}"></div>
+                            <label>Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                            <div class="address-display-section">
+                                <div class="current-address-card">
+                                    <div class="address-content">
+                                        <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                        <span th:text="${address != null ? address : 'Chưa có địa chỉ'}" class="address-text">123 Nguyễn Trãi, Phường Cầu Kho, Quận 1, TP. Hồ Chí Minh</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeAddress()">
+                                        <i class="bi bi-pencil me-1"></i>Thay đổi
+                                    </button>
+                                </div>
+                                <!-- Hidden field để lưu địa chỉ cuối cùng -->
+                                <input type="hidden" name="deliveryAddress" id="deliveryAddress" th:value="${address}" />
+                            </div>
                             <small class="text-danger" th:if="${errorAddress}" th:text="${errorAddress}"></small>
                         </div>
 
@@ -185,13 +218,59 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script th:inline="javascript">
+console.log('Checkout page loaded!');
 const subtotal = /*[[${total}]]*/ 0;
+console.log('Subtotal:', subtotal);
 
 function updateTotal(shippingFee) {
     const total = subtotal + shippingFee;
     document.getElementById('shippingFee').textContent = shippingFee.toLocaleString('vi-VN') + 'đ';
     document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
 }
+
+function changeAddress() {
+    console.log('Changing address...');
+    window.location.href = '/fashionstore/cart/checkout/select-delivery-address';
+}
+
+// Form validation before submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="/fashionstore/cart/checkout/place-order"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitting...');
+            
+            // Kiểm tra các trường bắt buộc
+            const fullName = document.querySelector('input[name="fullName"]').value.trim();
+            const phone = document.querySelector('input[name="phone"]').value.trim();
+            const deliveryAddress = document.querySelector('input[name="deliveryAddress"]').value.trim();
+            
+            console.log('Form data:', { fullName, phone, deliveryAddress });
+            
+            // Validation cơ bản
+            if (!fullName) {
+                e.preventDefault();
+                alert('Vui lòng nhập họ và tên!');
+                return false;
+            }
+            
+            if (!phone) {
+                e.preventDefault();
+                alert('Vui lòng nhập số điện thoại!');
+                return false;
+            }
+            
+            if (!deliveryAddress) {
+                e.preventDefault();
+                alert('Vui lòng chọn địa chỉ giao hàng!');
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting...');
+            return true;
+        });
+    }
+});
 </script>
 
 </body>

@@ -94,13 +94,11 @@ function loadProvinces() {
     const provSelect = document.getElementById('province');
     const errDiv = document.getElementById('addressError');
 
-    // 1. try local JSON file (static) first
-    // use Thymeleaf to compute a context-relative URL so it works no matter what
-    const localJsonUrl = /*[[@{/data/vietnam-address.json}]]*/ 'data/vietnam-address.json';
-    console.log('Loading local address JSON from', localJsonUrl);
-    fetch(localJsonUrl)
+    // 1. Thử API remote trước (nhanh hơn file local lớn)
+    console.log('Loading provinces from API...');
+    fetch('https://provinces.open-api.vn/api/?depth=3')
         .then(res => {
-            if (!res.ok) throw new Error('no local file');
+            if (!res.ok) throw new Error('API failed');
             return res.json();
         })
         .then(data => {
@@ -111,44 +109,27 @@ function loadProvinces() {
             if (errDiv) errDiv.innerHTML = '';
             const existing = /*[[${address}]]*/ '';
             if (existing) prefillAddress(existing);
+            // Cache cho lần sau
+            try {
+                localStorage.setItem('vietnamProvinces', JSON.stringify(data));
+                localStorage.setItem('vietnamProvincesTime', Date.now().toString());
+            } catch (e) {
+                console.warn('Could not cache to localStorage', e);
+            }
         })
         .catch(err => {
-            console.warn('local JSON fetch failed', err);
-            // fallback to remote + cache logic
-            const cachedData = localStorage.getItem('vietnamProvinces');
-            if (cachedData) {
-                try {
-                    provincesList = JSON.parse(cachedData);
-                    hideLoadingSpinner();
-                    provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
-                    provincesList.forEach(p => provSelect.add(new Option(p.name, p.name)));
-                    if (errDiv) errDiv.innerHTML = '';
-                    const existing = /*[[${address}]]*/ '';
-                    if (existing) prefillAddress(existing);
-                    return;
-                } catch (e) {
-                    console.warn('Cache corrupted, fetching fresh data', e);
-                    localStorage.removeItem('vietnamProvinces');
-                }
-            }
-
-            loadTimeout = setTimeout(() => {
-                showLoadingError('API chậm. Vui lòng <a href="javascript:location.reload()" class="text-danger">tải lại trang</a> hoặc thử lại sau.');
-                if (provSelect) provSelect.innerHTML = '<option value="">Không thể tải tỉnh/thành</option>';
-            }, 8000);
-
-            fetch('https://provinces.open-api.vn/api/?depth=3')
-                .then(res => res.json())
+            console.warn('API failed, trying local file', err);
+            // Fallback: Thử local JSON file
+            const localJsonUrl = /*[[@{/data/vietnam-address.json}]]*/ 'data/vietnam-address.json';
+            console.log('Loading local address JSON from', localJsonUrl);
+            fetch(localJsonUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error('no local file');
+                    return res.json();
+                })
                 .then(data => {
-                    clearTimeout(loadTimeout);
-                    hideLoadingSpinner();
-                    try {
-                        localStorage.setItem('vietnamProvinces', JSON.stringify(data));
-                        localStorage.setItem('vietnamProvincesTime', Date.now().toString());
-                    } catch (e) {
-                        console.warn('Could not cache to localStorage', e);
-                    }
                     provincesList = data;
+                    hideLoadingSpinner();
                     provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
                     data.forEach(p => provSelect.add(new Option(p.name, p.name)));
                     if (errDiv) errDiv.innerHTML = '';
@@ -156,10 +137,28 @@ function loadProvinces() {
                     if (existing) prefillAddress(existing);
                 })
                 .catch(err => {
-                    clearTimeout(loadTimeout);
-                    console.error('Failed to load provinces', err);
+                    console.warn('local JSON fetch failed', err);
+                    // Fallback: Dùng cache
+                    const cachedData = localStorage.getItem('vietnamProvinces');
+                    if (cachedData) {
+                        try {
+                            provincesList = JSON.parse(cachedData);
+                            hideLoadingSpinner();
+                            provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
+                            provincesList.forEach(p => provSelect.add(new Option(p.name, p.name)));
+                            if (errDiv) errDiv.innerHTML = '';
+                            const existing = /*[[${address}]]*/ '';
+                            if (existing) prefillAddress(existing);
+                            return;
+                        } catch (e) {
+                            console.warn('Cache corrupted', e);
+                            localStorage.removeItem('vietnamProvinces');
+                        }
+                    }
+                    
+                    // Cuối cùng: Hiển thị lỗi
+                    showLoadingError('Không thể tải danh sách tỉnh/thành. Vui lòng kiểm tra kết nối mạng và <a href="javascript:location.reload()" class="text-danger">tải lại trang</a>.');
                     if (provSelect) provSelect.innerHTML = '<option value="">Không thể tải tỉnh/thành</option>';
-                    showLoadingError('Không thể tải danh sách địa phương. Vui lòng kiểm tra kết nối mạng.');
                 });
         });
 }

@@ -12,7 +12,7 @@
         :root { --primary-color: #FF6B9D; --secondary-color: #C44569; --dark-text: #2C3E50; --light-bg: #FFF9F9; }
         body { font-family: 'Poppins', sans-serif; color: var(--dark-text); background-color: var(--light-bg); padding-top: 80px; }
         .navbar { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08); padding: 1rem 0; }
-        .navbar-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .navbar-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .nav-link { color: var(--dark-text); font-weight: 500; margin: 0 0.5rem; transition: all 0.3s ease; }
         .nav-link:hover { color: var(--primary-color); }
         .nav-icon { font-size: 1.3rem; color: var(--dark-text); transition: all 0.3s ease; cursor: pointer; }
@@ -109,11 +109,66 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <!-- address fragment will populate hidden address and required selects -->
-                            <div th:replace="~{fragments/addressDropdown :: addressSelect(${customer.address})}"></div>
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select name="province" class="form-select" id="provinceSelect" required>
+                                <option value="">Chọn tỉnh/thành phố</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                <option value="Đà Nẵng">Đà Nẵng</option>
+                                <option value="Hải Phòng">Hải Phòng</option>
+                                <option value="Cần Thơ">Cần Thơ</option>
+                                <option value="Bắc Ninh">Bắc Ninh</option>
+                                <option value="Bắc Giang">Bắc Giang</option>
+                                <option value="Hà Giang">Hà Giang</option>
+                                <option value="Hà Nam">Hà Nam</option>
+                                <option value="Ninh Bình">Ninh Bình</option>
+                                <option value="Ninh Thuận">Ninh Thuận</option>
+                                <option value="Quảng Bình">Quảng Bình</option>
+                                <option value="Quảng Nam">Quảng Nam</option>
+                                <option value="Quảng Ninh">Quảng Ninh</option>
+                                <option value="Quảng Trị">Quảng Trị</option>
+                                <option value="Tây Ninh">Tây Ninh</option>
+                                <option value="Thừa Thiên Huế">Thừa Thiên Huế</option>
+                                <option value="Đà Lạt">Đà Lạt</option>
+                                <option value="Đắk Lắk">Đắk Lắk</option>
+                                <option value="Đắk Nông">Đắk Nông</option>
+                                <option value="Điện Biên">Điện Biên</option>
+                                <option value="Hậu Giang">Hậu Giang</option>
+                                <option value="Lai Châu">Lai Châu</option>
+                                <option value="Lâm Đồng">Lâm Đồng</option>
+                                <option value="Long An">Long An</option>
+                                <option value="Sóc Trăng">Sóc Trăng</option>
+                                <option value="Tiền Giang">Tiền Giang</option>
+                                <option value="Trà Vinh">Trà Vinh</option>
+                                <option value="Vĩnh Long">Vĩnh Long</option>
+                                <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                                <option value="Yên Bái">Yên Bái</option>
+                                <option value="Bạc Liêu">Bạc Liêu</option>
+                                <option value="Bến Tre">Bến Tre</option>
+                                <option value="Bình Dương">Bình Dương</option>
+                                <option value="Bình Phước">Bình Phước</option>
+                                <option value="Bình Thuận">Bình Thuận</option>
+                                <option value="Bình Định">Bình Định</option>
+                                <option value="Cà Mau">Cà Mau</option>
+                                <option value="Đồng Nai">Đồng Nai</option>
+                                <option value="Đồng Tháp">Đồng Tháp</option>
+                                <option value="Gia Lai">Gia Lai</option>
+                                <option value="Kiên Giang">Kiên Giang</option>
+                                <option value="Kiên Tường">Kiên Tường</option>
+                                <option value="Long An">Long An</option>
+                                <option value="An Giang">An Giang</option>
+                                <option value="Bà Rịa-Vũng Tàu">Bà Rịa-Vũng Tàu</option>
+                            </select>
                         </div>
-
-
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ nhà *</label>
+                            <input type="text" name="houseAddress" class="form-control" id="houseAddressInput"
+                                   th:value="${customer.address != null ? customer.address : ''}"
+                                   placeholder="Nhập số nhà, tên đường, phường, quận" required>
+                            <small class="text-muted">Ví dụ: 123 Nguyễn Trãi, Phường Cầu Kho, Quận 1</small>
+                        </div>
+                        <!-- Hidden field for combined address -->
+                        <input type="hidden" name="address" id="combinedAddress" />
 
                         <div class="text-center mt-4">
                             <button type="submit" class="save-btn">
@@ -210,6 +265,40 @@
             });
         }
     })();
+    
+    // Function to combine address
+    function combineAddress() {
+        const province = document.getElementById('provinceSelect').value;
+        const houseAddress = document.getElementById('houseAddressInput').value;
+        const combinedAddressField = document.getElementById('combinedAddress');
+        
+        if (province && houseAddress) {
+            const fullAddress = houseAddress + ', ' + province;
+            combinedAddressField.value = fullAddress;
+        }
+    }
+    
+    // Add event listeners for address fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const provinceSelect = document.getElementById('provinceSelect');
+        const houseAddressInput = document.getElementById('houseAddressInput');
+        
+        if (provinceSelect) {
+            provinceSelect.addEventListener('change', combineAddress);
+        }
+        
+        if (houseAddressInput) {
+            houseAddressInput.addEventListener('input', combineAddress);
+        }
+        
+        // Combine on form submit
+        const form = document.querySelector('form[action="/update-profile"]');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                combineAddress();
+            });
+        }
+    });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

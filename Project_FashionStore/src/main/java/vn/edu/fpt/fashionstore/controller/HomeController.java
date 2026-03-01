@@ -14,16 +14,17 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.util.PhoneUtils;
 import vn.edu.fpt.fashionstore.util.DateUtils;
@@ -46,6 +47,9 @@ public class HomeController {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private OrderService orderService;
 
     public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
         this.accountService = accountService;
@@ -165,11 +169,31 @@ public class HomeController {
     }
 
     @GetMapping(value = "/order-history")
-    public String orderHistoryPage(HttpSession session) {
+    public String orderHistoryPage(HttpSession session, Model model) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
-        return "viewhistory";
+        
+        try {
+            // Lấy customer hiện tại
+            Customer currentCustomer = getCurrentCustomer(session);
+            
+            // Kiểm tra nếu customer không tồn tại
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+            
+            // Lấy danh sách đơn hàng của customer
+            List<Order> customerOrders = orderService.getOrdersByCustomer(currentCustomer);
+            
+            // Thêm vào model
+            model.addAttribute("orders", customerOrders);
+            model.addAttribute("customerName", currentCustomer.getFullName());
+            
+            return "viewhistory";
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
     }
 
     @GetMapping(value = "/wishlist")
@@ -178,22 +202,6 @@ public class HomeController {
             return "redirect:/login";
         }
         return "wishlist";
-    }
-
-    @GetMapping(value = "/order")
-    public String orderPage(HttpSession session) {
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "order";
-    }
-
-    @GetMapping(value = "/orderdetails")
-    public String orderDetailsPage(HttpSession session) {
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "orderdetails";
     }
 
     @PostMapping("/login")
@@ -295,8 +303,8 @@ public class HomeController {
         return "redirect:/verify-otp";
     }
 
-        @PostMapping("/update-profile")
-        public String handleUpdateProfile(
+    @PostMapping("/update-profile")
+    public String handleUpdateProfile(
             @RequestParam String fullName,
             @RequestParam String phone,
             @RequestParam String address,
@@ -402,6 +410,11 @@ public class HomeController {
         return "register";
     }
 
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
     private void updateCartCountForCustomer(HttpSession session, Account account) {
         try {
             if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
@@ -416,10 +429,19 @@ public class HomeController {
         }
     }
 
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login";
+    private Customer getCurrentCustomer(HttpSession session) {
+        try {
+            String email = (String) session.getAttribute("user");
+            if (email == null) return null;
+            
+            Account account = accountService.findByEmail(email).orElse(null);
+            if (account == null || account.getCustomers() == null || account.getCustomers().isEmpty()) {
+                return null;
+            }
+            
+            return account.getCustomers().get(0);
+        } catch (Exception e) {
+            return null;
+        }
     }
-
-
 }

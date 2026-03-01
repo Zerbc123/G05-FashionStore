@@ -9,6 +9,7 @@ import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.repository.CartRepository;
 import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,9 @@ public class CartService {
     // Lấy tất cả sản phẩm trong giỏ hàng của một khách hàng
     @Transactional(readOnly = true)
     public List<CartItem> getCartItems(Customer customer) {
+        if (customer == null) {
+            return Collections.emptyList();
+        }
         return cartRepository.findByCustomer(customer);
     }
 
@@ -71,6 +75,13 @@ public class CartService {
     @Transactional
     public void removeFromCart(Integer cartItemId) {
         cartRepository.deleteById(cartItemId);
+    }
+
+    // Xóa toàn bộ giỏ hàng của khách hàng
+    @Transactional
+    public void clearCart(Customer customer) {
+        List<CartItem> cartItems = cartRepository.findByCustomer(customer);
+        cartRepository.deleteAll(cartItems);
     }
 
     // Tính tổng tiền giỏ hàng

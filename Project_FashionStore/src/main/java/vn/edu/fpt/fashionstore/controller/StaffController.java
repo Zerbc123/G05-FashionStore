@@ -41,13 +41,6 @@ public class StaffController {
         return "staff/staffdashboard";
     }
 
-    @GetMapping("/orders")
-    public String orders(HttpSession session, Model model) {
-        if (!isStaff(session)) return "redirect:/login";
-        model.addAttribute("title", "Order Management");
-        return "staff/conformorder";
-    }
-
     @GetMapping("/support")
     public String support(HttpSession session, Model model) {
         if (!isStaff(session)) return "redirect:/login";
