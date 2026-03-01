@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Đơn Hàng - FashionStore</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-color: #FF6B9D; --secondary-color: #C44569; --dark-text: #2C3E50; --light-bg: #FFF9F9; }
+        body { font-family: 'Poppins', sans-serif; color: var(--dark-text); background-color: var(--light-bg); padding-top: 80px; }
+        .navbar { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08); padding: 1rem 0; }
+        .navbar-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .nav-link { color: var(--dark-text); font-weight: 500; margin: 0 0.5rem; transition: all 0.3s ease; }
+        .nav-link:hover { color: var(--primary-color); }
+        .nav-icon { font-size: 1.3rem; color: var(--dark-text); transition: all 0.3s ease; cursor: pointer; }
+        .nav-icon:hover { color: var(--primary-color); transform: scale(1.1); }
+        .history-section { padding: 3rem 0; min-height: calc(100vh - 200px); }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; text-align: center; }
+        .order-card { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); margin-bottom: 1.5rem; transition: all 0.3s ease; }
+        .order-card:hover { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12); transform: translateY(-2px); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid #eee; }
+        .order-id { font-weight: 700; font-size: 1.1rem; color: var(--primary-color); }
+        .order-status { padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d1ecf1; color: #0c5460; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-refunded { background: #d1ecf1; color: #0c5460; }
+        .order-items { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .order-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .more-items { display: flex; align-items: center; color: #666; font-size: 0.9rem; }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; }
+        .order-total { font-weight: 700; font-size: 1.1rem; color: var(--primary-color); }
+        .order-actions { display: flex; gap: 0.5rem; }
+        .btn-view { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s ease; }
+        .btn-view:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .btn-reorder { background: #28a745; color: white; padding: 0.5rem 1rem; border-radius: 8px; border: none; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
+        .btn-reorder:hover { background: #218838; transform: translateY(-2px); }
+        .empty-state { text-align: center; padding: 3rem; color: #666; }
+        .empty-state i { font-size: 4rem; color: #ddd; margin-bottom: 1rem; }
+        @media (max-width: 768px) {
+            .history-section { padding: 1rem; }
+            .page-title { font-size: 2rem; }
+            .order-card { padding: 1rem; }
+            .order-footer { flex-direction: column; gap: 1rem; }
+            .order-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+<!-- Main Content -->
+<section class="history-section">
+    <div class="container">
+        <h1 class="page-title">Lịch Sử Đơn Hàng</h1>
+        
+        <div th:if="${orders == null or #lists.isEmpty(orders)}" class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h3>Bạn chưa có đơn hàng nào</h3>
+            <p>Hãy mua sắm để tạo đơn hàng đầu tiên!</p>
+            <a th:href="@{/}" class="btn-view">Bắt đầu mua sắm</a>
+        </div>
+
+        <div th:each="order : ${orders}" class="order-card">
+            <div class="order-header">
+                <div>
+                    <div class="order-id" th:text="${order.orderCode}">#DH123456</div>
+                    <div class="text-muted" th:text="${#dates.format(order.orderDate, 'dd/MM/yyyy - HH:mm')}">23/01/2026 - 14:30</div>
+                </div>
+                <span class="order-status" th:class="'status-' + ${order.status.name().toLowerCase()}" th:text="${order.status.displayName}">Đang giao hàng</span>
+            </div>
+            
+            <div class="order-items">
+                <img th:if="${!#lists.isEmpty(order.orderItems)}" 
+                     th:src="${order.orderItems[0].productImage}" 
+                     th:alt="${order.orderItems[0].productName}" 
+                     class="order-item-img">
+                <div th:if="${#lists.size(order.orderItems) > 1}" class="more-items">
+                    <i class="bi bi-plus-circle"></i>
+                    <span th:text="${#lists.size(order.orderItems) - 1} + ' sản phẩm khác'">+1 sản phẩm khác</span>
+                </div>
+            </div>
+            
+            <div class="order-footer">
+                <div class="order-total" th:text="'Tổng: ' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA') + 'đ'}">Tổng: 1.327.000đ</div>
+                <div class="order-actions">
+                    <a th:href="@{/cart/order-details/{orderId}(orderId=${order.orderId})}" class="btn-view">Xem chi tiết</a>
+                    <button class="btn-reorder" th:onclick="'reorderOrder(' + ${order.orderId} + ')'">Mua lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function reorderOrder(orderId) {
+    // TODO: Implement reorder functionality
+    console.log('Reorder order: ' + orderId);
+    alert('Tính năng mua lại đang được phát triển!');
+}
+</script>
+</body>
+</html>

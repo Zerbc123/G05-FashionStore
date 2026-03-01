@@ -3,6 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Customer {
@@ -29,6 +30,9 @@ public class Customer {
     @ManyToOne
     @JoinColumn (name = "account_id")
     private Account account;
+
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Wishlist> wishlists;
 
     public Customer() {
     }
@@ -114,5 +118,13 @@ public class Customer {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public List<Wishlist> getWishlists() {
+        return wishlists;
+    }
+
+    public void setWishlists(List<Wishlist> wishlists) {
+        this.wishlists = wishlists;
     }
 }

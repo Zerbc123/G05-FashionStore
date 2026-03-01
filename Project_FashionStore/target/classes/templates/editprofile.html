@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh Sửa Hồ Sơ - FashionStore</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-color: #FF6B9D; --secondary-color: #C44569; --dark-text: #2C3E50; --light-bg: #FFF9F9; }
+        body { font-family: 'Poppins', sans-serif; color: var(--dark-text); background-color: var(--light-bg); padding-top: 80px; }
+        .navbar { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08); padding: 1rem 0; }
+        .navbar-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .nav-link { color: var(--dark-text); font-weight: 500; margin: 0 0.5rem; transition: all 0.3s ease; }
+        .nav-link:hover { color: var(--primary-color); }
+        .nav-icon { font-size: 1.3rem; color: var(--dark-text); transition: all 0.3s ease; cursor: pointer; }
+        .nav-icon:hover { color: var(--primary-color); transform: scale(1.1); }
+        .profile-section { padding: 3rem 0; }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; text-align: center; }
+        .profile-card { background: white; border-radius: 15px; padding: 2rem; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); }
+        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .avatar-upload { text-align: center; margin-bottom: 2rem; }
+        .avatar-preview { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem; display: block; border: 5px solid var(--primary-color); }
+        .form-label { font-weight: 500; }
+        .form-control, .form-select { border-radius: 10px; padding: 0.8rem; border: 2px solid #eee; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(255, 107, 157, 0.25); }
+        .save-btn { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: none; padding: 1rem 3rem; border-radius: 10px; color: white; font-weight: 600; transition: all 0.3s ease; }
+        .save-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 107, 157, 0.3); }
+        .footer { background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); color: white; padding: 4rem 0 2rem; margin-top: 3rem; }
+        .footer-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .footer-links { list-style: none; padding: 0; }
+        .footer-links li { margin-bottom: 0.8rem; }
+        .footer-links a { color: rgba(255, 255, 255, 0.8); text-decoration: none; transition: all 0.3s ease; }
+        .footer-links a:hover { color: var(--primary-color); padding-left: 5px; }
+        .social-icons { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .social-icon { width: 45px; height: 45px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; transition: all 0.3s ease; cursor: pointer; }
+        .social-icon:hover { background: var(--primary-color); transform: translateY(-5px); }
+        .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 3rem; padding-top: 2rem; text-align: center; color: rgba(255, 255, 255, 0.6); }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<section class="profile-section">
+    <div class="container">
+        <h1 class="page-title">Chỉnh Sửa Hồ Sơ</h1>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div th:if="${param.firstLogin}" class="alert alert-warning border-0 shadow-sm mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Vui lòng cập nhật <strong>Số điện thoại</strong> và <strong>Địa chỉ</strong> để tiếp tục mua sắm!
+                </div>
+
+                <div class="alert alert-danger" th:if="${error}">
+                    <i class="bi bi-exclamation-circle me-2"></i> <span th:text="${error}"></span>
+                </div>
+
+                <div class="alert alert-success" th:if="${success}">
+                    <i class="bi bi-check-circle me-2"></i> <span th:text="${success}"></span>
+                </div>
+
+                <div class="profile-card">
+                    <div class="avatar-upload">
+                        <img th:src="${'https://ui-avatars.com/api/?name=' + account.fullName + '&background=random'}"
+                             class="avatar-preview" id="avatarPreview">
+                        <input type="file" id="avatarInput" class="d-none" accept="image/*">
+                        <button class="btn btn-outline-primary" onclick="document.getElementById('avatarInput').click()">
+                            <i class="bi bi-camera me-2"></i>Thay đổi ảnh
+                        </button>
+                    </div>
+
+                    <form th:action="@{/update-profile}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ và tên *</label>
+                                <input type="text" name="fullName" class="form-control" th:value="${account.fullName}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" th:value="${account.email}" readonly>
+                                <small class="text-muted">Email đăng nhập Google không thể thay đổi</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại *</label>
+                                <input type="tel" name="phone" class="form-control"
+                                       th:value="${account.phone != null && account.phone != '' ? account.phone : ''}"
+                                       placeholder="Nhập số điện thoại" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ngày sinh</label>
+                                <input type="date" name="dateOfBirth" id="dateOfBirth" class="form-control"
+                                       th:value="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'yyyy-MM-dd') : ''}"
+                                       min="1950-01-01"
+                                       max="[[${#dates.format(#dates.createNow(),'yyyy-MM-dd')}]]">
+                                <div id="dobError" class="text-danger small mt-1"></div>
+                            </div>
+
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giới tính</label>
+                            <select name="gender" class="form-select">
+                                <option value="Nam" th:selected="${customer.gender == 'Nam'}">Nam</option>
+                                <option value="Nữ" th:selected="${customer.gender == 'Nữ'}">Nữ</option>
+                                <option value="Khác" th:selected="${customer.gender == 'Khác'}">Khác</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select name="province" class="form-select" id="provinceSelect" required>
+                                <option value="">Chọn tỉnh/thành phố</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                <option value="Đà Nẵng">Đà Nẵng</option>
+                                <option value="Hải Phòng">Hải Phòng</option>
+                                <option value="Cần Thơ">Cần Thơ</option>
+                                <option value="Bắc Ninh">Bắc Ninh</option>
+                                <option value="Bắc Giang">Bắc Giang</option>
+                                <option value="Hà Giang">Hà Giang</option>
+                                <option value="Hà Nam">Hà Nam</option>
+                                <option value="Ninh Bình">Ninh Bình</option>
+                                <option value="Ninh Thuận">Ninh Thuận</option>
+                                <option value="Quảng Bình">Quảng Bình</option>
+                                <option value="Quảng Nam">Quảng Nam</option>
+                                <option value="Quảng Ninh">Quảng Ninh</option>
+                                <option value="Quảng Trị">Quảng Trị</option>
+                                <option value="Tây Ninh">Tây Ninh</option>
+                                <option value="Thừa Thiên Huế">Thừa Thiên Huế</option>
+                                <option value="Đà Lạt">Đà Lạt</option>
+                                <option value="Đắk Lắk">Đắk Lắk</option>
+                                <option value="Đắk Nông">Đắk Nông</option>
+                                <option value="Điện Biên">Điện Biên</option>
+                                <option value="Hậu Giang">Hậu Giang</option>
+                                <option value="Lai Châu">Lai Châu</option>
+                                <option value="Lâm Đồng">Lâm Đồng</option>
+                                <option value="Long An">Long An</option>
+                                <option value="Sóc Trăng">Sóc Trăng</option>
+                                <option value="Tiền Giang">Tiền Giang</option>
+                                <option value="Trà Vinh">Trà Vinh</option>
+                                <option value="Vĩnh Long">Vĩnh Long</option>
+                                <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                                <option value="Yên Bái">Yên Bái</option>
+                                <option value="Bạc Liêu">Bạc Liêu</option>
+                                <option value="Bến Tre">Bến Tre</option>
+                                <option value="Bình Dương">Bình Dương</option>
+                                <option value="Bình Phước">Bình Phước</option>
+                                <option value="Bình Thuận">Bình Thuận</option>
+                                <option value="Bình Định">Bình Định</option>
+                                <option value="Cà Mau">Cà Mau</option>
+                                <option value="Đồng Nai">Đồng Nai</option>
+                                <option value="Đồng Tháp">Đồng Tháp</option>
+                                <option value="Gia Lai">Gia Lai</option>
+                                <option value="Kiên Giang">Kiên Giang</option>
+                                <option value="Kiên Tường">Kiên Tường</option>
+                                <option value="Long An">Long An</option>
+                                <option value="An Giang">An Giang</option>
+                                <option value="Bà Rịa-Vũng Tàu">Bà Rịa-Vũng Tàu</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ nhà *</label>
+                            <input type="text" name="houseAddress" class="form-control" id="houseAddressInput"
+                                   th:value="${customer.address != null ? customer.address : ''}"
+                                   placeholder="Nhập số nhà, tên đường, phường, quận" required>
+                            <small class="text-muted">Ví dụ: 123 Nguyễn Trãi, Phường Cầu Kho, Quận 1</small>
+                        </div>
+                        <!-- Hidden field for combined address -->
+                        <input type="hidden" name="address" id="combinedAddress" />
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="save-btn">
+                                <i class="bi bi-check-circle me-2"></i>Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <h3 class="footer-title">FashionStore</h3>
+                <p>Thời trang trẻ trung dành cho giới trẻ.</p>
+                <div class="social-icons">
+                    <div class="social-icon"><i class="bi bi-facebook"></i></div>
+                    <div class="social-icon"><i class="bi bi-instagram"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h4 class="footer-title">Liên Kết</h4>
+                <ul class="footer-links"><li><a href="/home">Trang chủ</a></li></ul>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <h4 class="footer-title">Liên Hệ</h4>
+                <p><i class="bi bi-telephone me-2"></i>0123 456 789</p>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 FashionStore. All rights reserved.</p></div>
+    </div>
+</footer>
+
+<script>
+    (function(){
+        const dob = document.getElementById('dateOfBirth');
+        const err = document.getElementById('dobError');
+        if (!dob) return;
+        const minDate = new Date('1950-01-01');
+        const maxDate = new Date();
+        
+        function showError(msg) {
+            if (err) err.textContent = msg;
+        }
+
+        function validate() {
+            showError('');
+            const raw = dob.value;
+            if (!raw) return; // empty is allowed
+
+            // try built-in parser first
+            let d = dob.valueAsDate;
+            if (d && !isNaN(d.getTime())) {
+                // check bounds
+                if (d < minDate || d > maxDate) {
+                    showError('Năm sinh phải nằm trong khoảng 1950 đến hôm nay.');
+                    return false;
+                }
+                return true;
+            }
+
+            // if valueAsDate failed (e.g. crazy year like 200000), attempt simple year extraction
+            const m = raw.match(/(\d{4})/g);
+            if (m && m.length > 0) {
+                const year = parseInt(m[0],10);
+                const currentYear = maxDate.getFullYear();
+                if (year < 1950 || year > currentYear) {
+                    showError('Năm sinh phải nằm trong khoảng 1950 đến hôm nay.');
+                    return false;
+                }
+                // still accept if year is ok; we can't easily create a valid Date
+                return true;
+            }
+
+            // crap input that didn't parse
+            showError('Định dạng ngày sinh không hợp lệ.');
+            return false;
+        }
+
+        dob.addEventListener('input', validate);
+        dob.addEventListener('blur', validate);
+
+        // block form submit if invalid
+        const form = dob.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!validate()) {
+                    e.preventDefault();
+                }
+            });
+        }
+    })();
+    
+    // Function to combine address
+    function combineAddress() {
+        const province = document.getElementById('provinceSelect').value;
+        const houseAddress = document.getElementById('houseAddressInput').value;
+        const combinedAddressField = document.getElementById('combinedAddress');
+        
+        if (province && houseAddress) {
+            const fullAddress = houseAddress + ', ' + province;
+            combinedAddressField.value = fullAddress;
+        }
+    }
+    
+    // Add event listeners for address fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const provinceSelect = document.getElementById('provinceSelect');
+        const houseAddressInput = document.getElementById('houseAddressInput');
+        
+        if (provinceSelect) {
+            provinceSelect.addEventListener('change', combineAddress);
+        }
+        
+        if (houseAddressInput) {
+            houseAddressInput.addEventListener('input', combineAddress);
+        }
+        
+        // Combine on form submit
+        const form = document.querySelector('form[action="/update-profile"]');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                combineAddress();
+            });
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

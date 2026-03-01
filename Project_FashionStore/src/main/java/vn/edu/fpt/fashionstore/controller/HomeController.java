@@ -196,14 +196,6 @@ public class HomeController {
         }
     }
 
-    @GetMapping(value = "/wishlist")
-    public String wishlistPage(HttpSession session) {
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "wishlist";
-    }
-
     @PostMapping("/login")
     public String handleLogin(@RequestParam String username,
                               @RequestParam String password,
