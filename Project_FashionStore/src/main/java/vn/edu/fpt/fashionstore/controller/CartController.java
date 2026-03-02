@@ -12,17 +12,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.entity.Voucher;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 
 import jakarta.servlet.http.HttpSession;
+import vn.edu.fpt.fashionstore.service.VoucherService;
+
 import java.util.List;
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/cart")
 public class CartController {
+
+    @Autowired
+    private VoucherService voucherService;
 
     @Autowired
     private CartService cartService;
@@ -159,35 +165,138 @@ public class CartController {
     }
 
     // =======================================================
-    // 1. MỞ TRANG CHECKOUT
+    // 1. MỞ TRANG CHECKOUT (ĐÃ THÊM LOGIC TÍNH PHÍ SHIP)
     // =======================================================
     @GetMapping("/checkout")
     @Transactional(readOnly = true)
-    public String checkoutPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String checkoutPage(
+            @RequestParam(value = "deliveryMethod", defaultValue = "standard") String deliveryMethod,
+            Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
 
-            // Nếu giỏ hàng trống thì không cho vào trang checkout
             if (cartItems.isEmpty()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
                 return "redirect:/cart";
             }
 
+            // Tiền hàng tạm tính
             double total = cartService.getCartTotal(cartItems);
+
+            // TÍNH PHÍ SHIP BẰNG JAVA BACKEND
+            double shippingFee = 0;
+            if ("express".equals(deliveryMethod)) {
+                shippingFee = 50000; // Giao nhanh
+            } else {
+                shippingFee = 30000; // Tiêu chuẩn
+            }
+
+            // TÍNH TỔNG THANH TOÁN (Total + Ship)
+            double finalTotal = total + shippingFee;
+
+            // Đẩy các biến ra ngoài file Thymeleaf
+            model.addAttribute("deliveryMethod", deliveryMethod);
+            model.addAttribute("shippingFee", shippingFee);
+            model.addAttribute("finalTotal", finalTotal);
 
             // Gửi dữ liệu ra cột bên phải
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
+            // Lấy danh sách mã hợp lệ và đẩy ra giao diện
+            model.addAttribute("availableVouchers", voucherService.getValidVouchersForCustomer());
 
-            // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
+            // Lấy sẵn tên và sđt từ Customer
             model.addAttribute("fullName", currentCustomer.getFullName());
-            model.addAttribute("phone", currentCustomer.getPhone());
+            String phoneStr = "0" + currentCustomer.getPhone();
+            model.addAttribute("phone", phoneStr);
             model.addAttribute("email", currentCustomer.getEmail());
             model.addAttribute("address", currentCustomer.getAddress());
 
             return "checkout";
         } catch (RuntimeException e) {
+            return "redirect:/login";
+        }
+    }
+
+    // =======================================================
+    // 1.5. HÀM TRUNG GIAN ĐỂ CẬP NHẬT GIAO DIỆN (TÍNH SHIP & VOUCHER)
+    // =======================================================
+    @PostMapping("/checkout/update")
+    public String updateCheckoutForm(
+            @RequestParam(value = "fullName", defaultValue = "") String fullName,
+            @RequestParam(value = "phone", defaultValue = "") String phone,
+            @RequestParam(value = "address", defaultValue = "") String address,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam(value = "deliveryMethod", defaultValue = "standard") String deliveryMethod,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
+            @RequestParam(value = "voucherCode", defaultValue = "") String voucherCode,
+            Model model, HttpSession session) {
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            double total = cartService.getCartTotal(cartItems); // Tiền hàng tạm tính
+
+            // 1. Tính phí ship
+            double shippingFee = "express".equals(deliveryMethod) ? 50000 : 30000;
+
+            // 2. Tính tiền Voucher TỪ DATABASE VÀ KIỂM TRA ĐƠN TỐI THIỂU
+            double discount = 0;
+            String voucherMessage = null;
+            boolean isVoucherValid = false;
+
+            if (!voucherCode.trim().isEmpty()) {
+                Voucher voucher = voucherService.getValidVoucherByCode(voucherCode);
+                if (voucher != null) {
+
+                    // --- ĐÃ THÊM LOGIC KIỂM TRA ĐƠN TỐI THIỂU TẠI ĐÂY ---
+                    double minValue = (voucher.getMinOrderValue() != null) ? voucher.getMinOrderValue() : 0;
+
+                    if (total >= minValue) {
+                        // Đủ điều kiện: Tiền hàng >= Yêu cầu tối thiểu của mã
+                        discount = voucher.getDiscountValue();
+                        voucherMessage = "Áp dụng mã thành công! Bạn được giảm " + String.format("%,.0f", discount) + "đ";
+                        isVoucherValid = true;
+                    } else {
+                        // Bị chặn lại: Không đủ tiền
+                        voucherMessage = "Mã này yêu cầu đơn hàng tối thiểu " + String.format("%,.0f", minValue) + "đ!";
+                    }
+                    // ---------------------------------------------------
+
+                } else {
+                    voucherMessage = "Mã giảm giá không tồn tại, đã hết hạn hoặc bị khóa!";
+                }
+            }
+
+            // 3. Tính tổng tiền
+            double finalTotal = total + shippingFee - discount;
+            if (finalTotal < 0) finalTotal = 0;
+
+            // 4. Trả lại toàn bộ thông tin khách đã gõ để không bị mất
+            model.addAttribute("fullName", fullName);
+            model.addAttribute("phone", phone);
+            model.addAttribute("email", email);
+            model.addAttribute("address", address);
+            model.addAttribute("note", note);
+            model.addAttribute("deliveryMethod", deliveryMethod);
+            model.addAttribute("paymentMethod", paymentMethod);
+            model.addAttribute("voucherCode", voucherCode);
+
+            // 5. Trả số liệu tính toán ra giao diện
+            model.addAttribute("cartItems", cartItems);
+            model.addAttribute("total", total);
+            model.addAttribute("shippingFee", shippingFee);
+            model.addAttribute("discount", discount);
+            model.addAttribute("finalTotal", finalTotal);
+
+            // 6. Gửi câu thông báo và danh sách gợi ý Voucher ra lại màn hình
+            model.addAttribute("voucherMessage", voucherMessage);
+            model.addAttribute("isVoucherValid", isVoucherValid);
+            model.addAttribute("availableVouchers", voucherService.getValidVouchersForCustomer());
+
+            return "checkout";
+        } catch (Exception e) {
             return "redirect:/login";
         }
     }
@@ -204,6 +313,7 @@ public class CartController {
             @RequestParam(value = "note", required = false) String note,
             @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
             @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
+            @RequestParam(value = "voucherCode", required = false) String voucherCode,
             Model model,
             HttpSession session) {
 

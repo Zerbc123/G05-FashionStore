@@ -112,7 +112,7 @@
         <form th:action="@{/login}" method="post">
             <div class="form-group">
                 <label for="username"><i class="bi bi-envelope"></i> Email Address</label>
-                <input type="email" class="form-control" id="username" name="username"
+                <input type="text" class="form-control" id="username" name="username"
                        placeholder="Enter your email" required
                        oninvalid="this.setCustomValidity('Email không được để trống hoặc sai định dạng')"
                        oninput="this.setCustomValidity('')">

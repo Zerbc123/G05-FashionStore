@@ -42,28 +42,26 @@ public class AccountService {
      */
     public Account authenticate(String username, String password) {
 
-        // 1. Tìm account theo email
-        Optional<Account> accountOpt = accountRepository.findByEmail(username);
+        // 1. Tìm account theo Username HOẶC Email
+        Account account = accountRepository.findByUsername(username)
+                .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
 
-        if (accountOpt.isEmpty()) {
-            return null; // Email không tồn tại
+        if (account == null) {
+            return null; // Không tìm thấy tài khoản
         }
-
-        Account account = accountOpt.get();
-
-        // 2. Kiểm tra password
-        // Xử lý cả plain text và hashed passwords
-        boolean passwordValid = false;
 
         if (account.getPassword() == null) {
             return null; // Tài khoản này chỉ dùng login qua Google
         }
 
-        // Thử verify với BCrypt trước (cho passwords đã được mã hóa)
-        try {
+        // 2. Kiểm tra password (Xử lý dứt điểm cả Hash BCrypt lẫn Chữ thô)
+        boolean passwordValid = false;
+
+        if (account.getPassword().startsWith("$2a$")) {
+            // Nếu trong DB là chuỗi mã hóa BCrypt
             passwordValid = passwordEncoder.matches(password, account.getPassword());
-        } catch (Exception e) {
-            // Nếu có lỗi (có thể do password không được hash), thử so sánh plain text
+        } else {
+            // Nếu trong DB là chữ thô (như '123456' bạn vừa update trong SQL)
             passwordValid = account.getPassword().equals(password);
         }
 
@@ -71,7 +69,7 @@ public class AccountService {
             return null; // Sai mật khẩu
         }
 
-        // 3. Kiểm tra status (dùng .equalsIgnoreCase để tránh lỗi viết hoa/thường)
+        // 3. Kiểm tra status
         if (!"Active".equalsIgnoreCase(account.getStatus())) {
             return null; // Tài khoản bị khóa hoặc chưa kích hoạt
         }

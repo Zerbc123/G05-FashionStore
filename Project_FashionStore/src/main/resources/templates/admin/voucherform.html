@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Form Voucher</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0" th:text="${pageTitle}">Thêm Mã Giảm Giá</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <div th:if="${errorMessage}" class="alert alert-danger fw-bold" th:text="${errorMessage}"></div>
+
+                    <form th:action="@{/admin/vouchers/save}" th:object="${voucher}" method="post">
+
+                        <input type="hidden" th:field="*{voucherId}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mã Giảm Giá (Code) *</label>
+                            <input type="text" th:field="*{code}" class="form-control" style="text-transform: uppercase;" required placeholder="VD: FPT2026">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số Tiền Giảm (VNĐ) *</label>
+                            <input type="number" th:field="*{discountValue}" class="form-control" required min="1000" step="1000" placeholder="VD: 50000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Đơn hàng tối thiểu để áp dụng (VNĐ) *</label>
+                            <input type="number" th:field="*{minOrderValue}" class="form-control" min="0" step="1000" placeholder="VD: 1000000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ngày Hết Hạn *</label>
+                            <input type="date" th:field="*{expiredDate}" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Trạng Thái</label>
+                            <select th:field="*{isActive}" class="form-select">
+                                <option value="true">Cho phép sử dụng (Kích hoạt)</option>
+                                <option value="false">Tạm khóa (Không dùng được)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a th:href="@{/admin/vouchers}" class="btn btn-secondary">Quay Lại</a>
+                            <button type="submit" class="btn btn-success">Lưu Mã Giảm Giá</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

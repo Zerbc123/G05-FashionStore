@@ -83,7 +83,8 @@
                     <h4 class="section-title"><i class="bi bi-truck me-2"></i>Phương Thức Giao Hàng</h4>
                     <div class="d-flex flex-column gap-3">
                         <label>
-                            <input type="radio" class="form-check-input" name="deliveryMethod" value="standard" checked>
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="standard"
+                                   th:checked="${deliveryMethod == 'standard'}">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
                                 <div class="flex-grow-1">
@@ -95,7 +96,8 @@
                         </label>
 
                         <label>
-                            <input type="radio" class="form-check-input" name="deliveryMethod" value="express">
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="express"
+                                   th:checked="${deliveryMethod == 'express'}">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
                                 <div class="flex-grow-1">
@@ -105,6 +107,10 @@
                                 <div class="fw-bold">50.000đ</div>
                             </div>
                         </label>
+
+                        <button type="submit" formmethod="GET" th:formaction="@{/cart/checkout}" class="btn btn-outline-secondary btn-sm mt-2" style="width: fit-content;">
+                            <i class="bi bi-arrow-clockwise"></i> Cập nhật lại phí Ship
+                        </button>
                     </div>
                 </div>
 
@@ -157,6 +163,36 @@
                         </div>
                     </div>
 
+                    <div class="mt-4 mb-3">
+                        <label class="form-label fw-bold"><i class="bi bi-ticket-perforated me-2"></i>Mã Giảm Giá</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" name="voucherCode" th:value="${voucherCode}" class="form-control" placeholder="Nhập mã (VD: FPT2026)">
+
+                            <button type="submit" th:formaction="@{/cart/checkout/update}" class="btn btn-dark" style="white-space: nowrap;">Áp dụng</button>
+                        </div>
+
+                        <small th:if="${voucherMessage}"
+                               th:text="${voucherMessage}"
+                               th:classappend="${isVoucherValid} ? 'text-success' : 'text-danger'"
+                               class="d-block mt-2 fw-bold"></small>
+                    </div>
+
+                    <div th:if="${not #lists.isEmpty(availableVouchers)}" class="mb-4">
+                        <p class="text-muted small fw-bold mb-2"><i class="bi bi-gift me-1"></i> Mã giảm giá dành cho bạn:</p>
+
+                        <div class="d-flex flex-column gap-2">
+                            <div th:each="v : ${availableVouchers}" class="border border-danger border-opacity-25 rounded p-2 bg-white d-flex justify-content-between align-items-center" style="border-left: 4px solid #dc3545 !important;">
+                                <div>
+                                    <span class="badge bg-dark font-monospace fs-6 shadow-sm" th:text="${v.code}">CODE</span>
+                                    <small class="text-danger fw-bold ms-2" th:text="'-' + ${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'">-0đ</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;" th:text="'HSD: ' + ${#dates.format(v.expiredDate, 'dd/MM/yyyy')}">31/12</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <hr class="text-muted">
 
                     <div class="summary-item">
@@ -165,12 +201,12 @@
                     </div>
                     <div class="summary-item">
                         <span class="text-muted">Phí vận chuyển:</span>
-                        <span class="fw-bold">30.000đ</span>
+                        <span class="fw-bold text-danger" th:text="${#numbers.formatDecimal(shippingFee, 0, 'COMMA', 0, 'POINT')} + 'đ'">30.000đ</span>
                     </div>
 
                     <div class="summary-total">
                         <span>Tổng thanh toán:</span>
-                        <span th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                        <span th:text="${#numbers.formatDecimal(finalTotal, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
 
                     <button type="submit" class="btn-checkout">ĐẶT HÀNG</button>
