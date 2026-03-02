@@ -60,8 +60,12 @@ public class OrderService {
 
             System.out.println("[ORDER SERVICE] Total amount: " + totalAmount);
 
-            // Tạo đơn hàng mới đơn giản (chỉ dùng các column có trong database)
+            // Tạo đơn hàng mới với địa chỉ giao hàng và tài khoản
             Order order = new Order(customer, totalAmount);
+            order.setShippingAddress(deliveryAddress);
+            if (customer.getAccount() != null) {
+                order.setAccount(customer.getAccount());
+            }
             order = orderRepository.save(order);
             
             System.out.println("[ORDER SERVICE] Order saved with ID: " + order.getOrderId());

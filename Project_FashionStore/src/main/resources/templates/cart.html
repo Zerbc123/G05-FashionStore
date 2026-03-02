@@ -19,7 +19,16 @@
     <style>
         /* Cart Page Specific Styles */
         body {
-            padding-top: 80px;
+            padding-top: 100px;
+        }
+        
+        /* Fix navbar positioning */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
         }
 
         /* Cart Section */
@@ -110,56 +119,6 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .brand-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .brand-item {
-            flex: 0 0 calc(33.333% - 0.6rem);
-        }
-
-        .brand-link {
-            display: block;
-            padding: 0.6rem 1rem;
-            background: var(--light-bg);
-            border-radius: 10px;
-            color: var(--dark-text);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .brand-link:hover {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
-        }
-
-        .simple-category {
-            display: block;
-            padding: 0.6rem 1rem;
-            background: var(--light-bg);
-            border-radius: 10px;
-            color: var(--dark-text);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .simple-category:hover {
-            background: var(--pastel-purple);
-            color: var(--dark-text);
-            padding-left: 1.5rem;
         }
 
         .nav-icons {
@@ -621,12 +580,8 @@
                         <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <div class="summary-row">
-                        <span>Phí vận chuyển:</span>
-                        <span>30.000đ</span>
-                    </div>
-                    <div class="summary-row">
                         <span>Tổng cộng:</span>
-                        <span th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                        <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <a th:href="@{/cart/checkout}" class="btn btn-primary w-100" style="background: var(--primary-color); border: none;">
                         <i class="bi bi-credit-card me-2"></i> Thanh Toán

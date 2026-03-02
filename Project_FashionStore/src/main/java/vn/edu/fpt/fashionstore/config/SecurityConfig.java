@@ -30,13 +30,16 @@ public class SecurityConfig {
                         // 1. Tài nguyên tĩnh: Luôn cho phép để giao diện không bị vỡ
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/vendor/**").permitAll()
 
-                        // 2. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
+                        // 2. API endpoints: Cho phép truy cập API
+                        .requestMatchers("/api/**").permitAll()
+
+                        // 3. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
                         .requestMatchers("/", "/home", "/products/**", "/product-details/**", "/search/**").permitAll()
 
-                        // 3. Auth pages: Trang login/register/verify-otp không cần login
+                        // 4. Auth pages: Trang login/register/verify-otp không cần login
                         .requestMatchers("/login", "/register", "/verify-otp").permitAll()
 
-                        // 4. Admin và Staff routes: Cho phép truy cập, controllers sẽ tự kiểm tra session
+                        // 5. Admin và Staff routes: Cho phép truy cập, controllers sẽ tự kiểm tra session
                         // Vì app dùng custom session-based auth, không dùng Spring Security authentication
                         .requestMatchers("/admin/**", "/staff/**").permitAll()
 

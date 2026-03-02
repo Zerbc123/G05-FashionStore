@@ -17,6 +17,10 @@ public class Order {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+    
     @Column(name = "order_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date orderDate;
@@ -27,6 +31,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private OrderStatus status;
+    
+    @Column(name = "shipping_address", length = 500)
+    private String shippingAddress;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
@@ -90,6 +97,22 @@ public class Order {
     
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+    
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+    
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+    
+    public Account getAccount() {
+        return account;
+    }
+    
+    public void setAccount(Account account) {
+        this.account = account;
     }
     
     // Business methods
