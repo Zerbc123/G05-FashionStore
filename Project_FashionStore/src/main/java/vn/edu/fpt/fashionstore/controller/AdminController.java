@@ -67,16 +67,6 @@ public class AdminController {
         return "admin/edit";
     }
 
-    // Quản lý đơn hàng
-    @GetMapping("/orders")
-    public String orders(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Order Management");
-        return "admin/adminorder";
-    }
-    
     // Xem chi tiết đơn hàng
     @GetMapping("/orderdetails/{id}")
     public String orderDetails(@PathVariable String id, HttpSession session, Model model) {

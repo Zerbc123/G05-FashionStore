@@ -1,54 +1,45 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-
 import java.util.Date;
+import java.util.List;
 
 @Entity
+@Table(name = "customer")
 public class Customer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column (name = "customer_id")
-    private int customerId;
+    @Column(name = "customer_id")
+    private Long customerId;
 
     @Column(name = "full_name")
     private String fullName;
 
     private boolean gender;
+
     @Column(name = "birthday")
     private Date dateOfBirth;
 
-    @Column (name = "created_at")
+    @Column(name = "created_at")
     private Date createdDate;
 
     private String email;
-    // Trong file Account.java và Customer.java
-    private Integer phone; // Integer (Wrapper class) cho phép nhận giá trị null
+    private Integer phone;
     private String address;
 
     @ManyToOne
-    @JoinColumn (name = "account_id")
+    @JoinColumn(name = "account_id")
     private Account account;
 
-    public Customer() {
-    }
+    @OneToMany(mappedBy = "customer")
+    private List<Order> orders;
 
-    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, Integer phone, String address) {
-        this.customerId = customerId;
-        this.fullName = fullName;
-        this.gender = gender;
-        this.dateOfBirth = dateOfBirth;
-        this.createdDate = createdDate;
-        this.email = email;
-        this.phone = phone;
-        this.address = address;
-    }
-
-    public int getCustomerId() {
+    public Long getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(Long customerId) {
         this.customerId = customerId;
     }
 
@@ -114,5 +105,13 @@ public class Customer {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 }
