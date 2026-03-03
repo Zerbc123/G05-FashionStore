@@ -97,13 +97,15 @@
 
             </div>
         </div>
-        
+
 
         <div class="mt-4">
             <a th:href="@{/admin/orders}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Quay lại
             </a>
-            
+            <a th:href="@{/admin/orders/orderdetails/{id}/pdf(id=${order.orderId})}" class="btn btn-danger">
+                In Đơn Hàng
+            </a>
         </div>
 
     </div>
