@@ -22,7 +22,7 @@ public class Order {
     private Account account;
     
     @Column(name = "order_date", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.DATE)
     private Date orderDate;
     
     @Column(name = "total_amount", nullable = false)
@@ -140,7 +140,6 @@ public class Order {
             throw new RuntimeException("Đơn hàng không thể hủy ở trạng thái: " + status);
         }
         this.status = OrderStatus.CANCELLED;
-        // Note: cancelledBy, cancelledDate, cancellationReason không lưu vào DB vì không có column
         System.out.println("Order #" + orderId + " cancelled by: " + cancelledBy + ", reason: " + reason);
     }
     

@@ -91,6 +91,64 @@
             font-size: 2rem;
             font-weight: 700;
         }
+        .order-items {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .order-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .order-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .item-details {
+            flex: 1;
+        }
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .item-variant {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .item-quantity {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .item-price {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .item-total {
+            font-weight: 700;
+            color: #007bff;
+            font-size: 1rem;
+            margin-top: 5px;
+        }
         .action-buttons {
             padding: 30px;
             display: flex;
@@ -148,7 +206,7 @@
                     <i class="bi bi-calendar"></i>
                     <div class="info-content">
                         <div class="info-label">Ngày đặt hàng</div>
-                        <div class="info-value" th:text="${#dates.format(orderDate, 'dd/MM/yyyy HH:mm')}">01/03/2026 00:15</div>
+                        <div class="info-value" th:text="${#dates.format(orderDate, 'dd/MM/yyyy')}">01/03/2026</div>
                     </div>
                 </div>
                 
@@ -200,22 +258,37 @@
         <!-- Order Items Section -->
         <div class="info-section">
             <h3><i class="bi bi-cart-fill"></i> Sản phẩm đã đặt</h3>
-            <div class="info-grid">
-                <!-- Hiển thị nếu có OrderItem -->
-                <div class="info-item" th:if="${orderItems != null and not #lists.isEmpty(orderItems)}">
-                    <i class="bi bi-check-circle"></i>
-                    <div class="info-content">
-                        <div class="info-label">Số lượng sản phẩm</div>
-                        <div class="info-value" th:text="${#lists.size(orderItems)}">0</div>
+            <div class="order-items">
+                <div class="item-list">
+                    <!-- Hiển thị nếu có OrderItem -->
+                    <div class="order-item" th:each="item : ${orderItems}" th:if="${orderItems != null and not #lists.isEmpty(orderItems)}">
+                        <img th:src="${item.productImage}" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name" th:text="${item.productName}">Áo sơ mi nam</div>
+                            <div class="item-variant">
+                                Size: <span th:text="${item.sizeName}">M</span> | 
+                                Color: <span th:text="${item.colorName}">Đen</span>
+                            </div>
+                            <div class="item-quantity">Số lượng: <span th:text="${item.quantity}">2</span></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div class="item-price">Đơn giá: <span th:text="${(item.quantity > 0 ? item.totalPrice / item.quantity : 0) + 'đ'}">250,000đ</span></div>
+                                <div class="item-total">Thành tiền: <span th:text="${item.totalPrice + 'đ'}">500,000đ</span></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Hiển thị thông báo nếu không có OrderItem -->
-                <div class="info-item" th:if="${orderItems == null or #lists.isEmpty(orderItems)}">
-                    <i class="bi bi-info-circle"></i>
-                    <div class="info-content">
-                        <div class="info-label">Trạng thái</div>
-                        <div class="info-value">Đơn hàng đã được tạo thành công!</div>
+                    
+                    <!-- Hiển thị thông báo nếu không có OrderItem -->
+                    <div class="order-item" th:if="${orderItems == null or #lists.isEmpty(orderItems)}">
+                        <div class="item-details">
+                            <div class="item-name">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Chi tiết đơn hàng
+                            </div>
+                            <div class="item-variant text-muted">
+                                Đơn hàng đã được tạo thành công.<br>
+                                Tổng giá trị: <span th:text="${totalAmount + 'đ'}">0đ</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -233,14 +306,6 @@
         <a th:href="@{/home}" class="btn-action btn-success">
             <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
         </a>
-        
-        <a th:href="@{/cart/order-details/{oid}(oid=${orderCode.replace('#', '')})}" class="btn-action btn-primary">
-            <i class="bi bi-eye"></i> Xem chi tiết đơn hàng
-        </a>
-        
-        <!-- <a th:href="@{/fashionstore/order-history}" class="btn-action btn-secondary">
-            <i class="bi bi-list"></i> Xem lịch sử đơn hàng
-        </a> -->
     </div>
 </div>
 

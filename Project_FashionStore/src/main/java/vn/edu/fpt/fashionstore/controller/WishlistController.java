@@ -58,30 +58,24 @@ public class WishlistController {
                                 org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         String email = (String) session.getAttribute("user");
         if (email == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thêm vào danh sách yêu thích");
             return "redirect:/login";
         }
         
         Optional<Account> accountOpt = accountService.findByEmail(email);
         if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin khách hàng");
-            return "redirect:/products";
+            redirectAttributes.addFlashAttribute("error", "Bạn cần đăng nhập để thêm vào yêu thích");
+            return "redirect:/login";
         }
         
         Customer customer = accountOpt.get().getCustomers().get(0);
         Optional<Product> productOpt = productRepository.findById(productId);
-        
-        if (productOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm");
-            return "redirect:/products";
-        }
         
         boolean added = wishlistService.addToWishlist(customer, productOpt.get());
         
         if (added) {
             redirectAttributes.addFlashAttribute("success", "Đã thêm vào danh sách yêu thích");
         } else {
-            redirectAttributes.addFlashAttribute("info", "Sản phẩm đã có trong danh sách yêu thích");
+            redirectAttributes.addFlashAttribute("error", "Sản phẩm đã có trong danh sách yêu thích");
         }
         
         return "redirect:/products";
@@ -92,7 +86,7 @@ public class WishlistController {
                                       org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         String email = (String) session.getAttribute("user");
         if (email == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập");
+            redirectAttributes.addFlashAttribute("error", "Bạn cần đăng nhập để xóa khỏi yêu thích");
             return "redirect:/login";
         }
         

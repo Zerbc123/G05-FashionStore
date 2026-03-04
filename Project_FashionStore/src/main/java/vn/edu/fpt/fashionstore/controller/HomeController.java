@@ -26,6 +26,7 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.edu.fpt.fashionstore.util.PhoneUtils;
 import vn.edu.fpt.fashionstore.util.DateUtils;
 import vn.edu.fpt.fashionstore.util.AddressUtils;
@@ -50,6 +51,9 @@ public class HomeController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
         this.accountService = accountService;
@@ -175,8 +179,15 @@ public class HomeController {
         }
         
         try {
-            // Lấy customer hiện tại
-            Customer currentCustomer = getCurrentCustomer(session);
+            // Lấy customer hiện tại - dùng logic giống profile method
+            String email = (String) session.getAttribute("user");
+            Account acc = accountService.findByEmail(email).orElse(null);
+            
+            Customer currentCustomer = null;
+            if (acc != null) {
+                currentCustomer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
+                        ? acc.getCustomers().get(0) : new Customer();
+            }
             
             // Kiểm tra nếu customer không tồn tại
             if (currentCustomer == null) {
@@ -400,6 +411,147 @@ public class HomeController {
     public String registerExpiredPage(Model model) {
         model.addAttribute("error", "Mã OTP đã hết hạn. Vui lòng đăng ký lại!");
         return "register";
+    }
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage() {
+        return "forgot-password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String sendForgotPasswordOtp(@RequestParam String email, HttpSession session, RedirectAttributes ra) {
+        try {
+            // Kiểm tra email tồn tại trong hệ thống
+            Optional<Account> accountOpt = accountService.findByEmail(email);
+            if (!accountOpt.isPresent()) {
+                ra.addFlashAttribute("error", "Email không tồn tại trong hệ thống!");
+                return "redirect:/forgot-password";
+            }
+
+            // Kiểm tra chống spam OTP
+            Long lastOtpRequestTime = (Long) session.getAttribute("lastOtpRequestTime");
+            Integer otpRequestCount = (Integer) session.getAttribute("otpRequestCount");
+            
+            if (lastOtpRequestTime != null && otpRequestCount != null) {
+                long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
+                
+                // Tính thời gian chờ: 30s, 1p, 2p, 3p, 4p, 5p...
+                long waitTimeSeconds;
+                if (otpRequestCount == 1) {
+                    waitTimeSeconds = 30; // Lần đầu: 30 giây
+                } else {
+                    waitTimeSeconds = otpRequestCount * 60; // Các lần sau: 1p, 2p, 3p...
+                }
+                
+                if (timeSinceLastRequest < waitTimeSeconds * 1000) {
+                    long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
+                    ra.addFlashAttribute("error", "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
+                    return "redirect:/forgot-password";
+                }
+            }
+
+            // Tạo OTP
+            String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
+
+            // Lưu thông tin vào session
+            session.setAttribute("resetEmail", email);
+            session.setAttribute("resetOtpCode", otp);
+            session.setAttribute("resetOtpTimestamp", System.currentTimeMillis());
+            
+            // Cập nhật thông tin chống spam
+            session.setAttribute("lastOtpRequestTime", System.currentTimeMillis());
+            if (otpRequestCount == null) {
+                session.setAttribute("otpRequestCount", 1);
+            } else {
+                session.setAttribute("otpRequestCount", otpRequestCount + 1);
+            }
+
+            // Gửi email
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Mã xác nhận đặt lại mật khẩu - Fashion Store");
+            message.setText("Mã OTP đặt lại mật khẩu của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
+            mailSender.send(message);
+
+            ra.addFlashAttribute("success", "Mã OTP đã được gửi đến email của bạn!");
+            return "redirect:/reset-password";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi gửi email: " + e.getMessage());
+            return "redirect:/forgot-password";
+        }
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPasswordPage(HttpSession session) {
+        if (session.getAttribute("resetOtpCode") == null) {
+            return "redirect:/forgot-password";
+        }
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String handleResetPassword(@RequestParam String otp, 
+                                     @RequestParam String newPassword, 
+                                     @RequestParam String confirmPassword,
+                                     HttpSession session, 
+                                     RedirectAttributes ra) {
+        String serverOtp = (String) session.getAttribute("resetOtpCode");
+        Long otpTimestamp = (Long) session.getAttribute("resetOtpTimestamp");
+        String email = (String) session.getAttribute("resetEmail");
+
+        // Kiểm tra OTP có hết hạn không (5 phút)
+        if (otpTimestamp == null || (System.currentTimeMillis() - otpTimestamp) > 300000) {
+            session.removeAttribute("resetOtpCode");
+            session.removeAttribute("resetOtpTimestamp");
+            session.removeAttribute("resetEmail");
+            session.removeAttribute("lastOtpRequestTime");
+            session.removeAttribute("otpRequestCount");
+            ra.addFlashAttribute("error", "Mã OTP đã hết hạn (5 phút). Vui lòng thử lại!");
+            return "redirect:/forgot-password";
+        }
+
+        // Kiểm tra OTP có đúng không
+        if (serverOtp == null || !serverOtp.equals(otp)) {
+            ra.addFlashAttribute("error", "Mã OTP không chính xác!");
+            return "redirect:/reset-password";
+        }
+
+        // Kiểm tra mật khẩu có khớp không
+        if (!newPassword.equals(confirmPassword)) {
+            ra.addFlashAttribute("error", "Mật khẩu mới và xác nhận mật khẩu không khớp!");
+            return "redirect:/reset-password";
+        }
+
+        // Kiểm tra định dạng mật khẩu
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số!");
+            return "redirect:/reset-password";
+        }
+
+        try {
+            // Cập nhật mật khẩu
+            Optional<Account> accountOpt = accountService.findByEmail(email);
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
+                account.setPassword(passwordEncoder.encode(newPassword));
+                accountService.saveAccount(account);
+            }
+
+            // Xóa session
+            session.removeAttribute("resetOtpCode");
+            session.removeAttribute("resetOtpTimestamp");
+            session.removeAttribute("resetEmail");
+            session.removeAttribute("lastOtpRequestTime");
+            session.removeAttribute("otpRequestCount");
+
+            ra.addFlashAttribute("success", "Mật khẩu đã được cập nhật thành công! Vui lòng đăng nhập.");
+            return "redirect:/login";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi cập nhật mật khẩu: " + e.getMessage());
+            return "redirect:/reset-password";
+        }
     }
 
     @GetMapping("/login")
