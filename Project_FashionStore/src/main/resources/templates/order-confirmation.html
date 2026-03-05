@@ -303,6 +303,9 @@
 
     <!-- Action Buttons -->
     <div class="action-buttons">
+        <a th:href="@{/order/details/{orderId}(orderId=${orderId})}" class="btn-action btn-primary">
+            <i class="bi bi-receipt"></i> Chi tiết đơn hàng
+        </a>
         <a th:href="@{/home}" class="btn-action btn-success">
             <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
         </a>

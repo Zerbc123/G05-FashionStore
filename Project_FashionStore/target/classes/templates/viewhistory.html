@@ -107,7 +107,7 @@
             <div class="order-footer">
                 <div class="order-total" th:text="'Tổng: ' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">Tổng: 1.327.000đ</div>
                 <div class="order-actions">
-                    <a th:href="@{/cart/order-details/{orderId}(orderId=${order.orderId})}" class="btn-view">Chi tiết</a>
+                    <a th:href="@{/order/details/{orderId}(orderId=${order.orderId})}" class="btn-view">Chi tiết</a>
                     <a th:href="@{/home}" class="btn-view">Tiếp tục mua sắm</a>
                 </div>
             </div>

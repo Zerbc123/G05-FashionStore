@@ -435,7 +435,7 @@
                 <button class="btn-action btn-secondary" onclick="hideCancelModal()">
                     <i class="bi bi-x"></i> Không hủy
                 </button>
-                <form th:action="@{/cart/order-details/{oid}/cancel(oid=${order_id})}" method="post" style="display: inline;">
+                <form th:action="@{/order/details/{oid}/cancel(oid=${orderId})}" method="post" style="display: inline;">
                     <button type="submit" class="btn-action btn-danger">
                         <i class="bi bi-check"></i> Xác nhận hủy
                     </button>

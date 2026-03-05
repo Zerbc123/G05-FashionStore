@@ -69,7 +69,7 @@
 <main class="container mb-5">
     <h2 class="page-title">Thanh Toán</h2>
 
-    <form th:action="@{/cart/checkout/place-order}" method="POST">
+    <form th:action="@{/order/checkout/place-order}" method="POST">
         <div class="row">
             <div class="col-lg-8">
                 <div class="checkout-box">
@@ -261,12 +261,12 @@ function updateTotal(shippingFee) {
 
 function changeAddress() {
     console.log('Changing address...');
-    window.location.href = '/fashionstore/cart/checkout/select-delivery-address';
+    window.location.href = '/fashionstore/order/checkout/select-delivery-address';
 }
 
 // Form validation before submit
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form[action="/fashionstore/cart/checkout/place-order"]');
+    const form = document.querySelector('form[action="/fashionstore/order/checkout/place-order"]');
     if (form) {
         form.addEventListener('submit', function(e) {
             console.log('Form submitting...');
