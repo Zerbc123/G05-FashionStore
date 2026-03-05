@@ -11,12 +11,16 @@ import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
+import vn.edu.fpt.fashionstore.entity.Voucher;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
+import vn.edu.fpt.fashionstore.repository.OrderRepository;
+import vn.edu.fpt.fashionstore.repository.VoucherRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +39,12 @@ public class CartController {
     
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private VoucherRepository voucherRepository;
 
     // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
@@ -90,19 +100,14 @@ public class CartController {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
             if (currentCustomer == null) {
-                System.out.println("[CART DEBUG] Customer is null, redirecting to login");
                 return "redirect:/login";
             }
-            
-            System.out.println("[CART DEBUG] Adding to cart - ProductID: " + productId + ", SizeID: " + sizeId + ", ColorID: " + colorId + ", Quantity: " + quantity);
-            
+
             // Tìm variant dựa trên productId, sizeId và colorId
             Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
-            
-            System.out.println("[CART DEBUG] Found variantId: " + variantId);
+
             
             if (variantId == null) {
-                System.out.println("[CART DEBUG] Variant not found!");
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
                 return "redirect:/products/detail/" + productId;
             }
@@ -111,11 +116,9 @@ public class CartController {
             
             // Cập nhật số lượng giỏ hàng
             updateCartCount(session, currentCustomer);
-            
-            System.out.println("[CART DEBUG] Successfully added to cart!");
+
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
         } catch (RuntimeException e) {
-            System.out.println("[CART DEBUG] Error: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
             return "redirect:/login";
@@ -133,19 +136,14 @@ public class CartController {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
             if (currentCustomer == null) {
-                System.out.println("[BUY NOW DEBUG] Customer is null, redirecting to login");
                 return "redirect:/login";
             }
-            
-            System.out.println("[BUY NOW DEBUG] Buy now - ProductID: " + productId + ", SizeID: " + sizeId + ", ColorID: " + colorId + ", Quantity: " + quantity);
-            
             // Tìm variant dựa trên productId, sizeId và colorId
             Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
             
-            System.out.println("[BUY NOW DEBUG] Found variantId: " + variantId);
-            
+
             if (variantId == null) {
-                System.out.println("[BUY NOW DEBUG] Variant not found!");
+
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
                 return "redirect:/products/detail/" + productId;
             }
@@ -155,13 +153,11 @@ public class CartController {
             
             // Cập nhật số lượng giỏ hàng
             updateCartCount(session, currentCustomer);
-            
-            System.out.println("[BUY NOW DEBUG] Successfully added to cart, redirecting to checkout!");
+
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
             return "redirect:/cart/checkout";
             
         } catch (RuntimeException e) {
-            System.out.println("[BUY NOW DEBUG] Error: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
             return "redirect:/login";
@@ -254,6 +250,10 @@ public class CartController {
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
 
+            // Lấy danh sách voucher hợp lệ từ database
+            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+            model.addAttribute("validVouchers", validVouchers);
+
             // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
             model.addAttribute("fullName", currentCustomer.getFullName());
             
@@ -288,17 +288,10 @@ public class CartController {
             @RequestParam(value = "note", required = false) String note,
             @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
             @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
+            @RequestParam(value = "totalAmount", defaultValue = "0") Double totalAmount,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
-
-        System.out.println("[CART CONTROLLER] placeOrder called with params:");
-        System.out.println("  fullName: " + fullName);
-        System.out.println("  phone: " + phone);
-        System.out.println("  deliveryAddress: " + deliveryAddress);
-        System.out.println("  note: " + note);
-        System.out.println("  deliveryMethod: " + deliveryMethod);
-        System.out.println("  paymentMethod: " + paymentMethod);
 
         // Lấy customer hiện tại
         Customer currentCustomer = getCurrentCustomer(session);
@@ -336,11 +329,15 @@ public class CartController {
         if (hasError) {
             try {
                 List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
-                double total = cartService.getCartTotal(cartItems);
+                double subtotal = cartService.getCartTotal(cartItems);
 
                 // Gửi lại data giỏ hàng
                 model.addAttribute("cartItems", cartItems);
-                model.addAttribute("total", total);
+                model.addAttribute("total", subtotal);
+                
+                // Lấy danh sách voucher hợp lệ từ database
+                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+                model.addAttribute("validVouchers", validVouchers);
 
                 // Giữ nguyên chữ khách đã nhập
                 model.addAttribute("fullName", fullName);
@@ -356,8 +353,16 @@ public class CartController {
         
         // TẠO ĐƠN HÀNG THỰC TẾ QUA ORDER SERVICE
         try {
+            System.out.println("[ORDER] Creating order with totalAmount: " + totalAmount);
+            
             // Sử dụng địa chỉ từ session hoặc từ form
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
+            
+            // Cập nhật tổng tiền đơn hàng với giá trị từ frontend
+            order.setTotalAmount(totalAmount);
+            
+            // Lưu Order vào database
+            orderRepository.save(order);
             
             // Xóa địa chỉ tạm thời khỏi session sau khi đã đặt hàng
             session.removeAttribute("deliveryAddress");

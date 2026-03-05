@@ -188,21 +188,48 @@
                         </div>
                     </div>
 
+                    <div class="mt-4 mb-3">
+                        <label class="form-label fw-bold"><i class="bi bi-ticket-perforated me-2"></i>Mã Giảm Giá</label>
+                        <div class="d-flex gap-2">
+                            <select id="voucherSelect" class="form-select">
+                                <option value="">-- Chọn voucher --</option>
+                                <option th:each="voucher : ${validVouchers}" 
+                                        th:value="${voucher.code}" 
+                                        th:data-discount="${voucher.discountValue}"
+                                        th:text="${voucher.code + ' - Giảm ' + #numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT') + 'đ'}"></option>
+                            </select>
+                            <button type="button" onclick="applyVoucher()" class="btn btn-dark" style="white-space: nowrap;">Áp dụng</button>
+                        </div>
+                        <small id="voucherMessage" class="d-block mt-2 fw-bold"></small>
+                    </div>
+
                     <hr class="text-muted">
 
                     <div class="summary-item">
                         <span class="text-muted">Tạm tính:</span>
-                        <span class="fw-bold" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                        <span class="fw-bold" id="subtotal" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <div class="summary-item">
                         <span class="text-muted">Phí vận chuyển:</span>
                         <span class="fw-bold" id="shippingFee">30.000đ</span>
+                    </div>
+                    <div class="summary-item" id="discountRow" style="display: none;">
+                        <span class="text-muted">Giảm giá:</span>
+                        <span class="fw-bold text-danger" id="discountAmount">-0đ</span>
                     </div>
 
                     <div class="summary-total">
                         <span>Tổng thanh toán:</span>
                         <span id="totalAmount" th:text="${#numbers.formatDecimal(total + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
+
+                    <!-- Hidden inputs lưu giá trị voucher -->
+                    <input type="hidden" name="voucherCode" id="hiddenVoucherCode" value="">
+                    <input type="hidden" name="voucherDiscount" id="hiddenVoucherDiscount" value="0">
+                    <input type="hidden" name="shippingFee" id="hiddenShippingFee" value="30000">
+
+                    <!-- THÊM DÒNG NÀY: Để gửi tổng tiền cuối cùng lên Server -->
+                    <input type="hidden" name="totalAmount" id="hiddenTotalAmount" th:value="${total + 30000}">
 
                     <button type="submit" class="btn-checkout">ĐẶT HÀNG</button>
                     <div class="text-center mt-3">
@@ -223,9 +250,13 @@ const subtotal = /*[[${total}]]*/ 0;
 console.log('Subtotal:', subtotal);
 
 function updateTotal(shippingFee) {
-    const total = subtotal + shippingFee;
+    // Cập nhật UI phí ship
     document.getElementById('shippingFee').textContent = shippingFee.toLocaleString('vi-VN') + 'đ';
-    document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
+    // Cập nhật Hidden phí ship
+    document.getElementById('hiddenShippingFee').value = shippingFee;
+
+    // Tính lại tổng cuối
+    calculateFinalTotal();
 }
 
 function changeAddress() {
@@ -271,6 +302,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Hàm áp dụng voucher
+function applyVoucher() {
+    const select = document.getElementById('voucherSelect');
+    const voucherCode = select.value;
+    const messageDiv = document.getElementById('voucherMessage');
+
+    if (!voucherCode) {
+        messageDiv.textContent = 'Vui lòng chọn mã voucher!';
+        messageDiv.className = 'text-warning';
+        return;
+    }
+
+    const selectedOption = select.options[select.selectedIndex];
+    const discountAmount = parseFloat(selectedOption.getAttribute('data-discount')) || 0;
+
+    // 1. Lưu thông tin voucher vào hidden
+    document.getElementById('hiddenVoucherCode').value = voucherCode;
+    document.getElementById('hiddenVoucherDiscount').value = discountAmount;
+
+    // 2. Cập nhật UI giảm giá
+    document.getElementById('discountRow').style.display = 'flex';
+    document.getElementById('discountAmount').textContent = '-' + discountAmount.toLocaleString('vi-VN') + 'đ';
+
+    // 3. Gọi hàm tính lại tổng cuối để cập nhật hiddenTotalAmount
+    calculateFinalTotal();
+
+    messageDiv.textContent = 'Áp dụng voucher thành công!';
+    messageDiv.className = 'text-success';
+}
+
+function calculateFinalTotal() {
+    // Lấy giá trị hiện tại từ các hidden inputs
+    const shippingFee = parseFloat(document.getElementById('hiddenShippingFee').value) || 0;
+    const discount = parseFloat(document.getElementById('hiddenVoucherDiscount').value) || 0;
+
+    // Tính toán
+    const finalTotal = subtotal + shippingFee - discount;
+    const safeTotal = Math.max(0, finalTotal); // Không để tổng âm
+
+    // Cập nhật hiển thị (UI)
+    document.getElementById('totalAmount').textContent = safeTotal.toLocaleString('vi-VN') + 'đ';
+
+    // CẬP NHẬT DỮ LIỆU GỬI ĐI (Server)
+    document.getElementById('hiddenTotalAmount').value = safeTotal;
+}
 </script>
 
 </body>
