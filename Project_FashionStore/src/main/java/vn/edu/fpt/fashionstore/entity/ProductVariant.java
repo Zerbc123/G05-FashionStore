@@ -1,6 +1,8 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "ProductVariant")
@@ -21,10 +23,12 @@ public class ProductVariant {
     @JoinColumn(name = "color_id")
     private Color color;
 
-    // ===== FK tới Category_Size =====
+    // ===== FK tới CategorySize =====
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_size_id")
     private CategorySize categorySize;
+
+
 
     @Column(name = "price")
     private Double price;
@@ -70,6 +74,8 @@ public class ProductVariant {
         this.categorySize = categorySize;
     }
 
+
+
     public Double getPrice() {
         return price;
     }
@@ -94,13 +100,13 @@ public class ProductVariant {
         this.imageUrl = imageUrl;
     }
 
-    public ProductVariant(int variantId, Color color, Double price, Integer stock, String imageUrl, Product product, CategorySize categorySize) {
+    public ProductVariant(int variantId, Color color, CategorySize categorySize, Double price, Integer stock, String imageUrl, Product product) {
         this.variantId = variantId;
         this.color = color;
+        this.categorySize = categorySize;
         this.price = price;
         this.stock = stock;
         this.imageUrl = imageUrl;
         this.product = product;
-        this.categorySize = categorySize;
     }
 }

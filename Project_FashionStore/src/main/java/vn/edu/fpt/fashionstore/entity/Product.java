@@ -40,7 +40,7 @@ public class Product {
     }
 
     public Product(Long productId, String productName, String description,
-                   Category category, Long accountId) {
+            Category category, Long accountId) {
         this.productId = productId;
         this.productName = productName;
         this.description = description;

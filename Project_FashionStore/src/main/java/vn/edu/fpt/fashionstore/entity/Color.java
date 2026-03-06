@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "Color")
 public class Color {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

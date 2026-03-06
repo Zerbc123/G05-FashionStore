@@ -2,9 +2,7 @@ package vn.edu.fpt.fashionstore.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Category;
@@ -32,15 +30,15 @@ public class ProductService {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(
-                criteriaBuilder.lower(root.get("productName")),
-                "%" + keyword.toLowerCase() + "%"
-            );
+                    criteriaBuilder.lower(root.get("productName")),
+                    "%" + keyword.toLowerCase() + "%");
         };
         return productRepository.findAll(spec, pageable);
     }
 
     // Lọc sản phẩm theo nhiều tiêu chí
-    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice, Pageable pageable) {
+    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice,
+            Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
 
@@ -75,7 +73,7 @@ public class ProductService {
 
     // Tìm kiếm và lọc kết hợp
     public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size,
-                                               Double minPrice, Double maxPrice, Pageable pageable) {
+            Double minPrice, Double maxPrice, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
 
@@ -119,5 +117,13 @@ public class ProductService {
 
     public List<Category> getAllCategoryIds() {
         return productRepository.findAllCategories();
+    }
+
+    public List<Product> getAllProductsWithVariants() {
+        return productRepository.findAllWithVariants();
+    }
+
+    public Product createProduct(Product product) {
+        return productRepository.save(product);
     }
 }

@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.Product;
+import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.ProductVariantService;
 
 import java.util.List;
 
@@ -19,6 +21,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductVariantService productVariantService;
 
     // =========================
     // LIST PRODUCT
@@ -37,10 +42,9 @@ public class ProductController {
             Model model) {
 
         // Sort
-        Sort.Direction sortDirection =
-                direction.equalsIgnoreCase("desc")
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
 
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
 
@@ -49,8 +53,7 @@ public class ProductController {
         // Có filter/search thì gọi search
         if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
             productPage = productService.searchAndFilterProducts(
-                    keyword, categoryId, size, minPrice, maxPrice, pageable
-            );
+                    keyword, categoryId, size, minPrice, maxPrice, pageable);
         } else {
             productPage = productService.getAllProducts(pageable);
         }
@@ -60,8 +63,7 @@ public class ProductController {
             pageable = PageRequest.of(0, pageSize, Sort.by(sortDirection, sort));
             if (hasFilter(keyword, categoryId, size, minPrice, maxPrice)) {
                 productPage = productService.searchAndFilterProducts(
-                        keyword, categoryId, size, minPrice, maxPrice, pageable
-                );
+                        keyword, categoryId, size, minPrice, maxPrice, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -125,12 +127,46 @@ public class ProductController {
     // CHECK FILTER
     // =========================
     private boolean hasFilter(String keyword, Long categoryId, String size,
-                              Double minPrice, Double maxPrice) {
+            Double minPrice, Double maxPrice) {
 
         return (keyword != null && !keyword.isBlank())
                 || categoryId != null
                 || (size != null && !size.isBlank())
                 || minPrice != null
                 || maxPrice != null;
+    }
+
+    // =========================
+    // ADMIN - LIST PRODUCT
+    // =========================
+    @GetMapping("/admin/products")
+    public String adminShowProducts(Model model) {
+
+        List<Product> products = productService.getAllProductsWithVariants();
+
+        model.addAttribute("products", products);
+
+        return "admin/adminproduct";
+    }
+
+    // =========================
+    // VIEW PRODUCT VARIANTS
+    // =========================
+    @GetMapping("/variants")
+    public String viewProductVariants(
+            @RequestParam("productId") Long productId,
+            Model model) {
+
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            return "redirect:/products/admin/products";
+        }
+
+        List<ProductVariant> variants = productVariantService.getVariantsByProductId(productId);
+        
+        model.addAttribute("product", product);
+        model.addAttribute("variants", variants);
+
+        return "admin/productvariants";
     }
 }

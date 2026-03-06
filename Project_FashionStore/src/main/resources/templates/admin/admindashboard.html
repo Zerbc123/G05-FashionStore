@@ -49,26 +49,28 @@
 
         .admin-navbar .nav-link.active {
             color: white;
-            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
         }
 
         .main-content {
-            padding: 40px 0;
+            padding: 2rem 0;
         }
 
         .page-header {
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
         }
 
         .page-header h1 {
             font-family: 'Playfair Display', serif;
             color: #2d3436;
-            font-size: 2rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .welcome-text {
             color: #636e72;
-            margin-top: 5px;
+            font-size: 1.1rem;
         }
 
         /* Stats Cards */
@@ -278,7 +280,7 @@
                     <i class="bi bi-currency-dollar"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>$45,890</h3>
+                    <h3 th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + 'đ'">$45,678</h3>
                     <p>Total Revenue</p>
                     <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +12.5% from last month</span>
                 </div>
@@ -289,9 +291,9 @@
                     <i class="bi bi-cart-check"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>1,245</h3>
+                    <h3 th:text="${totalOrders}">1,234</h3>
                     <p>Total Orders</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +8.3% from last month</span>
+                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +8.2% from last month</span>
                 </div>
             </div>
 
@@ -300,7 +302,7 @@
                     <i class="bi bi-people"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>3,567</h3>
+                    <h3 th:text="${totalCustomers}">3,567</h3>
                     <p>Total Customers</p>
                     <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +15.2% from last month</span>
                 </div>
@@ -311,7 +313,7 @@
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>456</h3>
+                    <h3 th:text="${totalProducts}">456</h3>
                     <p>Total Products</p>
                     <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +5 new this week</span>
                 </div>
@@ -351,40 +353,14 @@
             <div class="col-lg-4">
                 <div class="recent-orders">
                     <h3>Recent Orders</h3>
-                    <div class="order-item">
+                    <div th:each="order : ${recentOrders}" class="order-item">
                         <div class="order-info">
-                            <h6>#ORD-2024-001</h6>
-                            <p>John Doe - $139.97</p>
+                            <h6 th:text="'#' + ${order.orderId}">#ORD-2024-001</h6>
+                            <p th:text="${order.customer != null ? order.customer.fullName : 'Unknown Customer'} + ' - ' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">John Doe - $139.97</p>
                         </div>
-                        <span class="badge pending">Pending</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-002</h6>
-                            <p>Jane Smith - $239.98</p>
-                        </div>
-                        <span class="badge processing">Processing</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-003</h6>
-                            <p>Mike Brown - $129.99</p>
-                        </div>
-                        <span class="badge completed">Completed</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-004</h6>
-                            <p>Sarah Davis - $89.99</p>
-                        </div>
-                        <span class="badge pending">Pending</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-005</h6>
-                            <p>Robert Johnson - $199.99</p>
-                        </div>
-                        <span class="badge completed">Completed</span>
+                        <span th:class="'badge ' + ${#strings.toLowerCase(order.status)}" 
+                              th:text="${order.status}" 
+                              class="badge pending">Pending</span>
                     </div>
                 </div>
             </div>
@@ -417,8 +393,8 @@
         data: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             datasets: [{
-                label: 'Revenue ($)',
-                data: [3200, 3800, 4200, 3900, 4500, 5200, 4800, 5500, 5800, 6200, 6500, 7000],
+                label: 'Revenue (đ)',
+                data: [3200, 3800, 4200, 3900, 4500, 5200, 4800, 5500, 5800, 6200, 7000],
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4,
@@ -445,7 +421,7 @@
     new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Men Fashion', 'Women Fashion', 'Accessories', 'Shoes'],
+            labels: ['Áo', 'Quần', 'Phụ kiện', 'Giày dép'],
             datasets: [{
                 data: [35, 40, 15, 10],
                 backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b']
@@ -466,11 +442,11 @@
     new Chart(orderStatusCtx, {
         type: 'bar',
         data: {
-            labels: ['Pending', 'Processing', 'Shipping', 'Completed', 'Cancelled'],
+            labels: ['Pending', 'Processing', 'Completed'],
             datasets: [{
                 label: 'Orders',
-                data: [45, 32, 28, 156, 8],
-                backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545']
+                data: [[${pendingOrders}]], [[${processingOrders}]], [[${completedOrders}]],
+                backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745']
             }]
         },
         options: {
