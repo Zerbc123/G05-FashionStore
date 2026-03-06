@@ -21,13 +21,9 @@ public class AddressApiController {
     public ResponseEntity<String> getProvinces(@RequestParam(required = false, defaultValue = "1") int depth) {
         try {
             String url = EXTERNAL_API_URL + "?depth=" + depth;
-            System.out.println("Fetching data from: " + url);
             String response = restTemplate.getForObject(url, String.class);
-            System.out.println("API Response received successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("Error fetching provinces: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("[]");
         }
     }

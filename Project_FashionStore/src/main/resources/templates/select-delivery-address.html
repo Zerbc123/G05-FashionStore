@@ -87,22 +87,22 @@
             <div class="address-option" onclick="selectAddress('new')" id="newAddress">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Tinh/Thanh <span class="text-danger">*</span></label>
+                        <label class="form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
                         <select id="orderProvince" name="province" class="form-select" required>
-                            <option value="">Dang tai tinh/thanh...</option>
+                            <option value="">Đang tải tỉnh/thành...</option>
                         </select>
                         <div id="orderProvinceLoadingIndicator" style="margin-top: 0.5rem;">
-                            <span style="color: #666; font-size: 0.9rem;">Vui long cho tai danh sach...</span>
+                            <span style="color: #666; font-size: 0.9rem;">Vui lòng chờ tải danh sách...</span>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Phuong/Xa (Sau sap nhap) <span class="text-danger">*</span></label>
+                        <label class="form-label">Phường/Xã (Sau sáp nhập)<span class="text-danger">*</span></label>
                         <select id="orderWard" name="ward" class="form-select" required disabled>
-                            <option value="">Chon phuong/xa</option>
+                            <option value="">Chọn Phường/Xã</option>
                         </select>
                     </div>
                     <div class="col-md-12">
-                        <label class="form-label">So nha & ten duong <span class="text-danger">*</span></label>
+                        <label class="form-label">Số nhà & Tên đường <span class="text-danger">*</span></label>
                         <input type="text" id="orderHouse" name="house" class="form-control" placeholder="Vi du: 123 Nguyen Trai" required />
                     </div>
                     <input type="hidden" id="orderAddress" name="newAddress" />
@@ -118,7 +118,7 @@
             <button type="submit" class="btn-primary-custom me-3">
                 <i class="bi bi-check-circle me-2"></i>Xác nhận địa chỉ
             </button>
-            <a th:href="@{/cart/checkout}" class="btn-secondary-custom text-decoration-none">
+            <a th:href="@{/order/checkout}" class="btn-secondary-custom text-decoration-none">
                 <i class="bi bi-arrow-left me-2"></i>Quay lại
             </a>
         </div>
@@ -150,6 +150,7 @@ function loadOrderProvinces() {
     const loadingIndicator = document.getElementById('orderProvinceLoadingIndicator');
     
     fetch('/fashionstore/address-api?depth=2')
+    fetch('/fashionstore/address-api?depth=2')
         .then(res => {
             if (!res.ok) throw new Error('API failed');
             return res.json();
@@ -157,13 +158,13 @@ function loadOrderProvinces() {
         .then(data => {
             orderProvincesList = data;
             if (loadingIndicator) loadingIndicator.style.display = 'none';
-            provSelect.innerHTML = '<option value="">Chon tinh/thanh</option>';
+            provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
             data.forEach(p => provSelect.add(new Option(p.name, p.name)));
         })
         .catch(err => {
             console.error('Fetch failed', err);
             if (loadingIndicator) {
-                loadingIndicator.innerHTML = '<span style="color: red;">Khong the tai du lieu. Vui long thu lai.</span>';
+                loadingIndicator.innerHTML = '<span style="color: red;">Không thể tải dữ liệu. Vui lòng thử lại</span>';
             }
         });
 }
@@ -172,7 +173,7 @@ function populateOrderWards(provinceName) {
     const prov = orderProvincesList.find(p => p.name === provinceName);
     const wardSelect = document.getElementById('orderWard');
     
-    wardSelect.innerHTML = '<option value="">Chon phuong/xa</option>';
+    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
     wardSelect.disabled = true;
     
     if (prov && prov.wards) {

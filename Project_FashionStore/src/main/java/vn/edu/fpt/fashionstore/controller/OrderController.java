@@ -366,13 +366,6 @@ public class OrderController {
         session.removeAttribute("selectedProductId");
         session.removeAttribute("selectedVariantId");
         
-        // DEBUG: In ra tất cả session attributes
-        java.util.Enumeration<String> attrs = session.getAttributeNames();
-        while (attrs.hasMoreElements()) {
-            String attrName = attrs.nextElement();
-            Object attrValue = session.getAttribute(attrName);
-        }
-
         try {
             Customer currentCustomer = getCurrentCustomer(session);
             

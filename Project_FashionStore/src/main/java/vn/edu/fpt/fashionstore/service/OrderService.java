@@ -32,8 +32,6 @@ public class OrderService {
     @Transactional
     public Order createOrderFromCart(Customer customer, String deliveryAddress) {
         try {
-            System.out.println("[ORDER SERVICE] Starting order creation for customer: " + customer.getEmail());
-            
             // Kiểm tra customer null
             if (customer == null) {
                 throw new RuntimeException("Customer không được để trống!");
@@ -51,14 +49,10 @@ public class OrderService {
                 throw new RuntimeException("Giỏ hàng trống, không thể tạo đơn hàng!");
             }
 
-            System.out.println("[ORDER SERVICE] Found " + cartItems.size() + " items in cart");
-
             // Tính tổng tiền
             double totalAmount = cartItems.stream()
                 .mapToDouble(item -> item.getProductVariant().getPrice() * item.getQuantity())
                 .sum();
-
-            System.out.println("[ORDER SERVICE] Total amount: " + totalAmount);
 
             // Tạo đơn hàng mới với địa chỉ giao hàng và tài khoản
             Order order = new Order(customer, totalAmount);
@@ -68,30 +62,20 @@ public class OrderService {
             }
             order = orderRepository.save(order);
             
-            System.out.println("[ORDER SERVICE] Order saved with ID: " + order.getOrderId());
-
             // Lưu OrderItem vào database
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartItem cartItem : cartItems) {
                 OrderItem orderItem = new OrderItem(order, cartItem.getProductVariant(), cartItem.getQuantity());
                 orderItem = orderItemRepository.save(orderItem);
                 orderItems.add(orderItem);
-                System.out.println("[ORDER SERVICE] Saved OrderItem: " + orderItem.getOrderItemId() + 
-                    " - Product: " + orderItem.getProductName() + 
-                    " - Quantity: " + orderItem.getQuantity() + 
-                    " - Total: " + orderItem.getTotalPrice());
             }
             
             // Clear cart sau khi đã lưu OrderItem thành công
             cartService.clearCart(customer);
-            System.out.println("[ORDER SERVICE] Cart cleared after saving OrderItems");
 
-            System.out.println("[ORDER SERVICE] Order creation completed successfully! Order ID: " + order.getOrderId());
             return order;
 
         } catch (Exception e) {
-            System.err.println("[ORDER SERVICE] Error creating order: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Không thể tạo đơn hàng: " + e.getMessage(), e);
         }
     }
