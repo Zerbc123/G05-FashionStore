@@ -6,19 +6,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.fpt.fashionstore.dto.ProductAddRequest;
-import vn.edu.fpt.fashionstore.dto.ProductVariantRequest;
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.*;
-
-import jakarta.persistence.criteria.Predicate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.criteria.Predicate;
+
 @Service
 public class ProductService {
-
     @Autowired
     private ProductRepository productRepository;
     
@@ -144,61 +141,5 @@ public class ProductService {
 
     public Product createProduct(Product product) {
         return productRepository.save(product);
-    }
-
-    @Transactional
-    public Product addProduct(ProductAddRequest request) {
-        // Create Product
-        Product product = new Product();
-        product.setProductName(request.getProductName());
-        product.setDescription(request.getDescription());
-        product.setAccountId(request.getAccountId());
-        
-        // Set Category
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-        product.setCategory(category);
-        
-        // Save Product first
-        Product savedProduct = productRepository.save(product);
-        
-        // Create ProductVariants if provided
-        if (request.getVariants() != null && !request.getVariants().isEmpty()) {
-            List<ProductVariant> variants = new ArrayList<>();
-            
-            for (ProductVariantRequest variantRequest : request.getVariants()) {
-                ProductVariant variant = new ProductVariant();
-                variant.setProduct(savedProduct);
-                
-                // Set Color
-                Color color = colorRepository.findById(variantRequest.getColorId())
-                        .orElseThrow(() -> new RuntimeException("Color not found"));
-                variant.setColor(color);
-                
-                // Set CategorySize
-                CategorySize categorySize = categorySizeRepository.findById(variantRequest.getCategorySizeId())
-                        .orElseThrow(() -> new RuntimeException("Size not found"));
-                variant.setCategorySize(categorySize);
-                
-                variant.setPrice(variantRequest.getPrice());
-                variant.setStock(variantRequest.getStock());
-                
-                // Handle image upload
-                if (variantRequest.getImageFile() != null && !variantRequest.getImageFile().isEmpty()) {
-                    try {
-                        String imageUrl = cloudinaryService.uploadImage(variantRequest.getImageFile());
-                        variant.setImageUrl(imageUrl);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to upload image to Cloudinary: " + e.getMessage());
-                    }
-                }
-                
-                variants.add(variant);
-            }
-            
-            productVariantRepository.saveAll(variants);
-        }
-        
-        return savedProduct;
     }
 }

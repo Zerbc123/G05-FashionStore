@@ -287,7 +287,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <form th:action="@{/products/admin/add}" th:object="${productRequest}" method="post" id="productForm" enctype="multipart/form-data">
+        <form th:action="@{/products/admin/add}" method="post" id="productForm" enctype="multipart/form-data">
             <!-- Product Information Section -->
             <div class="section-header">
                 <h3 class="mb-0">
@@ -299,22 +299,20 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" th:field="*{productName}" 
-                                   id="productName" placeholder="Product Name" required>
+                            <input type="text" class="form-control" 
+                                   name="productName" id="productName" placeholder="Product Name" required>
                             <label for="productName">Product Name *</label>
-                            <div th:if="${#fields.hasErrors('productName')}" class="error-message" th:errors="*{productName}"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <select class="form-select" th:field="*{categoryId}" id="categoryId" required>
+                            <select class="form-select" name="categoryId" id="categoryId" required>
                                 <option value="">Select Category</option>
                                 <option th:each="category : ${categories}" 
                                         th:value="${category.cateId}" 
                                         th:text="${category.categoryName}"></option>
                             </select>
                             <label for="categoryId">Category *</label>
-                            <div th:if="${#fields.hasErrors('categoryId')}" class="error-message" th:errors="*{categoryId}"></div>
                         </div>
                     </div>
                 </div>
@@ -322,20 +320,9 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="form-floating">
-                            <textarea class="form-control" th:field="*{description}" 
-                                      id="description" placeholder="Description" style="height: 120px"></textarea>
+                            <textarea class="form-control" 
+                                      name="description" id="description" placeholder="Description" style="height: 120px"></textarea>
                             <label for="description">Description</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-floating mb-3">
-                            <input type="number" class="form-control" th:field="*{accountId}" 
-                                   id="accountId" placeholder="Account ID" required>
-                            <label for="accountId">Account ID *</label>
-                            <div th:if="${#fields.hasErrors('accountId')}" class="error-message" th:errors="*{accountId}"></div>
                         </div>
                     </div>
                 </div>

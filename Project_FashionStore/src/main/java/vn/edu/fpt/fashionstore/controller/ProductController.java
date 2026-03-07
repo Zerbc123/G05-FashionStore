@@ -1,15 +1,10 @@
 package vn.edu.fpt.fashionstore.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
-import jakarta.validation.Valid;
-import vn.edu.fpt.fashionstore.dto.ProductAddRequest;
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.service.ProductVariantService;
@@ -21,7 +16,6 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/products")
-@SessionAttributes("productRequest")
 public class ProductController {
 
     @Autowired
@@ -167,9 +161,6 @@ public class ProductController {
     // =========================
     @GetMapping("/admin/add")
     public String showAddProductForm(Model model) {
-        if (!model.containsAttribute("productRequest")) {
-            model.addAttribute("productRequest", new ProductAddRequest());
-        }
         model.addAttribute("categories", categoryRepository.findAll());
         model.addAttribute("colors", colorRepository.findAll());
         model.addAttribute("sizes", categorySizeRepository.findAll());
@@ -182,7 +173,6 @@ public class ProductController {
             @RequestParam("productName") String productName,
             @RequestParam("description") String description,
             @RequestParam("categoryId") Integer categoryId,
-            @RequestParam("accountId") Long accountId,
             @RequestParam(value = "variantImages", required = false) MultipartFile[] variantImages,
             @RequestParam(value = "variants", required = false) List<String> variantData,
             @RequestParam(value = "colorIds", required = false) List<Integer> colorIds,
@@ -199,15 +189,12 @@ public class ProductController {
             if (categoryId == null) {
                 throw new IllegalArgumentException("Category is required");
             }
-            if (accountId == null) {
-                throw new IllegalArgumentException("Account ID is required");
-            }
             
             // Create Product and Variants directly
             Product product = new Product();
             product.setProductName(productName);
             product.setDescription(description);
-            product.setAccountId(accountId);
+            product.setAccountId(1L); // Default account ID = 1
             
             Category category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
