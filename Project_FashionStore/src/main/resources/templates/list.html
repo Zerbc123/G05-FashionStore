@@ -358,8 +358,16 @@
                 <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
                     <div th:each="product : ${products}" class="product-card">
                         <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
-                            <div class="product-image-placeholder">
-                                <i class="bi bi-image"></i>
+                            <div class="product-image-container">
+                                <img th:if="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
+                                     th:src="${product.variants[0].imageUrl}" 
+                                     th:alt="${product.productName}"
+                                     class="product-image"
+                                     style="width: 100%; height: 300px; object-fit: cover; border-bottom: 1px solid #e9ecef;">
+                                <div th:unless="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
+                                     class="product-image-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
                             </div>
                         </a>
                         <div class="product-actions">

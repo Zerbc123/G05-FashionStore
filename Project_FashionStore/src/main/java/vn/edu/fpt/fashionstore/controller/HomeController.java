@@ -26,8 +26,8 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -314,7 +314,7 @@ public class HomeController {
             @RequestParam String address,
             @RequestParam String gender,
             // Thêm required = false để tránh lỗi khi người dùng không chọn ngày
-            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateOfBirth,
             HttpSession session) {
 
         String email = (String) session.getAttribute("user");

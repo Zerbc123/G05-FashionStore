@@ -51,10 +51,81 @@
             <div class="row">
                 <div class="col-md-3"><select class="form-select"><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 3 Months</option><option>Last Year</option></select></div>
                 <div class="col-md-3"><input type="date" class="form-control"></div>
-                <div class="col-md-3"><input type="date" class="form-control"></div>
                 <div class="col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-search"></i> Generate Report</button></div>
             </div>
         </div>
+        <div class="row">
+            <!-- Report Cards -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h5 class="card-title">Revenue Report</h5>
+                        <p class="card-text">View detailed revenue analytics and financial insights</p>
+                        <a th:href="@{/admin/reports/revenue}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <h5 class="card-title">Best Seller Report</h5>
+                        <p class="card-text">Analyze top-selling products and categories</p>
+                        <a th:href="@{/admin/reports/best-seller}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <h5 class="card-title">Inventory Report</h5>
+                        <p class="card-text">Monitor stock levels and inventory status</p>
+                        <a th:href="@{/admin/reports/inventory}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Product Report Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-box"></i>
+                        </div>
+                        <h5 class="card-title">Product Report</h5>
+                        <p class="card-text">Comprehensive product performance analysis</p>
+                        <a th:href="@{/admin/reports/product}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Report Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h5 class="card-title">Customer Report</h5>
+                        <p class="card-text">Customer behavior and registration insights</p>
+                        <a th:href="@{/admin/reports/customer}" class="btn btn-primary">View Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="row">
             <div class="col-lg-6"><div class="report-card"><h3>Revenue Trend</h3><canvas id="revenueChart"></canvas></div></div>
             <div class="col-lg-6"><div class="report-card"><h3>Top Products</h3><canvas id="productsChart"></canvas></div></div>

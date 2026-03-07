@@ -1,15 +1,24 @@
 package vn.edu.fpt.fashionstore.controller;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import vn.edu.fpt.fashionstore.service.ReportService;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    @Autowired
+    private ReportService reportService;
 
     // Kiểm tra quyền truy cập ADMIN
     private boolean isAdmin(HttpSession session) {
@@ -170,4 +179,65 @@ public class AdminController {
         model.addAttribute("title", "Reports");
         return "admin/reports";
     }
+
+    // Revenue Report
+    @GetMapping("/reports/revenue")
+    public String revenueReport(HttpSession session, Model model,
+                                @RequestParam(required = false) String startDate,
+                                @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(1);
+        LocalDate end = endDate != null ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Revenue Report");
+        model.addAttribute("report", reportService.getRevenueReport(start, end));
+        return "admin/revenue_report";
+    }
+
+    // Best Seller Report
+    @GetMapping("/reports/best-seller")
+    public String bestSellerReport(HttpSession session, Model model,
+                                  @RequestParam(required = false) String startDate,
+                                  @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(1);
+        LocalDate end = endDate != null ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Best Seller Report");
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        model.addAttribute("report", reportService.getBestSellerReport(start, end));
+        return "admin/best_seller_report";
+    }
+
+    // Inventory Report
+    @GetMapping("/reports/inventory")
+    public String inventoryReport(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("title", "Inventory Report");
+        model.addAttribute("report", reportService.getInventoryReport());
+        return "admin/inventory_report";
+    }
+
+    // Best Seller Report - Removed
+    // Inventory Report - Removed  
+    // Product Report - Removed
+    // Customer Report - Removed
 }

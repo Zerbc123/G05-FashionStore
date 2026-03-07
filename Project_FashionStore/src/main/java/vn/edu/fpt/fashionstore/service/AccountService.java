@@ -13,7 +13,7 @@ import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.RoleRepository;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -130,14 +130,14 @@ public class AccountService {
         }
 
         // 2. Xử lý Phone
-        Integer phoneNumber = null;
+        String phoneNumber = null;
         if (phone != null && !phone.trim().isEmpty()) {
             try {
                 String cleanPhone = phone.replaceAll("[^0-9]", "");
                 if (!cleanPhone.isEmpty()) {
-                    phoneNumber = Integer.parseInt(cleanPhone);
+                    phoneNumber = cleanPhone;
                 }
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 phoneNumber = null;
             }
         }
@@ -170,7 +170,7 @@ public class AccountService {
             customer.setFullName(fullName);
             customer.setEmail(email);
             customer.setPhone(phoneNumber); // Đồng bộ số điện thoại sang bảng Customer
-            customer.setCreatedDate(new Date());
+            customer.setCreatedDate(LocalDate.now());
 
             customerRepository.save(customer); // Lưu vào bảng Customer
         }
@@ -180,17 +180,16 @@ public class AccountService {
     }
 
     @Transactional
-    public Account updateProfile(String email, String fullName, String phone, String address, String gender, Date dateOfBirth) {
+    public Account updateProfile(String email, String fullName, String phone, String address, String gender, LocalDate dateOfBirth) {
         return accountRepository.findByEmail(email).map(account -> {
             // 1. Cập nhật thông tin vào bảng Account
             account.setFullName(fullName);
-            try {
-                // Loại bỏ ký tự không phải số trước khi parse
-                if (phone != null && !phone.isEmpty()) {
-                    account.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                }
-            } catch (Exception e) {
-                // Log lỗi nếu cần: System.out.println("Lỗi format số điện thoại");
+            // Xử lý phone như String
+            if (phone != null && !phone.trim().isEmpty()) {
+                String cleanPhone = phone.replaceAll("[^0-9]", "");
+                account.setPhone(cleanPhone.isEmpty() ? null : cleanPhone);
+            } else {
+                account.setPhone(null);
             }
 
             // Lưu Account trước để có ID ổn định
@@ -205,7 +204,7 @@ public class AccountService {
                     customer = account.getCustomers().get(0);
                 } else {
                     customer = new Customer();
-                    customer.setCreatedDate(new Date());
+                    customer.setCreatedDate(LocalDate.now());
                     customer.setAccount(savedAccount);
                 }
 
@@ -215,19 +214,21 @@ public class AccountService {
                 customer.setAddress(address);
                 // Giả sử: true = Nam (1), false = Nữ (0)
                 if (gender != null) {
-                    if (gender.equals("Nam")) {
+                    if (gender.equalsIgnoreCase("Nam")) {
                         customer.setGender(true);
-                    } else if (gender.equals("Nữ")) {
+                    } else if (gender.equalsIgnoreCase("Nữ")) {
                         customer.setGender(false);
                     }
-                }    // <--- MỚI THÊM
-                customer.setDateOfBirth(dateOfBirth); // <--- MỚI THÊM
+                }
+                customer.setDateOfBirth(dateOfBirth);
 
-                try {
-                    if (phone != null) {
-                        customer.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                    }
-                } catch (Exception e) {}
+                // Xử lý phone như String
+                if (phone != null && !phone.trim().isEmpty()) {
+                    String cleanPhone = phone.replaceAll("[^0-9]", "");
+                    customer.setPhone(cleanPhone.isEmpty() ? null : cleanPhone);
+                } else {
+                    customer.setPhone(null);
+                }
 
                 // Lưu bảng Customer
                 customerRepository.save(customer);
@@ -242,11 +243,14 @@ public class AccountService {
         vn.edu.fpt.fashionstore.entity.Account acc = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
+        // Get role name from account
+        String roleName = (acc.getRole() != null) ? acc.getRole().getRoleName() : "USER";
+        
         // Trả về User của Spring Security
         return org.springframework.security.core.userdetails.User
                 .withUsername(acc.getEmail())
-                .password(acc.getPassword()) // Vì dùng NoOp nên nó sẽ so sánh trực tiếp chữ thường
-                .roles("USER")
+                .password(acc.getPassword())
+                .roles(roleName)
                 .build();
     }
 
@@ -283,7 +287,7 @@ public class AccountService {
             customer.setAccount(savedAccount);
             customer.setFullName(fullName);
             customer.setEmail(email);
-            customer.setCreatedDate(new Date());
+            customer.setCreatedDate(LocalDate.now());
             customerRepository.save(customer);
 
             return savedAccount;

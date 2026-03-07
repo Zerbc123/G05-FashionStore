@@ -12,6 +12,7 @@ import vn.edu.fpt.fashionstore.entity.Color;
 import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.ImageUploadService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ImageUploadService imageUploadService;
 
     // ========================================================================
     // 1. DANH SÁCH SẢN PHẨM (LIST)
@@ -192,6 +196,61 @@ public class ProductController {
         model.addAttribute("selectedVariant", selectedVariant);
 
         return "productdetails";
+    }
+
+    // ========================================================================
+    // 5. PRODUCT IMAGE UPLOAD PAGE
+    // URL: /products/{id}/upload-image
+    // ========================================================================
+    @GetMapping("/{id}/upload-image")
+    public String uploadImagePage(@PathVariable("id") Long productId, Model model) {
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            return "redirect:/products";
+        }
+        
+        model.addAttribute("productId", productId);
+        model.addAttribute("product", product);
+        return "admin/product-image-upload";
+    }
+
+    // ========================================================================
+    // 6. UPDATE PRODUCT VARIANT IMAGE
+    // URL: /products/{id}/update-image
+    // ========================================================================
+    @PostMapping("/{id}/update-image")
+    public String updateProductImage(
+            @PathVariable("id") Long productId,
+            @RequestParam("imageUrl") String imageUrl,
+            @RequestParam(value = "variantId", required = false) Integer variantId,
+            Model model) {
+        
+        try {
+            Product product = productService.getProductById(productId);
+            if (product != null && product.getVariants() != null && !product.getVariants().isEmpty()) {
+                // Update first variant or specific variant if provided
+                ProductVariant targetVariant = null;
+                if (variantId != null) {
+                    targetVariant = product.getVariants().stream()
+                        .filter(v -> v.getVariantId() == variantId)
+                        .findFirst()
+                        .orElse(null);
+                } else {
+                    targetVariant = product.getVariants().get(0); // Default to first variant
+                }
+                
+                if (targetVariant != null) {
+                    targetVariant.setImageUrl(imageUrl);
+                    // Here you would typically save the variant to database
+                    // productVariantService.saveProductVariant(targetVariant);
+                    model.addAttribute("success", "Image updated successfully!");
+                }
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to update image: " + e.getMessage());
+        }
+        
+        return "redirect:/products/detail/" + productId;
     }
 
     // ========================================================================

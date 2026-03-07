@@ -2,7 +2,7 @@ package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 public class Customer {
@@ -16,14 +16,14 @@ public class Customer {
 
     private boolean gender;
     @Column(name = "birthday")
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Column (name = "created_at")
-    private Date createdDate;
+    private LocalDate createdDate;
 
     private String email;
-    // Trong file Account.java và Customer.java
-    private Integer phone; // Integer (Wrapper class) cho phép nhận giá trị null
+    // Phone number as String to handle various formats and international numbers
+    private String phone;
     private String address;
 
     @ManyToOne
@@ -33,7 +33,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, Integer phone, String address) {
+    public Customer(int customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
@@ -68,19 +68,19 @@ public class Customer {
         this.gender = gender;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public Date getCreatedDate() {
+    public LocalDate getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
+    public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
     }
 
@@ -92,11 +92,11 @@ public class Customer {
         this.email = email;
     }
 
-    public Integer getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Integer phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 
