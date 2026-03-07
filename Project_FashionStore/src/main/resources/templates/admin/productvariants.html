@@ -381,6 +381,34 @@
                         </tbody>
                     </table>
 
+                    <!-- Pagination -->
+                    <div th:if="${variantPage.totalPages > 1}" class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Variant pagination">
+                            <ul class="pagination">
+                                <!-- Previous -->
+                                <li class="page-item" th:class="${variantPage.hasPrevious() ? 'page-item' : 'page-item disabled'}">
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number - 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}" tabindex="-1">
+                                        Previous
+                                    </a>
+                                </li>
+                                
+                                <!-- Page numbers -->
+                                <li th:each="pageNum : ${#numbers.sequence(0, variantPage.totalPages - 1)}" 
+                                    th:class="${pageNum == variantPage.number ? 'page-item active' : 'page-item'}">
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${pageNum}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}" 
+                                       th:text="${pageNum + 1}">1</a>
+                                </li>
+                                
+                                <!-- Next -->
+                                <li class="page-item" th:class="${variantPage.hasNext() ? 'page-item' : 'page-item disabled'}">
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number + 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}">
+                                        Next
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+
                     <!-- Empty State -->
                     <div th:if="${#lists.isEmpty(variants)}" class="empty-state">
                         <i class="bi bi-box"></i>

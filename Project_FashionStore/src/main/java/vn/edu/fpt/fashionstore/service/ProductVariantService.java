@@ -1,6 +1,8 @@
 package vn.edu.fpt.fashionstore.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.*;
@@ -25,6 +27,10 @@ public class ProductVariantService {
 
     public List<ProductVariant> getAllVariants() {
         return productVariantRepository.findAll();
+    }
+
+    public Page<ProductVariant> getAllVariants(Pageable pageable) {
+        return productVariantRepository.findAll(pageable);
     }
 
     public Optional<ProductVariant> getVariantById(int variantId) {

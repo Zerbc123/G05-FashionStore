@@ -23,11 +23,15 @@ public class CloudinaryService {
             throw new IllegalArgumentException("File cannot be empty");
         }
 
+        // Debug: Check Cloudinary config
+        System.out.println("Cloudinary config: " + cloudinary.config);
+        System.out.println("Cloud name: " + cloudinary.config.cloudName);
+        System.out.println("API Key: " + cloudinary.config.apiKey);
+
         @SuppressWarnings("unchecked")
         Map<String, Object> uploadParams = ObjectUtils.asMap(
             "folder", "fashion_store/products",
-            "resource_type", "image",
-            "format", "auto"
+            "resource_type", "image"
         );
 
         @SuppressWarnings("unchecked")
