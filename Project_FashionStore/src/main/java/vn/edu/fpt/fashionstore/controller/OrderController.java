@@ -519,4 +519,41 @@ public class OrderController {
             return "redirect:/order/details/" + orderId;
         }
     }
+
+
+    // Thêm phương thức POST này để nhận dữ liệu từ nút "MUA NGAY"
+    @PostMapping("/checkout")
+    public String buyNowCheckout(
+            @RequestParam("productId") Long productId,
+            @RequestParam("sizeId") Integer sizeId,
+            @RequestParam("colorId") Integer colorId,
+            @RequestParam("quantity") Integer quantity,
+            Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+
+            // 1. Logic xử lý "Mua ngay":
+            // Thay vì lấy từ Cart, bạn cần lấy thông tin Variant từ productId, sizeId, colorId
+            // Sau đó đưa vào model để hiển thị ở trang checkout.
+
+            // TẠM THỜI: Để trang checkout không bị lỗi do thiếu data giỏ hàng:
+            // Bạn có thể xử lý logic "Mua ngay" tại đây hoặc chuyển hướng:
+
+            // Lưu thông tin mua ngay vào session nếu trang checkout của bạn
+            // đang được viết chỉ để đọc từ giỏ hàng (CartService)
+            session.setAttribute("isBuyNow", true);
+            session.setAttribute("buyNowProductId", productId);
+            session.setAttribute("buyNowSizeId", sizeId);
+            session.setAttribute("buyNowColorId", colorId);
+            session.setAttribute("buyNowQty", quantity);
+
+            // Sau khi xử lý xong, gọi lại logic hiển thị trang checkout
+            return checkoutPage(model, session, redirectAttributes);
+
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/login";
+        }
+    }
 }

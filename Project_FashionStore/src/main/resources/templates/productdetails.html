@@ -254,32 +254,35 @@
 </main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<!-- Form ẩn dùng tên hoàn toàn mới để tránh trùng lặp -->
+<form id="hiddenBuyNowForm" th:action="@{/order/checkout}" method="POST" style="display: none;">
+    <input type="hidden" name="productId" th:value="${product.productId}">
+    <input type="hidden" name="sizeId" id="hiddenSizeId">
+    <input type="hidden" name="colorId" id="hiddenColorId">
+    <input type="hidden" name="quantity" value="1">
+</form>
+
+<!-- Sau đó mới đến các script -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-function buyNow() {
-    // Lấy size và color đã chọn
-    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
-    const selectedColor = document.querySelector('input[name="colorId"]:checked');
-    
-    // Kiểm tra đã chọn size và color chưa
-    if (!selectedSize) {
-        alert('Vui lòng chọn size!');
-        return;
+    function buyNow() {
+        const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+        const selectedColor = document.querySelector('input[name="colorId"]:checked');
+
+        if (!selectedSize || !selectedColor) {
+            alert('Vui lòng chọn size và màu sắc!');
+            return;
+        }
+
+        // Gán giá trị vào các ID đã đổi tên
+        document.getElementById('hiddenSizeId').value = selectedSize.value;
+        document.getElementById('hiddenColorId').value = selectedColor.value;
+
+        // Submit form với ID mới
+        document.getElementById('hiddenBuyNowForm').submit();
     }
-    
-    if (!selectedColor) {
-        alert('Vui lòng chọn màu sắc!');
-        return;
-    }
-    
-    // Set giá trị vào form ẩn
-    document.getElementById('buyNowSizeId').value = selectedSize.value;
-    document.getElementById('buyNowColorId').value = selectedColor.value;
-    
-    // Submit form MUA NGAY
-    document.getElementById('buyNowForm').submit();
-}
 </script>
 
 </body>
