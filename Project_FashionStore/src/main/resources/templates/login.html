@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- GIỮ NGUYÊN PHẦN CSS CỦA BẠN --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
@@ -87,6 +87,7 @@
         }
     </style>
 </head>
+
 <body>
 <div class="login-container">
     <div class="login-left">
@@ -114,10 +115,11 @@
             <i class="bi bi-check-circle"></i> Bạn đã đăng xuất thành công!
         </div>
 
+        <!-- FORM LOGIN -->
         <form th:action="@{/login}" method="post">
             <div class="form-group">
-                <label for="username"><i class="bi bi-envelope"></i> Email Address</label>
-                <input type="email" class="form-control" id="username" name="username"
+                <label for="email"><i class="bi bi-envelope"></i> Email Address</label>
+                <input type="email" class="form-control" id="email" name="username"
                        placeholder="Enter your email" required
                        oninvalid="this.setCustomValidity('Email không được để trống hoặc sai định dạng')"
                        oninput="this.setCustomValidity('')">
@@ -126,10 +128,13 @@
             <div class="form-group">
                 <label for="password"><i class="bi bi-lock"></i> Password</label>
                 <div class="password-toggle">
+
+                    <!-- Password must be exactly 6 alphanumeric characters -->
                     <input type="password" class="form-control" id="password" name="password"
-                           placeholder="Enter your password" required
-                           oninvalid="this.setCustomValidity('Mật khẩu không được để trống')"
-                           oninput="this.setCustomValidity('')">
+                           placeholder="6 ký tự, chữ hoặc số" required
+                           pattern="^[A-Za-z0-9]{6}$" minlength="6" maxlength="6"
+                           title="Mật khẩu chỉ gồm 6 ký tự chữ và số" >
+
                 </div>
             </div>
 
@@ -138,7 +143,7 @@
                     <input type="checkbox" name="remember">
                     <span>Remember me</span>
                 </label>
-                <a href="#" class="forgot-password">Forgot Password?</a>
+                <a th:href="@{/forgot-password}" class="forgot-password">Forgot Password?</a>
             </div>
 
             <button type="submit" class="btn-login" style="border: none;">

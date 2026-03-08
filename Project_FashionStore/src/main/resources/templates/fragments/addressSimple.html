@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Fragment đơn giản cho địa chỉ chỉ dùng input text -->
+<div th:fragment="addressSimple(address)">
+    <div class="mb-3">
+        <label class="form-label">Địa chỉ nhận hàng chi tiết <span class="text-danger">*</span></label>
+        <textarea 
+            name="address" 
+            class="form-control" 
+            rows="3" 
+            placeholder="Ví dụ: 123 Nguyễn Trãi, Phường 1, Quận 5, TP.Hồ Chí Minh"
+            th:text="${address}"
+            required></textarea>
+        <small class="text-muted">
+            Vui lòng nhập đầy đủ: Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố
+        </small>
+    </div>
+</div>

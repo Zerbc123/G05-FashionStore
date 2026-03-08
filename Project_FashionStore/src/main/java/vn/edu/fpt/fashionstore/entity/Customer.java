@@ -25,15 +25,30 @@ public class Customer {
     private Date createdDate;
 
     private String email;
-    private Integer phone;
+    // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
+    private String phone; // String có thể null
     private String address;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
 
-    @OneToMany(mappedBy = "customer")
-    private List<Order> orders;
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Wishlist> wishlists;
+
+    public Customer() {
+    }
+
+    public Customer(Long customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
+        this.customerId = customerId;
+        this.fullName = fullName;
+        this.gender = gender;
+        this.dateOfBirth = dateOfBirth;
+        this.createdDate = createdDate;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+    }
 
     public Long getCustomerId() {
         return customerId;
@@ -83,11 +98,11 @@ public class Customer {
         this.email = email;
     }
 
-    public Integer getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Integer phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 
@@ -107,11 +122,11 @@ public class Customer {
         this.account = account;
     }
 
-    public List<Order> getOrders() {
-        return orders;
+    public List<Wishlist> getWishlists() {
+        return wishlists;
     }
 
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
+    public void setWishlists(List<Wishlist> wishlists) {
+        this.wishlists = wishlists;
     }
 }

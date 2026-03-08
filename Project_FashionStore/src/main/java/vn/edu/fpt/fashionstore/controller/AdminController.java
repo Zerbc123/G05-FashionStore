@@ -2,10 +2,12 @@ package vn.edu.fpt.fashionstore.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
@@ -13,6 +15,8 @@ import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.Map;
+import vn.edu.fpt.fashionstore.entity.Account;
+import vn.edu.fpt.fashionstore.service.AccountService;
 
 @Controller
 @RequestMapping("/admin")
@@ -22,6 +26,9 @@ public class AdminController {
     private final ProductService productService;
     private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
+    @Autowired
+    private AccountService accountService;
+
     // Kiểm tra quyền truy cập ADMIN
     private boolean isAdmin(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
@@ -200,6 +207,28 @@ public class AdminController {
         return "profile";
     }
 
+    // ======== ADMIN PROFILE ========
+
+    @GetMapping("/profile")
+    public String adminProfile(HttpSession session, Model model) {
+        if (!isAdmin(session)) return "redirect:/login";
+
+        String email = (String) session.getAttribute("user");
+        if (email == null) return "redirect:/login";
+
+        var admin = accountService.getAccountByEmail(email);
+
+        if (admin == null) {
+            model.addAttribute("error", "Không tìm thấy thông tin quản trị viên!");
+            return "admin/admin_profile";
+        }
+
+        model.addAttribute("title", "Admin Profile");
+        model.addAttribute("admin", admin);
+
+        return "admin/admin_profile";
+    }
+
     // Chỉnh sửa khách hàng
     @GetMapping("/customers/edit/{id}")
     public String editCustomer(@PathVariable String id, HttpSession session, Model model) {
@@ -262,3 +291,6 @@ public class AdminController {
         return "admin/reports";
     }
 }
+
+    // password-change endpoints for admin have been removed per requirement
+    // (only customers may change their password now).}

@@ -22,6 +22,7 @@ import com.itextpdf.layout.element.Table;
 
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
 @Controller
@@ -80,13 +81,13 @@ public class OrderController {
         }
 
         orderRepository.findById(id).ifPresent(order -> {
-            // Prevent changing from Completed to Shipping or Pending
-            if ("Completed".equals(order.getStatus()) && 
-                ("Shipping".equals(status) || "Pending".equals(status))) {
+            // Prevent changing from Confirmed to Pending
+            if (OrderStatus.CONFIRMED.equals(order.getStatus()) && 
+                OrderStatus.PENDING.equals(status)) {
                 // Don't allow this change, redirect back without saving
                 return;
             }
-            order.setStatus(status);
+            order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
             orderRepository.save(order);
         });
 
@@ -96,7 +97,7 @@ public class OrderController {
     @GetMapping("/orderdetails/{id}")
     public String viewOrderDetails(@PathVariable Long id, Model model) {
 
-        Order order = orderRepository.findOrderWithItems(id);
+        Order order = orderRepository.findByOrderIdWithDetails(id);
         model.addAttribute("order", order);
 
         return "admin/vieworderdetail";
@@ -106,7 +107,7 @@ public class OrderController {
     public void exportOrderToPDF(@PathVariable Long id,
             HttpServletResponse response) throws IOException {
 
-        Order order = orderRepository.findOrderWithItems(id);
+        Order order = orderRepository.findByOrderIdWithDetails(id);
 
         if (order == null) {
             response.getWriter().write("Không tìm thấy đơn hàng");
@@ -159,7 +160,7 @@ public class OrderController {
 
         for (OrderItem item : order.getOrderItems()) {
 
-            double gia = item.getPrice() != null ? item.getPrice() : 0;
+            double gia = item.getTotalPrice() != null ? item.getTotalPrice() : 0;
             int soLuong = item.getQuantity() != null ? item.getQuantity() : 0;
             double thanhTien = gia * soLuong;
 
