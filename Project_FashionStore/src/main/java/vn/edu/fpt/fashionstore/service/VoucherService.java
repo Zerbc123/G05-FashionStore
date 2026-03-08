@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Voucher;
 import vn.edu.fpt.fashionstore.repository.VoucherRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,7 +48,7 @@ public class VoucherService {
     // Lấy danh sách mã giảm giá hợp lệ cho Khách hàng xem
     public List<Voucher> getValidVouchersForCustomer() {
         // Lấy ngày giờ hiện tại
-        java.util.Date today = new java.util.Date();
+        LocalDate today = LocalDate.now();
         return voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(today);
     }
 
@@ -59,16 +60,8 @@ public class VoucherService {
         if (optVoucher.isPresent()) {
             Voucher v = optVoucher.get();
 
-            // Ép thời gian hiện tại về 00:00:00 để so sánh công bằng với Database
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
-            cal.set(java.util.Calendar.MINUTE, 0);
-            cal.set(java.util.Calendar.SECOND, 0);
-            cal.set(java.util.Calendar.MILLISECOND, 0);
-            java.util.Date todayMidnight = cal.getTime();
-
             // Kiểm tra xem mã có đang kích hoạt và còn hạn (Tính đến hết 23h59p của ngày hết hạn)
-            if (v.getIsActive() != null && v.getIsActive() && !v.getExpiredDate().before(todayMidnight)) {
+            if (v.getIsActive() != null && v.getIsActive() && !v.getExpiredDate().isBefore(LocalDate.now())) {
                 return v;
             }
         }

@@ -23,12 +23,12 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
     // Get top selling products
     @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
            "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-           "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
+           "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
            "FROM Product p " +
            "JOIN p.category c " +
            "JOIN p.variants pv " +
-           "LEFT JOIN OrderItem oi ON pv = oi.variant " +
-           "LEFT JOIN Orders o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
+           "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
+           "LEFT JOIN Order o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
            "ORDER BY soldQuantity DESC")
     List<Object[]> getTopSellingProducts();
@@ -36,13 +36,22 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
     // Get all products with sales info
     @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
            "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-           "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
+           "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
            "FROM Product p " +
            "JOIN p.category c " +
            "JOIN p.variants pv " +
-           "LEFT JOIN OrderItem oi ON pv = oi.variant " +
-           "LEFT JOIN Orders o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
+           "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
+           "LEFT JOIN Order o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
            "ORDER BY p.productName")
     List<Object[]> getAllProductsWithSales();
+
+    // Get product summary statistics
+    @Query("SELECT COUNT(DISTINCT p), " +
+           "SUM(CASE WHEN pv.stock > 0 THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN pv.stock = 0 THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN pv.stock > 0 AND pv.stock < 10 THEN 1 ELSE 0 END) " +
+           "FROM Product p " +
+           "LEFT JOIN p.variants pv")
+    Object[] getProductSummary();
 }

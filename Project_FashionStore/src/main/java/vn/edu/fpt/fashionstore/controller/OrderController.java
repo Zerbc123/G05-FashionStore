@@ -19,7 +19,8 @@ import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.Date;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,7 +90,7 @@ public class OrderController {
             model.addAttribute("total", total);
 
             // Lấy danh sách voucher hợp lệ từ database
-            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(LocalDate.now());
             model.addAttribute("validVouchers", validVouchers);
 
             // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
@@ -174,7 +175,7 @@ public class OrderController {
                 model.addAttribute("total", subtotal);
                 
                 // Lấy danh sách voucher hợp lệ từ database
-                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(LocalDate.now());
                 model.addAttribute("validVouchers", validVouchers);
 
                 // Giữ nguyên chữ khách đã nhập

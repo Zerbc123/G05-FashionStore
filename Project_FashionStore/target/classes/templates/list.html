@@ -42,6 +42,11 @@
         .form-check { margin-bottom: 10px; }
         .form-check-label { color: #636e72; cursor: pointer; }
         .price-range { display: flex; gap: 10px; align-items: center; }
+        .quick-filters { margin-top: 10px; }
+        .quick-filters .btn { font-size: 0.8rem; padding: 5px 10px; }
+        .size-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .color-options { display: flex; flex-wrap: wrap; gap: 10px; }
+        .color-options .form-check { margin-bottom: 5px; }
         .price-input { width: 80px; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; }
         /* Toolbar */
         .toolbar { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
@@ -181,6 +186,8 @@
                 <form method="GET" class="d-flex">
                     <input type="hidden" name="categoryId" th:value="${selectedCategoryId}">
                     <input type="hidden" name="size" th:value="${selectedSize}">
+                    <input type="hidden" name="color" th:value="${selectedColor}">
+                    <input type="hidden" name="stockStatus" th:value="${stockStatus}">
                     <input type="hidden" name="minPrice" th:value="${minPrice}">
                     <input type="hidden" name="maxPrice" th:value="${maxPrice}">
                     <input type="hidden" name="sort" th:value="${sort}">
@@ -202,33 +209,37 @@
                 <div class="filter-sidebar">
                     <h4 style="margin-bottom: 30px; font-weight: 700; color: var(--dark-text);"><i class="bi bi-funnel-fill me-2"></i>Filters</h4>
 
-                    <form method="GET" th:action="@{/products}">
+                    <form id="filterForm" method="GET" th:action="@{/products}">
                         <input type="hidden" name="keyword" th:value="${keyword}">
                         <input type="hidden" name="sort" th:value="${sort}">
                         <input type="hidden" name="direction" th:value="${direction}">
                         <input type="hidden" name="pageSize" th:value="${pageSize}">
                         <input type="hidden" name="page" th:value="0">
+                        <input type="hidden" name="stockStatus" th:value="${stockStatus}">
+                        <input type="hidden" name="priceRange" th:value="${priceRange}">
 
-                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                        <!-- Category Filter -->
+                        <div class="filter-section" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; transition: all 0.3s;">
                             <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-grid-3x3-gap me-2"></i>Category</h5>
                             <div class="form-check" style="margin-bottom: 10px;">
                                 <input class="form-check-input" type="radio" name="categoryId" value="" 
                                        id="catAll" th:checked="${selectedCategoryId == null}" style="cursor: pointer;">
                                 <label class="form-check-label" for="catAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Categories</label>
                             </div>
-                            <div th:each="catId : ${categoryIds}" class="form-check" style="margin-bottom: 10px;">
+                            <div th:each="category : ${categoryIds}" class="form-check" style="margin-bottom: 10px;">
                                 <input class="form-check-input" type="radio" name="categoryId" 
-                                       th:value="${catId}" th:id="'cat' + ${catId}" 
-                                       th:checked="${selectedCategoryId == catId}" style="cursor: pointer;">
-                                <label class="form-check-label" th:for="'cat' + ${catId}" 
-                                       th:text="${catId == 1 ? 'Men''s Fashion' : catId == 2 ? 'Women''s Fashion' : catId == 3 ? 'Accessories' : 'Shoes'}" 
+                                       th:value="${category.categoryId}" th:id="'cat' + ${category.categoryId}" 
+                                       th:checked="${selectedCategoryId == category.categoryId}" style="cursor: pointer;">
+                                <label class="form-check-label" th:for="'cat' + ${category.categoryId}" 
+                                       th:text="${category.categoryName}" 
                                        style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" 
                                        onmouseover="this.style.color='var(--primary-color)'" 
                                        onmouseout="this.style.color='#495057'"></label>
                             </div>
                         </div>
 
-                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                        <!-- Price Range Filter -->
+                        <div class="filter-section" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; transition: all 0.3s;">
                             <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-currency-dollar me-2"></i>Price Range</h5>
                             <div class="price-range d-flex gap-2 align-items-center mb-3">
                                 <input type="number" class="form-control form-control-sm" name="minPrice" 
@@ -237,48 +248,145 @@
                                 <input type="number" class="form-control form-control-sm" name="maxPrice" 
                                        placeholder="Max" th:value="${maxPrice}" min="0" step="10000">
                             </div>
+                            <!-- Quick Price Ranges as Radio Buttons -->
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="priceRange" value="" 
+                                       id="priceAll" th:checked="${(minPrice == null or minPrice == 0) and (maxPrice == null or maxPrice == 0)}" style="cursor: pointer;">
+                                <label class="form-check-label" for="priceAll" style="cursor: pointer; font-weight: 500; color: #495057;">All Prices</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="priceRange" value="0-200000" 
+                                       id="price1" th:checked="${minPrice != null and minPrice == 0 and maxPrice != null and maxPrice == 200000}" style="cursor: pointer;">
+                                <label class="form-check-label" for="price1" style="cursor: pointer; font-weight: 500; color: #495057;">Dưới 200K</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="priceRange" value="200000-500000" 
+                                       id="price2" th:checked="${minPrice != null and minPrice == 200000 and maxPrice != null and maxPrice == 500000}" style="cursor: pointer;">
+                                <label class="form-check-label" for="price2" style="cursor: pointer; font-weight: 500; color: #495057;">200K - 500K</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="priceRange" value="500000-1000000" 
+                                       id="price3" th:checked="${minPrice != null and minPrice == 500000 and maxPrice != null and maxPrice == 1000000}" style="cursor: pointer;">
+                                <label class="form-check-label" for="price3" style="cursor: pointer; font-weight: 500; color: #495057;">500K - 1M</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="priceRange" value="1000000-9999999" 
+                                       id="price4" th:checked="${minPrice != null and minPrice == 1000000 and maxPrice != null and maxPrice == 9999999}" style="cursor: pointer;">
+                                <label class="form-check-label" for="price4" style="cursor: pointer; font-weight: 500; color: #495057;">Trên 1M</label>
+                            </div>
                         </div>
 
-                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                        <!-- Size Filter -->
+                        <div class="filter-section" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; transition: all 0.3s;">
                             <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-rulers me-2"></i>Size</h5>
                             <div class="form-check" style="margin-bottom: 10px;">
                                 <input class="form-check-input" type="radio" name="size" value="" 
                                        id="sizeAll" th:checked="${selectedSize == null}" style="cursor: pointer;">
                                 <label class="form-check-label" for="sizeAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Sizes</label>
                             </div>
-                            <div class="form-check" style="margin-bottom: 10px;">
-                                <input class="form-check-input" type="radio" name="size" value="S" 
-                                       id="sizeS" th:checked="${selectedSize == 'S'}" style="cursor: pointer;">
-                                <label class="form-check-label" for="sizeS" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">S</label>
-                            </div>
-                            <div class="form-check" style="margin-bottom: 10px;">
-                                <input class="form-check-input" type="radio" name="size" value="M" 
-                                       id="sizeM" th:checked="${selectedSize == 'M'}" style="cursor: pointer;">
-                                <label class="form-check-label" for="sizeM" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">M</label>
-                            </div>
-                            <div class="form-check" style="margin-bottom: 10px;">
-                                <input class="form-check-input" type="radio" name="size" value="L" 
-                                       id="sizeL" th:checked="${selectedSize == 'L'}" style="cursor: pointer;">
-                                <label class="form-check-label" for="sizeL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">L</label>
-                            </div>
-                            <div class="form-check" style="margin-bottom: 10px;">
-                                <input class="form-check-input" type="radio" name="size" value="XL" 
-                                       id="sizeXL" th:checked="${selectedSize == 'XL'}" style="cursor: pointer;">
-                                <label class="form-check-label" for="sizeXL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">XL</label>
+                            <div class="size-grid">
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="size" value="XS" 
+                                           id="sizeXS" th:checked="${selectedSize == 'XS'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeXS" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">XS</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="size" value="S" 
+                                           id="sizeS" th:checked="${selectedSize == 'S'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeS" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">S</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="size" value="M" 
+                                           id="sizeM" th:checked="${selectedSize == 'M'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeM" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">M</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="size" value="L" 
+                                           id="sizeL" th:checked="${selectedSize == 'L'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">L</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="size" value="XL" 
+                                           id="sizeXL" th:checked="${selectedSize == 'XL'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeXL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">XL</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block;">
+                                    <input class="form-check-input" type="radio" name="size" value="XXL" 
+                                           id="sizeXXL" th:checked="${selectedSize == 'XXL'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="sizeXXL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">XXL</label>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Color Filter -->
+                        <div class="filter-section" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; transition: all 0.3s;">
+                            <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-palette me-2"></i>Color</h5>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="color" value="" 
+                                       id="colorAll" th:checked="${selectedColor == null}" style="cursor: pointer;">
+                                <label class="form-check-label" for="colorAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Colors</label>
+                            </div>
+                            <div class="color-options">
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="color" value="Đen" 
+                                           id="colorBlack" th:checked="${selectedColor == 'Đen'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="colorBlack" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Đen</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="color" value="Trắng" 
+                                           id="colorWhite" th:checked="${selectedColor == 'Trắng'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="colorWhite" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Trắng</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="color" value="Xanh" 
+                                           id="colorBlue" th:checked="${selectedColor == 'Xanh'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="colorBlue" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Xanh</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block; margin-right: 15px;">
+                                    <input class="form-check-input" type="radio" name="color" value="Đỏ" 
+                                           id="colorRed" th:checked="${selectedColor == 'Đỏ'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="colorRed" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Đỏ</label>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 10px; display: inline-block;">
+                                    <input class="form-check-input" type="radio" name="color" value="Hồng" 
+                                           id="colorPink" th:checked="${selectedColor == 'Hồng'}" style="cursor: pointer;">
+                                    <label class="form-check-label" for="colorPink" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Hồng</label>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary flex-fill" style="font-weight: 600; padding: 12px; border-radius: 10px; transition: all 0.3s;" 
-                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(255, 107, 157, 0.3)'" 
-                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                                <i class="bi bi-funnel me-2"></i>Apply Filters
+                        <!-- Stock Status Filter -->
+                        <div class="filter-section" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; transition: all 0.3s;">
+                            <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-box-seam me-2"></i>Stock Status</h5>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="stockStatus" value="" 
+                                       id="stockAll" th:checked="${stockStatus == null}" style="cursor: pointer;">
+                                <label class="form-check-label" for="stockAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Products</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="stockStatus" value="in-stock" 
+                                       id="inStock" th:checked="${stockStatus == 'in-stock'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="inStock" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">In Stock</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="stockStatus" value="low-stock" 
+                                       id="lowStock" th:checked="${stockStatus == 'low-stock'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="lowStock" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Low Stock</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="stockStatus" value="out-of-stock" 
+                                       id="outOfStock" th:checked="${stockStatus == 'out-of-stock'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="outOfStock" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">Out of Stock</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Apply Filter Button -->
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-funnel-fill me-2"></i>Apply Filters
                             </button>
-                            <a th:href="@{/products}" class="btn btn-outline-secondary flex-fill" style="font-weight: 600; padding: 12px; border-radius: 10px; transition: all 0.3s; text-decoration: none;" 
-                               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(108, 117, 125, 0.2)'" 
-                               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                                <i class="bi bi-arrow-clockwise me-2"></i>Clear
+                            <a th:href="@{/products}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
                             </a>
                         </div>
                     </form>
@@ -294,6 +402,8 @@
                             <input type="hidden" name="keyword" th:value="${keyword}">
                             <input type="hidden" name="categoryId" th:value="${selectedCategoryId}">
                             <input type="hidden" name="size" th:value="${selectedSize}">
+                            <input type="hidden" name="color" th:value="${selectedColor}">
+                            <input type="hidden" name="stockStatus" th:value="${stockStatus}">
                             <input type="hidden" name="minPrice" th:value="${minPrice}">
                             <input type="hidden" name="maxPrice" th:value="${maxPrice}">
                             <select class="sort-select" name="sort">
@@ -308,9 +418,9 @@
                             <button type="submit" class="btn btn-outline-primary btn-sm">Apply</button>
                         </form>
                         <div class="view-toggle">
-                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
+                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
                                class="view-btn active"><i class="bi bi-grid"></i></a>
-                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
+                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
                                class="view-btn"><i class="bi bi-list"></i></a>
                         </div>
                     </div>
@@ -319,8 +429,16 @@
                 <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
                     <div th:each="product : ${products}" class="product-card">
                         <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
-                            <div class="product-image-placeholder">
-                                <i class="bi bi-image"></i>
+                            <div class="product-image-container">
+                                <img th:if="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
+                                     th:src="${product.variants[0].imageUrl}" 
+                                     th:alt="${product.productName}"
+                                     class="product-image"
+                                     style="width: 100%; height: 300px; object-fit: cover; border-bottom: 1px solid #e9ecef;">
+                                <div th:unless="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
+                                     class="product-image-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
                             </div>
                         </a>
                         <div class="product-actions">
@@ -361,7 +479,7 @@
                 <div th:if="${totalPages > 1}" class="pagination">
                     <!-- Previous button -->
                     <a th:if="${currentPage > 0}" 
-                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage - 1})}" 
+                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage - 1})}" 
                        class="page-btn">
                         <i class="bi bi-chevron-left"></i>
                     </a>
@@ -374,26 +492,26 @@
                                       endPage=${T(java.lang.Math).min(totalPages - 1, currentPage + 2)}">
                         <!-- First page -->
                         <a th:if="${startPage > 0}" 
-                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=0)}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=0)}" 
                            class="page-btn">1</a>
                         <span th:if="${startPage > 1}" class="page-btn">...</span>
                         
                         <!-- Page range -->
                         <a th:each="i : ${#numbers.sequence(startPage, endPage)}" 
-                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${i})}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${i})}" 
                            class="page-btn" th:classappend="${i == currentPage ? 'active' : ''}" 
                            th:text="${i + 1}"></a>
                         
                         <!-- Last page -->
                         <span th:if="${endPage < totalPages - 2}" class="page-btn">...</span>
                         <a th:if="${endPage < totalPages - 1}" 
-                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${totalPages - 1})}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${totalPages - 1})}" 
                            class="page-btn" th:text="${totalPages}"></a>
                     </th:block>
                     
                     <!-- Next button -->
                     <a th:if="${currentPage < totalPages - 1}" 
-                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage + 1})}" 
+                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, color=${selectedColor}, stockStatus=${stockStatus}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage + 1})}" 
                        class="page-btn">
                         <i class="bi bi-chevron-right"></i>
                     </a>

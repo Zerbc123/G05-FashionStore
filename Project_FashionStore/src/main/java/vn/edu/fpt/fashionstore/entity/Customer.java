@@ -1,9 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -38,7 +36,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
+    public Customer(int customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;

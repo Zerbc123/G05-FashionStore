@@ -3,7 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "Voucher")
@@ -21,9 +21,8 @@ public class Voucher {
     private Double discountValue;
 
     @Column(name = "expired_date")
-    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date expiredDate;
+    private LocalDate expiredDate;
 
     @Column(name = "is_active")
     private Boolean isActive;
@@ -35,7 +34,7 @@ public class Voucher {
     public Voucher() {
     }
 
-    public Voucher(Integer voucherId, String code, Double discountValue, Date expiredDate, Boolean isActive, Double minOrderValue) {
+    public Voucher(Integer voucherId, String code, Double discountValue, LocalDate expiredDate, Boolean isActive, Double minOrderValue) {
         this.voucherId = voucherId;
         this.code = code;
         this.discountValue = discountValue;
@@ -69,11 +68,11 @@ public class Voucher {
         this.discountValue = discountValue;
     }
 
-    public Date getExpiredDate() {
+    public LocalDate getExpiredDate() {
         return expiredDate;
     }
 
-    public void setExpiredDate(Date expiredDate) {
+    public void setExpiredDate(LocalDate expiredDate) {
         this.expiredDate = expiredDate;
     }
 

@@ -1,7 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -22,8 +22,7 @@ public class Order {
     private Account account;
     
     @Column(name = "order_date", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date orderDate;
+    private LocalDate orderDate;
     
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
@@ -40,7 +39,7 @@ public class Order {
     
     // Constructor
     public Order() {
-        this.orderDate = new Date();
+        this.orderDate = LocalDate.now();
         this.status = OrderStatus.PENDING;
     }
     
@@ -67,11 +66,11 @@ public class Order {
         this.customer = customer;
     }
     
-    public Date getOrderDate() {
+    public LocalDate getOrderDate() {
         return orderDate;
     }
     
-    public void setOrderDate(Date orderDate) {
+    public void setOrderDate(LocalDate orderDate) {
         this.orderDate = orderDate;
     }
     

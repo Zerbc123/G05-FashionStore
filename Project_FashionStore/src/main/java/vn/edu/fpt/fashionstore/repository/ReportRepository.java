@@ -16,8 +16,8 @@ public interface ReportRepository extends JpaRepository<ProductVariant, Long> {
            "FROM ProductVariant v " +
            "JOIN v.product p " +
            "JOIN p.category c " +
-           "LEFT JOIN OrderItem oi ON v.variantId = oi.variant.variantId " +
-           "LEFT JOIN Orders o ON oi.order.orderId = o.orderId AND o.status IN ('Completed', 'Pending') " +
+           "LEFT JOIN OrderItem oi ON v.variantId = oi.productVariant.variantId " +
+           "LEFT JOIN Order o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productName, v.variantId, v.stock, c.categoryName " +
            "ORDER BY v.stock ASC")
     List<Object[]> getInventoryReport();
@@ -27,8 +27,8 @@ public interface ReportRepository extends JpaRepository<ProductVariant, Long> {
            "FROM ProductVariant v " +
            "JOIN v.product p " +
            "JOIN p.category c " +
-           "LEFT JOIN OrderItem oi ON v.variantId = oi.variant.variantId " +
-           "LEFT JOIN Orders o ON oi.order.orderId = o.orderId AND o.status IN ('Completed', 'Pending') " +
+           "LEFT JOIN OrderItem oi ON v.variantId = oi.productVariant.variantId " +
+           "LEFT JOIN Order o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "WHERE v.stock < :threshold " +
            "GROUP BY p.productName, v.variantId, v.stock, c.categoryName " +
            "ORDER BY v.stock ASC")
@@ -40,8 +40,8 @@ public interface ReportRepository extends JpaRepository<ProductVariant, Long> {
            "FROM ProductVariant v " +
            "JOIN v.product p " +
            "JOIN p.category c " +
-           "LEFT JOIN OrderItem oi ON v.variantId = oi.variant.variantId " +
-           "LEFT JOIN Orders o ON oi.order.orderId = o.orderId AND o.status IN ('Completed', 'Pending') " +
+           "LEFT JOIN OrderItem oi ON v.variantId = oi.productVariant.variantId " +
+           "LEFT JOIN Order o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY c.categoryId, c.categoryName " +
            "ORDER BY productCount DESC")
     List<Object[]> getInventoryByCategory();

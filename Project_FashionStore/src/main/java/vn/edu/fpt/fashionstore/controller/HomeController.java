@@ -312,7 +312,7 @@ public class HomeController {
             @RequestParam String phone,
             @RequestParam String address,
             @RequestParam String gender,
-            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateOfBirth,
             HttpSession session,
             RedirectAttributes ra) {
 

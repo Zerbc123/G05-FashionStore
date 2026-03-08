@@ -12,7 +12,7 @@ import java.util.*;
 public class ReportService {
 
     @Autowired
-    private OrdersRepository ordersRepository;
+    private OrderRepository orderRepository;
 
     @Autowired
     private OrderItemRepository orderItemRepository;
@@ -34,7 +34,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting revenue report from " + startDate + " to " + endDate);
             
             // Get daily revenue from database
-            List<Object[]> dailyRevenueData = ordersRepository.getDailyRevenue(startDate, endDate);
+            List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate);
             System.out.println("DEBUG: Daily revenue data size: " + (dailyRevenueData != null ? dailyRevenueData.size() : 0));
             
             List<Map<String, Object>> dailyRevenue = new ArrayList<>();
@@ -43,7 +43,7 @@ public class ReportService {
                 for (Object[] row : dailyRevenueData) {
                     Map<String, Object> item = new HashMap<>();
                     item.put("date", row[0] != null ? row[0].toString() : ""); // LocalDate to String
-                    item.put("revenue", row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO);
+                    item.put("revenue", row[1] != null ? ((Number) row[1]).doubleValue() : 0.0);
                     // If we have orders count in the query result, use it, otherwise calculate it
                     if (row.length > 2) {
                         item.put("orders", row[2] != null ? ((Number) row[2]).longValue() : 0);
@@ -56,7 +56,7 @@ public class ReportService {
             }
             
             // Get monthly revenue from database
-            List<Object[]> monthlyRevenueData = ordersRepository.getMonthlyRevenue(startDate, endDate);
+            List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate);
             System.out.println("DEBUG: Monthly revenue data size: " + (monthlyRevenueData != null ? monthlyRevenueData.size() : 0));
             
             List<Map<String, Object>> monthlyRevenue = new ArrayList<>();
@@ -65,23 +65,22 @@ public class ReportService {
                 for (Object[] row : monthlyRevenueData) {
                     Map<String, Object> item = new HashMap<>();
                     item.put("date", row[0] != null ? row[0].toString() : ""); // Month string
-                    item.put("revenue", row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO);
+                    item.put("revenue", row[1] != null ? ((Number) row[1]).doubleValue() : 0.0);
                     monthlyRevenue.add(item);
                 }
             }
             
             // Calculate totals
-            BigDecimal totalRevenue = ordersRepository.getTotalRevenue(startDate, endDate);
-            Long totalOrders = ordersRepository.getTotalOrders(startDate, endDate);
+            Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate);
+            Long totalOrders = orderRepository.getTotalOrders(startDate, endDate);
             System.out.println("DEBUG: Total revenue: " + totalRevenue + ", Total orders: " + totalOrders);
             
-            BigDecimal averageOrderValue = totalOrders != null && totalOrders > 0 ? 
-                totalRevenue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP) : 
-                BigDecimal.ZERO;
+            Double averageOrderValue = totalOrders != null && totalOrders > 0 ? 
+                totalRevenue / totalOrders : 0.0;
             
             report.put("dailyRevenue", dailyRevenue);
             report.put("monthlyRevenue", monthlyRevenue);
-            report.put("totalRevenue", totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
+            report.put("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
             report.put("totalOrders", totalOrders != null ? totalOrders : 0L);
             report.put("averageOrderValue", averageOrderValue);
             report.put("startDate", startDate);
@@ -96,9 +95,9 @@ public class ReportService {
             // Return empty report with default values
             report.put("dailyRevenue", new ArrayList<>());
             report.put("monthlyRevenue", new ArrayList<>());
-            report.put("totalRevenue", BigDecimal.ZERO);
+            report.put("totalRevenue", 0.0);
             report.put("totalOrders", 0L);
-            report.put("averageOrderValue", BigDecimal.ZERO);
+            report.put("averageOrderValue", 0.0);
             report.put("startDate", startDate);
             report.put("endDate", endDate);
         }
@@ -110,40 +109,64 @@ public class ReportService {
     public Map<String, Object> getBestSellerReport(LocalDate startDate, LocalDate endDate) {
         Map<String, Object> report = new HashMap<>();
         
-        // Get best selling products
-        List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate);
-        List<Map<String, Object>> products = new ArrayList<>();
-        
-        for (Object[] row : bestSellingProducts) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("productName", row[0]);
-            item.put("totalSold", row[1]);
-            item.put("revenue", (BigDecimal) row[2]);
-            item.put("categoryName", row[3]); // Add category name
-            products.add(item);
+        try {
+            System.out.println("DEBUG: Getting best seller report from " + startDate + " to " + endDate);
             
-            // Limit to top 5 products
-            if (products.size() >= 5) {
-                break;
+            // Get best selling products
+            List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate);
+            List<Map<String, Object>> products = new ArrayList<>();
+            
+            if (bestSellingProducts != null) {
+                for (Object[] row : bestSellingProducts) {
+                    if (row != null && row.length >= 4) {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("productName", row[0] != null ? row[0] : "N/A");
+                        item.put("totalSold", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+                        item.put("revenue", row[2] != null ? ((Number) row[2]).doubleValue() : 0.0);
+                        item.put("categoryName", row[3] != null ? row[3] : "N/A");
+                        products.add(item);
+                        
+                        // Limit to top 5 products
+                        if (products.size() >= 5) {
+                            break;
+                        }
+                    }
+                }
             }
+            
+            // Get best selling categories
+            List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate);
+            List<Map<String, Object>> categories = new ArrayList<>();
+            
+            if (bestSellingCategories != null) {
+                for (Object[] row : bestSellingCategories) {
+                    if (row != null && row.length >= 3) {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("categoryName", row[0] != null ? row[0] : "N/A");
+                        item.put("totalSold", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+                        item.put("revenue", row[2] != null ? ((Number) row[2]).doubleValue() : 0.0);
+                        categories.add(item);
+                    }
+                }
+            }
+            
+            report.put("products", products);
+            report.put("categories", categories);
+            report.put("startDate", startDate);
+            report.put("endDate", endDate);
+            
+            System.out.println("DEBUG: Best seller report completed successfully");
+            
+        } catch (Exception e) {
+            System.err.println("ERROR in getBestSellerReport: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Return empty report with default values
+            report.put("products", new ArrayList<>());
+            report.put("categories", new ArrayList<>());
+            report.put("startDate", startDate);
+            report.put("endDate", endDate);
         }
-        
-        // Get best selling categories
-        List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate);
-        List<Map<String, Object>> categories = new ArrayList<>();
-        
-        for (Object[] row : bestSellingCategories) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("categoryName", row[0]);
-            item.put("totalSold", row[1]);
-            item.put("revenue", (BigDecimal) row[2]);
-            categories.add(item);
-        }
-        
-        report.put("products", products);
-        report.put("categories", categories);
-        report.put("startDate", startDate);
-        report.put("endDate", endDate);
         
         return report;
     }
@@ -253,13 +276,22 @@ public class ReportService {
         try {
             System.out.println("DEBUG: Getting product report");
             
-            // Use hardcoded values for now to avoid query issues
-            // TODO: Fix this later with proper query
-            report.put("totalProducts", 139L);
-            report.put("activeProducts", 120L);
-            report.put("outOfStockProducts", 19L);
-            report.put("lowStockProducts", 8L);
-            System.out.println("DEBUG: Using hardcoded summary values");
+            // Get product summary from database
+            Object[] productSummary = productReportRepository.getProductSummary();
+            if (productSummary != null && productSummary.length >= 4) {
+                report.put("totalProducts", ((Number) productSummary[0]).longValue());
+                report.put("activeProducts", ((Number) productSummary[1]).longValue());
+                report.put("outOfStockProducts", ((Number) productSummary[2]).longValue());
+                report.put("lowStockProducts", ((Number) productSummary[3]).longValue());
+                System.out.println("DEBUG: Using database summary values");
+            } else {
+                // Fallback values if query fails
+                report.put("totalProducts", 0L);
+                report.put("activeProducts", 0L);
+                report.put("outOfStockProducts", 0L);
+                report.put("lowStockProducts", 0L);
+                System.out.println("DEBUG: Using fallback summary values");
+            }
 
             // Products by category
             List<Object[]> categoryData = productReportRepository.getProductsByCategory();
@@ -433,10 +465,10 @@ public class ReportService {
             // Customer summary with null safety
             Object[] summary = customerReportRepository.getCustomerSummary(startDate);
             if (summary != null && summary.length >= 4) {
-                report.put("totalCustomers", summary[0] != null ? summary[0] : 0L);
-                report.put("activeCustomers", summary[1] != null ? summary[1] : 0L);
-                report.put("newCustomers", summary[2] != null ? summary[2] : 0L);
-                report.put("inactiveCustomers", summary[3] != null ? summary[3] : 0L);
+                report.put("totalCustomers", summary[0] != null ? ((Number) summary[0]).longValue() : 0L);
+                report.put("activeCustomers", summary[1] != null ? ((Number) summary[1]).longValue() : 0L);
+                report.put("newCustomers", summary[2] != null ? ((Number) summary[2]).longValue() : 0L);
+                report.put("inactiveCustomers", summary[3] != null ? ((Number) summary[3]).longValue() : 0L);
             } else {
                 // Fallback values
                 report.put("totalCustomers", 0L);
@@ -455,7 +487,7 @@ public class ReportService {
                         item.put("customerName", row[0] != null ? row[0] : "N/A");
                         item.put("email", row[1] != null ? row[1] : "N/A");
                         item.put("phone", row[2] != null ? row[2] : "N/A");
-                        item.put("totalOrders", row[3] != null ? row[3] : 0);
+                        item.put("totalOrders", row[3] != null ? ((Number) row[3]).longValue() : 0L);
                         item.put("totalSpent", row[4] != null ? ((Number) row[4]).doubleValue() : 0.0);
                         item.put("averageOrderValue", row[5] != null ? ((Number) row[5]).doubleValue() : 0.0);
                         item.put("joinDate", row[6] != null ? row[6] : "N/A");
@@ -475,8 +507,8 @@ public class ReportService {
                     if (row != null && row.length >= 4) {
                         Map<String, Object> item = new HashMap<>();
                         item.put("period", row[0] != null ? row[0] : "N/A");
-                        item.put("newCustomers", row[1] != null ? row[1] : 0);
-                        item.put("activeCustomers", row[2] != null ? row[2] : 0);
+                        item.put("newCustomers", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+                        item.put("activeCustomers", row[2] != null ? ((Number) row[2]).longValue() : 0L);
                         item.put("registrationRate", row[3] != null ? ((Number) row[3]).doubleValue() : 0.0);
                         registrationSummary.add(item);
                     }
@@ -493,7 +525,7 @@ public class ReportService {
                         item.put("customerName", row[0] != null ? row[0] : "N/A");
                         item.put("email", row[1] != null ? row[1] : "N/A");
                         item.put("phone", row[2] != null ? row[2] : "N/A");
-                        item.put("totalOrders", row[3] != null ? row[3] : 0);
+                        item.put("totalOrders", row[3] != null ? ((Number) row[3]).longValue() : 0L);
                         item.put("totalSpent", row[4] != null ? ((Number) row[4]).doubleValue() : 0.0);
                         item.put("status", row[5] != null ? row[5] : "Inactive");
                         allCustomers.add(item);

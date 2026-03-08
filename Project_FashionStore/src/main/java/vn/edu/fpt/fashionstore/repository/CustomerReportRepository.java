@@ -18,7 +18,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "SUM(CASE WHEN o IS NULL THEN 1 ELSE 0 END) " +
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
-           "LEFT JOIN Orders o ON a.accountId = o.accountId")
+           "LEFT JOIN Order o ON a.accountId = o.account.accountId")
     Object[] getCustomerSummary(@Param("startDate") LocalDate startDate);
 
     // Get top customers by revenue
@@ -29,7 +29,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "c.createdDate " +
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
-           "LEFT JOIN Orders o ON a.accountId = o.accountId " +
+           "LEFT JOIN Order o ON a.accountId = o.account.accountId " +
            "GROUP BY c.customerId, c.fullName, c.email, c.phone, c.createdDate " +
            "ORDER BY totalSpent DESC")
     List<Object[]> getTopCustomers();
@@ -42,7 +42,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "c.createdDate " +
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
-           "LEFT JOIN Orders o ON a.accountId = o.accountId " +
+           "LEFT JOIN Order o ON a.accountId = o.account.accountId " +
            "GROUP BY c.customerId, c.fullName, c.email, c.phone, c.createdDate " +
            "ORDER BY c.fullName")
     List<Object[]> getAllCustomersWithOrders();
@@ -55,7 +55,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "0.0 as registrationRate " +
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
-           "LEFT JOIN Orders o ON a.accountId = o.accountId " +
+           "LEFT JOIN Order o ON a.accountId = o.account.accountId " +
            "WHERE c.createdDate >= :startDate " +
            "GROUP BY YEAR(c.createdDate), MONTH(c.createdDate) " +
            "ORDER BY YEAR(c.createdDate), MONTH(c.createdDate)")

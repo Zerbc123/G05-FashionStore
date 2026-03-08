@@ -14,7 +14,6 @@ import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 

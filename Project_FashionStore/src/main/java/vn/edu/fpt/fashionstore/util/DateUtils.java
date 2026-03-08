@@ -1,5 +1,7 @@
 package vn.edu.fpt.fashionstore.util;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -28,6 +30,22 @@ public class DateUtils {
         }
         Date today = new Date();
         return !dob.before(MIN_DOB) && !dob.after(today);
+    }
+
+    /**
+     * Validates that a date of birth is between {@code 1900-01-01} and today (inclusive).
+     *
+     * @param dob the date to validate, may be null
+     * @return true if dob is null or within the allowed range
+     */
+    public static boolean isValidDOB(LocalDate dob) {
+        if (dob == null) {
+            // empty value is acceptable; other logic may enforce requiredness
+            return true;
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate minDate = MIN_DOB.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return !dob.isBefore(minDate) && !dob.isAfter(today);
     }
 
     /**

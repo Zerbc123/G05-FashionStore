@@ -305,7 +305,7 @@ public class AccountService {
             customer.setAccount(account);
             customer.setFullName(fullName != null ? fullName : account.getFullName());
             customer.setEmail(email);
-            customer.setCreatedDate(new Date());
+            customer.setCreatedDate(LocalDate.now());
             customerRepository.save(customer);
         }
         return account;
