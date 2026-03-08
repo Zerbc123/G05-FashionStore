@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
     List<ProductVariant> findByProduct_ProductId(Long productId);
-
+    void deleteByProduct_ProductId(Long productId);
 }

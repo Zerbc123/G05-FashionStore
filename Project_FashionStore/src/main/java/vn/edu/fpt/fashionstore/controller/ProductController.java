@@ -8,6 +8,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.CategorySize;
@@ -19,7 +21,6 @@ import vn.edu.fpt.fashionstore.service.ProductVariantService;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.repository.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -209,13 +210,23 @@ public class ProductController {
 
         Product product = productService.getProductById(productId);
         if (product == null) {
-            return "redirect:/products/admin/products";
+            return "redirect:/admin/products";
         }
 
         List<ProductVariant> variants = productVariantService.getVariantsByProductId(productId);
         
+        // Calculate statistics
+        long totalVariants = variants.size();
+        long inStockCount = variants.stream().filter(v -> v.getStock() > 20).count();
+        long lowStockCount = variants.stream().filter(v -> v.getStock() > 0 && v.getStock() <= 20).count();
+        long outOfStockCount = variants.stream().filter(v -> v.getStock() == 0).count();
+        
         model.addAttribute("product", product);
         model.addAttribute("variants", variants);
+        model.addAttribute("totalVariants", totalVariants);
+        model.addAttribute("inStockCount", inStockCount);
+        model.addAttribute("lowStockCount", lowStockCount);
+        model.addAttribute("outOfStockCount", outOfStockCount);
 
         return "admin/productvariants";
     }
@@ -230,5 +241,286 @@ public class ProductController {
         model.addAttribute("sizes", categorySizeRepository.findAll());
         
         return "admin/addproduct";
+    }
+
+    @PostMapping("/admin/add")
+    public String addProduct(
+            @RequestParam("productName") String productName,
+            @RequestParam("categoryId") Integer categoryId,
+            @RequestParam("description") String description,
+            @RequestParam("colorIds") List<Integer> colorIds,
+            @RequestParam("sizeIds") List<Integer> sizeIds,
+            @RequestParam("prices") List<Double> prices,
+            @RequestParam("stocks") List<Integer> stocks,
+            @RequestParam("variantImages") List<MultipartFile> variantImages,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            // Create new product
+            Product product = new Product();
+            product.setProductName(productName);
+            product.setDescription(description);
+            
+            Category category = categoryRepository.findById(categoryId).orElse(null);
+            product.setCategory(category);
+            
+            // Save product first
+            product = productRepository.save(product);
+            
+            // Create product variants
+            for (int i = 0; i < colorIds.size(); i++) {
+                if (i < sizeIds.size() && i < prices.size() && i < stocks.size() && i < variantImages.size()) {
+                    ProductVariant variant = new ProductVariant();
+                    variant.setProduct(product);
+                    
+                    Color color = colorRepository.findById(colorIds.get(i)).orElse(null);
+                    variant.setColor(color);
+                    
+                    CategorySize size = categorySizeRepository.findById(sizeIds.get(i)).orElse(null);
+                    variant.setCategorySize(size);
+                    
+                    variant.setPrice(prices.get(i));
+                    variant.setStock(stocks.get(i));
+                    
+                    // Upload image to Cloudinary
+                    if (!variantImages.get(i).isEmpty()) {
+                        String imageUrl = cloudinaryService.uploadImage(variantImages.get(i));
+                        variant.setImageUrl(imageUrl);
+                    }
+                    
+                    productVariantRepository.save(variant);
+                }
+            }
+            
+            redirectAttributes.addAttribute("success", "true");
+            return "redirect:/admin/products/add";
+            
+        } catch (Exception e) {
+            redirectAttributes.addAttribute("error", "Failed to add product: " + e.getMessage());
+            return "redirect:/admin/products/add";
+        }
+    }
+
+    // ========================================================================
+    // 7. ADMIN - EDIT PRODUCT
+    // ========================================================================
+    @GetMapping("/admin/edit")
+    public String showEditProductForm(@RequestParam("id") Long productId, Model model) {
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            return "redirect:/admin/products";
+        }
+        
+        model.addAttribute("product", product);
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("colors", colorRepository.findAll());
+        model.addAttribute("sizes", categorySizeRepository.findAll());
+        model.addAttribute("variants", product.getVariants());
+        
+        return "admin/editproduct";
+    }
+
+    @PostMapping("/admin/edit")
+    public String editProduct(
+            @RequestParam("productId") Long productId,
+            @RequestParam("productName") String productName,
+            @RequestParam("categoryId") Integer categoryId,
+            @RequestParam("description") String description,
+            @RequestParam(value = "deletedVariantIds", required = false) String deletedVariantIds,
+            @RequestParam(value = "colorIds", required = false) List<Integer> colorIds,
+            @RequestParam(value = "sizeIds", required = false) List<Integer> sizeIds,
+            @RequestParam(value = "prices", required = false) List<Double> prices,
+            @RequestParam(value = "stocks", required = false) List<Integer> stocks,
+            @RequestParam(value = "variantImages", required = false) List<MultipartFile> variantImages,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                redirectAttributes.addAttribute("error", "Product not found");
+                return "redirect:/admin/products";
+            }
+            
+            // Update product details
+            product.setProductName(productName);
+            product.setDescription(description);
+            
+            Category category = categoryRepository.findById(categoryId).orElse(null);
+            product.setCategory(category);
+            
+            // Save updated product
+            product = productRepository.save(product);
+            
+            // Delete marked variants
+            if (deletedVariantIds != null && !deletedVariantIds.trim().isEmpty()) {
+                String[] ids = deletedVariantIds.split(",");
+                for (String id : ids) {
+                    try {
+                        productVariantRepository.deleteById(Integer.parseInt(id.trim()));
+                    } catch (Exception e) {
+                        // Log error but continue
+                        System.err.println("Error deleting variant: " + id);
+                    }
+                }
+            }
+            
+            // Update existing variants and add new ones
+            if (colorIds != null && !colorIds.isEmpty()) {
+                for (int i = 0; i < colorIds.size(); i++) {
+                    if (i < sizeIds.size() && i < prices.size() && i < stocks.size()) {
+                        ProductVariant variant = new ProductVariant();
+                        variant.setProduct(product);
+                        
+                        Color color = colorRepository.findById(colorIds.get(i)).orElse(null);
+                        variant.setColor(color);
+                        
+                        CategorySize size = categorySizeRepository.findById(sizeIds.get(i)).orElse(null);
+                        variant.setCategorySize(size);
+                        
+                        variant.setPrice(prices.get(i));
+                        variant.setStock(stocks.get(i));
+                        
+                        // Upload image if provided
+                        if (variantImages != null && i < variantImages.size() && !variantImages.get(i).isEmpty()) {
+                            String imageUrl = cloudinaryService.uploadImage(variantImages.get(i));
+                            variant.setImageUrl(imageUrl);
+                        }
+                        
+                        productVariantRepository.save(variant);
+                    }
+                }
+            }
+            
+            redirectAttributes.addAttribute("success", "true");
+            return "redirect:/admin/products";
+            
+        } catch (Exception e) {
+            redirectAttributes.addAttribute("error", "Failed to update product: " + e.getMessage());
+            return "redirect:/products/admin/edit?id=" + productId;
+        }
+    }
+
+    // ========================================================================
+    // 8. ADMIN - ADD VARIANT TO PRODUCT
+    // ========================================================================
+    @GetMapping("/admin/variant/add")
+    public String showAddVariantForm(@RequestParam("productId") Long productId, Model model) {
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            return "redirect:/admin/products";
+        }
+        
+        model.addAttribute("product", product);
+        model.addAttribute("colors", colorRepository.findAll());
+        model.addAttribute("sizes", categorySizeRepository.findAll());
+        
+        return "admin/addvariant";
+    }
+
+    @PostMapping("/admin/variant/add")
+    public String addVariant(
+            @RequestParam("productId") Long productId,
+            @RequestParam("colorId") Integer colorId,
+            @RequestParam("sizeId") Integer sizeId,
+            @RequestParam("price") Double price,
+            @RequestParam("stock") Integer stock,
+            @RequestParam("variantImage") MultipartFile variantImage,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                redirectAttributes.addAttribute("error", "Product not found");
+                return "redirect:/admin/products";
+            }
+            
+            ProductVariant variant = new ProductVariant();
+            variant.setProduct(product);
+            
+            Color color = colorRepository.findById(colorId).orElse(null);
+            variant.setColor(color);
+            
+            CategorySize size = categorySizeRepository.findById(sizeId).orElse(null);
+            variant.setCategorySize(size);
+            
+            variant.setPrice(price);
+            variant.setStock(stock);
+            
+            // Upload image to Cloudinary
+            if (!variantImage.isEmpty()) {
+                String imageUrl = cloudinaryService.uploadImage(variantImage);
+                variant.setImageUrl(imageUrl);
+            }
+            
+            productVariantRepository.save(variant);
+            
+            redirectAttributes.addFlashAttribute("success", "Thêm biến thể thành công!");
+            return "redirect:/admin/product-variants";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to add variant: " + e.getMessage());
+            return "redirect:/products/admin/variant/add?productId=" + productId;
+        }
+    }
+
+    // ========================================================================
+    // 9. ADMIN - EDIT VARIANT
+    // ========================================================================
+    @GetMapping("/admin/variant/edit")
+    public String showEditVariantForm(@RequestParam("variantId") Integer variantId, Model model) {
+        ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
+        if (variant == null) {
+            return "redirect:/admin/products";
+        }
+        
+        model.addAttribute("variant", variant);
+        model.addAttribute("product", variant.getProduct());
+        model.addAttribute("colors", colorRepository.findAll());
+        model.addAttribute("sizes", categorySizeRepository.findAll());
+        
+        return "admin/editvariant";
+    }
+
+    @PostMapping("/admin/variant/edit")
+    public String editVariant(
+            @RequestParam("variantId") Integer variantId,
+            @RequestParam("colorId") Integer colorId,
+            @RequestParam("sizeId") Integer sizeId,
+            @RequestParam("price") Double price,
+            @RequestParam("stock") Integer stock,
+            @RequestParam(value = "variantImage", required = false) MultipartFile variantImage,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
+            if (variant == null) {
+                redirectAttributes.addAttribute("error", "Variant not found");
+                return "redirect:/admin/products";
+            }
+            
+            Color color = colorRepository.findById(colorId).orElse(null);
+            variant.setColor(color);
+            
+            CategorySize size = categorySizeRepository.findById(sizeId).orElse(null);
+            variant.setCategorySize(size);
+            
+            variant.setPrice(price);
+            variant.setStock(stock);
+            
+            // Upload new image if provided
+            if (variantImage != null && !variantImage.isEmpty()) {
+                String imageUrl = cloudinaryService.uploadImage(variantImage);
+                variant.setImageUrl(imageUrl);
+            }
+            
+            productVariantRepository.save(variant);
+            
+            redirectAttributes.addFlashAttribute("success", "Cập nhật biến thể thành công!");
+            return "redirect:/admin/product-variants";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update variant: " + e.getMessage());
+            return "redirect:/products/admin/variant/edit?variantId=" + variantId;
+        }
     }
 }
