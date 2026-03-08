@@ -24,6 +24,10 @@
                     <span th:text="${order.customer.fullName}"></span>
                 </p>
 
+                <p><strong>Số điện thoại:</strong>
+                    <span th:text="${order.customer.phone}"></span>
+                </p>
+
                 <p><strong>Ngày đặt:</strong>
                     <span th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></span>
                 </p>

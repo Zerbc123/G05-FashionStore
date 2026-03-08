@@ -140,6 +140,8 @@ public class OrderController {
         document.add(new Paragraph("Mã đơn hàng: " + order.getOrderId()));
         document.add(new Paragraph("Tên người đặt: "
                 + order.getCustomer().getFullName()));
+        document.add(new Paragraph("Số điện thoại: "
+                + order.getCustomer().getPhone()));
         document.add(new Paragraph("Địa chỉ giao hàng: "
                 + order.getShippingAddress()));
         document.add(new Paragraph("Ngày đặt: "
