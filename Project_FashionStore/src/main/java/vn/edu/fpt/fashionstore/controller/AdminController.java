@@ -15,7 +15,10 @@ import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import vn.edu.fpt.fashionstore.entity.Account;
+import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
 @Controller
@@ -67,19 +70,19 @@ public class AdminController {
         
         // Tính tổng doanh thu
         double totalRevenue = orders.stream()
-            .filter(order -> "Completed".equals(order.getStatus()))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         
         // Đếm đơn hàng theo trạng thái
         long pendingOrders = orders.stream()
-            .filter(order -> "Pending".equals(order.getStatus()))
+            .filter(order -> "PENDING".equals(order.getStatus()))
             .count();
         long processingOrders = orders.stream()
-            .filter(order -> "Shipping".equals(order.getStatus()))
+            .filter(order -> "SHIPPING".equals(order.getStatus()))
             .count();
         long completedOrders = orders.stream()
-            .filter(order -> "Completed".equals(order.getStatus()))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .count();
         
         // Lấy 5 đơn hàng gần nhất
@@ -88,12 +91,47 @@ public class AdminController {
             .limit(5)
             .collect(java.util.stream.Collectors.toList());
         
-        // Tính doanh thu theo danh mục
-        Map<String, Long> salesByCategory = products.stream()
+        // Tính doanh thu theo tháng (Revenue Overview)
+        Map<Integer, Double> revenueByMonth = orders.stream()
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
-                p -> p.getCategory() != null ? p.getCategory().getCategoryName() : "Unknown",
-                java.util.stream.Collectors.counting()
+                order -> {
+                    // Convert Date to LocalDate to get month value
+                    java.time.LocalDate localDate = order.getOrderDate().toInstant()
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDate();
+                    return localDate.getMonthValue();
+                },
+                java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
+        
+        // Tạo dữ liệu cho 12 tháng
+        double[] monthlyRevenue = new double[12];
+        for (int month = 1; month <= 12; month++) {
+            monthlyRevenue[month - 1] = revenueByMonth.getOrDefault(month, 0.0);
+        }
+        
+        // Tính doanh thu theo danh mục với số lượng (Sales by Category)
+        Map<String, Long> salesByCategory = orders.stream()
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .flatMap(order -> order.getOrderItems() != null ? order.getOrderItems().stream() : java.util.stream.Stream.empty())
+            .collect(java.util.stream.Collectors.groupingBy(
+                item -> {
+                    ProductVariant variant = item.getProductVariant();
+                    if (variant != null && variant.getProduct() != null && variant.getProduct().getCategory() != null) {
+                        return variant.getProduct().getCategory().getCategoryName();
+                    }
+                    return "Unknown";
+                },
+                java.util.stream.Collectors.summingLong(item -> item.getQuantity() != null ? item.getQuantity() : 0)
+            ));
+        
+        // Chuyển đổi thành dữ liệu cho chart
+        List<String> categoryNames = new ArrayList<>(salesByCategory.keySet());
+        List<Long> categorySales = new ArrayList<>();
+        for (String categoryName : categoryNames) {
+            categorySales.add(salesByCategory.get(categoryName));
+        }
         
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("totalOrders", totalOrders);
@@ -104,6 +142,9 @@ public class AdminController {
         model.addAttribute("completedOrders", completedOrders);
         model.addAttribute("recentOrders", recentOrders);
         model.addAttribute("salesByCategory", salesByCategory);
+        model.addAttribute("monthlyRevenue", monthlyRevenue);
+        model.addAttribute("categoryNames", categoryNames);
+        model.addAttribute("categorySales", categorySales);
         model.addAttribute("title", "Admin Dashboard");
         
         return "admin/admindashboard";

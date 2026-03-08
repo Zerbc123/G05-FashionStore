@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -74,21 +75,67 @@ public class OrderController {
 
     @PostMapping("/update-status/{id}")
     public String updateStatus(@PathVariable Long id,
-            @RequestParam String status, HttpSession session, Model model) {
+            @RequestParam String status, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
 
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
 
         orderRepository.findById(id).ifPresent(order -> {
+            // Prevent changing from final statuses
+            if (OrderStatus.COMPLETED.equals(order.getStatus()) || 
+                OrderStatus.CANCELLED.equals(order.getStatus()) || 
+                OrderStatus.REFUNDED.equals(order.getStatus())) {
+                // Don't allow changing from final statuses
+                redirectAttributes.addFlashAttribute("error", "Không thể thay đổi trạng thái của đơn hàng đã " + 
+                    (OrderStatus.COMPLETED.equals(order.getStatus()) ? "hoàn thành" :
+                     OrderStatus.CANCELLED.equals(order.getStatus()) ? "bị hủy" : "hoàn tiền"));
+                return;
+            }
+            
             // Prevent changing from Confirmed to Pending
             if (OrderStatus.CONFIRMED.equals(order.getStatus()) && 
                 OrderStatus.PENDING.equals(status)) {
                 // Don't allow this change, redirect back without saving
+                redirectAttributes.addFlashAttribute("error", "Không thể chuyển từ trạng thái Đã xác nhận về Chờ xác nhận");
                 return;
             }
-            order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+            
+            // Map incoming status to correct enum value
+            OrderStatus newStatus;
+            switch (status.toUpperCase()) {
+                case "PENDING":
+                    newStatus = OrderStatus.PENDING;
+                    break;
+                case "CONFIRMED":
+                    newStatus = OrderStatus.CONFIRMED;
+                    break;
+                case "SHIPPING":
+                    newStatus = OrderStatus.SHIPPING;
+                    break;
+                case "COMPLETED":
+                    newStatus = OrderStatus.COMPLETED;
+                    break;
+                case "CANCELLED":
+                    newStatus = OrderStatus.CANCELLED;
+                    break;
+                case "REFUNDED":
+                    newStatus = OrderStatus.REFUNDED;
+                    break;
+                default:
+                    // Try to use the value directly if it matches an enum
+                    try {
+                        newStatus = OrderStatus.valueOf(status.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        return; // Invalid status, don't update
+                    }
+            }
+            
+            order.setStatus(newStatus);
             orderRepository.save(order);
+            
+            // Add success message
+            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái đơn hàng thành công");
         });
 
         return "redirect:/admin/orders";
