@@ -3,6 +3,8 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Customer {
@@ -22,18 +24,21 @@ public class Customer {
     private LocalDate createdDate;
 
     private String email;
-    // Phone number as String to handle various formats and international numbers
-    private String phone;
+    // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
+    private String phone; // String có thể null
     private String address;
 
     @ManyToOne
     @JoinColumn (name = "account_id")
     private Account account;
 
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Wishlist> wishlists;
+
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
+    public Customer(int customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
@@ -114,5 +119,13 @@ public class Customer {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public List<Wishlist> getWishlists() {
+        return wishlists;
+    }
+
+    public void setWishlists(List<Wishlist> wishlists) {
+        this.wishlists = wishlists;
     }
 }

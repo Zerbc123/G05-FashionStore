@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Chi tiết nhân viên</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                        success: '#C8E6C9',
+                        danger: '#F8D7DA',
+                        warning: '#FFF3CD'
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            padding: 32px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7A7A7A;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .value-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2F2F2F;
+        }
+
+        .status-badge {
+            padding: 4px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div style="margin-top: 80px;">
+<!-- ADMIN HEADER (Hidden) -->
+<header class="h-16 bg-admin-gradient flex items-center justify-between px-8 text-white sticky top-0 z-50" style="display: none;">
+    <div class="flex items-center gap-4">
+        <span class="text-xl font-heading font-bold tracking-wide">FashionStore Admin</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="relative">
+            <i class="fa-solid fa-bell text-lg cursor-pointer"></i>
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Quản trị viên</p>
+                <p class="text-[10px] opacity-80">Admin Root</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-gear"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow p-8 max-w-[1000px] mx-auto w-full">
+
+    <!-- Back Button & Page Title -->
+    <div class="mb-8">
+        <button onclick="window.location.href='staff_list.html'" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+        </button>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-heading font-bold text-text-main">Chi tiết hồ sơ nhân viên</h1>
+                <div class="w-12 h-1 bg-primary mt-2"></div>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-primary hover:border-primary transition shadow-sm">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <a href="/fashionstore/admin/cancel_staff" class="bg-white border border-divider text-text-muted p-2.5 rounded-xl hover:text-red-500 hover:border-red-500 transition shadow-sm inline-flex items-center justify-center">
+                    <i class="fa-solid fa-trash-can"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Detail Card -->
+    <div class="info-card">
+        <!-- Profile Header -->
+        <div class="flex flex-col md:flex-row items-center gap-8 mb-12 pb-8 border-b border-divider">
+            <div class="relative">
+                <div class="w-32 h-32 rounded-3xl bg-secondary-bg flex items-center justify-center text-primary text-4xl font-heading font-bold border border-primary/20">
+                    HT
+                </div>
+                <div class="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-green-500 border-4 border-white"></div>
+            </div>
+            <div class="text-center md:text-left">
+                <h2 class="text-2xl font-bold text-text-main mb-1">Lê Hoàng Thành</h2>
+                <p class="text-primary font-mono text-sm font-bold tracking-wider mb-3">ID: STF-2024-001</p>
+                <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+            </div>
+        </div>
+
+        <!-- Detailed Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+            <!-- Column 1 -->
+            <div class="space-y-8">
+                <div>
+                    <p class="label-text">Họ và Tên</p>
+                    <p class="value-text">Lê Hoàng Thành</p>
+                </div>
+                <div>
+                    <p class="label-text">Email cá nhân</p>
+                    <p class="value-text">thanh.le@fashionstore.com</p>
+                </div>
+                <div>
+                    <p class="label-text">Số điện thoại</p>
+                    <p class="value-text">0901 234 567</p>
+                </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="space-y-8">
+                <div>
+                    <p class="label-text">Vai trò / Chức vụ</p>
+                    <p class="value-text">Nhân viên bán hàng (Sales Associate)</p>
+                </div>
+                <div>
+                    <p class="label-text">Ngày gia nhập</p>
+                    <p class="value-text">15 Tháng 01, 2024</p>
+                </div>
+                <div>
+                    <p class="label-text">Trạng thái tài khoản</p>
+                    <p class="value-text flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Đã xác thực người dùng
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Area -->
+        <div class="mt-12 pt-8 border-t border-divider flex justify-end">
+            <button onclick="window.location.href='staff_list.html'" class="px-8 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
+                Quay lại
+            </button>
+        </div>
+    </div>
+
+</main>
+
+<footer class="py-6 border-t border-divider bg-white text-center mt-auto">
+    <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest">FashionStore Admin Console &copy; 2024</p>
+</footer>
+
+</body>
+</html>

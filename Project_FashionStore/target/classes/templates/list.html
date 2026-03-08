@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore - Sản Phẩm</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Common Styles -->
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Common Styles -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* Product List Page Specific Styles */
+        body { 
+            padding-top: 100px; 
+        }
+        
+        /* Fix navbar positioning */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .main-content { padding: 40px 0; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-family: 'Playfair Display', serif; color: var(--dark-text); font-size: 2rem; }
+        .breadcrumb { background: none; padding: 0; margin-bottom: 20px; }
+        .breadcrumb-item a { color: var(--primary-color); text-decoration: none; }
+        /* Filter Sidebar */
+        .filter-sidebar { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .filter-section { margin-bottom: 25px; }
+        .filter-section h5 { font-weight: 600; color: #2d3436; margin-bottom: 15px; font-size: 1rem; }
+        .form-check { margin-bottom: 10px; }
+        .form-check-label { color: #636e72; cursor: pointer; }
+        .price-range { display: flex; gap: 10px; align-items: center; }
+        .price-input { width: 80px; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; }
+        /* Toolbar */
+        .toolbar { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .result-count { color: #636e72; }
+        .sort-select { padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; }
+        .view-toggle { display: flex; gap: 10px; }
+        .view-btn { width: 40px; height: 40px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .view-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        /* Product Grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .product-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); transition: all 0.3s; position: relative; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .product-image-link { display: block; text-decoration: none; }
+        .product-image-placeholder { 
+            width: 100%; height: 300px; 
+            background: #f8f9fa; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 3rem; 
+            color: #6c757d; 
+            border-bottom: 1px solid #e9ecef;
+        }
+        .product-name-link { 
+            color: #2d3436; 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            transition: color 0.3s; 
+        }
+        .product-name-link:hover { color: var(--primary-color); }
+        .product-badge { position: absolute; top: 15px; left: 15px; background: #dc3545; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .product-badge.new { background: #28a745; }
+        .product-actions { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .action-btn:hover { background: var(--primary-color); color: white; transform: scale(1.1); }
+        .product-info { padding: 20px; }
+        .product-category { color: #636e72; font-size: 0.85rem; margin-bottom: 5px; }
+        .product-name { font-weight: 600; color: #2d3436; margin-bottom: 10px; font-size: 1.1rem; cursor: pointer; }
+        .product-name:hover { color: var(--primary-color); }
+        .product-rating { color: #ffc107; margin-bottom: 10px; }
+        .product-price { font-size: 1.3rem; font-weight: 700; color: var(--primary-color); }
+        .old-price { text-decoration: line-through; color: #636e72; font-size: 1rem; margin-left: 10px; }
+        .btn-add-cart { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: all 0.3s; }
+        .btn-add-cart:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3); }
+        
+        /* Fix for empty state */
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state i { font-size: 4rem; color: #6c757d; margin-bottom: 20px; }
+        .empty-state h4 { color: #495057; margin-bottom: 10px; }
+        .empty-state p { color: #6c757d; margin-bottom: 20px; }
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 40px; }
+        .page-btn { padding: 10px 15px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .page-btn:hover, .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .footer { background: #2d3436; color: white; padding: 40px 0; margin-top: 60px; }
+        @media (max-width: 768px) { .toolbar { flex-direction: column; align-items: stretch; } }
+        
+        /* Toast Notification Styles */
+        .toast-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 30px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            animation: zoomIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+            min-width: 350px;
+            justify-content: center;
+        }
+        .toast-success {
+            background: linear-gradient(135deg, #48BB78, #38A169);
+        }
+        .toast-error {
+            background: linear-gradient(135deg, #F56565, #E53E3E);
+        }
+        .toast-info {
+            background: linear-gradient(135deg, #4299E1, #3182CE);
+        }
+        @keyframes zoomIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+<!-- Toast Notification -->
+<div th:if="${success}" class="toast-notification toast-success">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <span th:text="${success}"></span>
+</div>
+<div th:if="${error}" class="toast-notification toast-error">
+    <i class="bi bi-x-circle-fill me-2"></i>
+    <span th:text="${error}"></span>
+</div>
+<div th:if="${info}" class="toast-notification toast-info">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <span th:text="${info}"></span>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/page">Home</a></li>
+                <li class="breadcrumb-item active">Products</li>
+            </ol>
+        </nav>
+
+        <div class="page-header">
+            <h1><i class="bi bi-grid"></i> All Products</h1>
+            <!-- Search Bar -->
+            <div class="mt-3">
+                <form method="GET" class="d-flex">
+                    <input type="hidden" name="categoryId" th:value="${selectedCategoryId}">
+                    <input type="hidden" name="size" th:value="${selectedSize}">
+                    <input type="hidden" name="minPrice" th:value="${minPrice}">
+                    <input type="hidden" name="maxPrice" th:value="${maxPrice}">
+                    <input type="hidden" name="sort" th:value="${sort}">
+                    <input type="hidden" name="direction" th:value="${direction}">
+                    <input type="hidden" name="pageSize" th:value="${pageSize}">
+                    <input type="hidden" name="page" th:value="0">
+                    <input class="form-control me-2" type="search" name="keyword" 
+                           placeholder="Search products..." th:value="${keyword}">
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <div class="col-lg-3">
+                <div class="filter-sidebar">
+                    <h4 style="margin-bottom: 30px; font-weight: 700; color: var(--dark-text);"><i class="bi bi-funnel-fill me-2"></i>Filters</h4>
+
+                    <form method="GET" th:action="@{/products}">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <input type="hidden" name="sort" th:value="${sort}">
+                        <input type="hidden" name="direction" th:value="${direction}">
+                        <input type="hidden" name="pageSize" th:value="${pageSize}">
+                        <input type="hidden" name="page" th:value="0">
+
+                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                            <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-grid-3x3-gap me-2"></i>Category</h5>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="categoryId" value="" 
+                                       id="catAll" th:checked="${selectedCategoryId == null}" style="cursor: pointer;">
+                                <label class="form-check-label" for="catAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Categories</label>
+                            </div>
+                            <div th:each="catId : ${categoryIds}" class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="categoryId" 
+                                       th:value="${catId}" th:id="'cat' + ${catId}" 
+                                       th:checked="${selectedCategoryId == catId}" style="cursor: pointer;">
+                                <label class="form-check-label" th:for="'cat' + ${catId}" 
+                                       th:text="${catId == 1 ? 'Men''s Fashion' : catId == 2 ? 'Women''s Fashion' : catId == 3 ? 'Accessories' : 'Shoes'}" 
+                                       style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" 
+                                       onmouseover="this.style.color='var(--primary-color)'" 
+                                       onmouseout="this.style.color='#495057'"></label>
+                            </div>
+                        </div>
+
+                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                            <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-currency-dollar me-2"></i>Price Range</h5>
+                            <div class="price-range d-flex gap-2 align-items-center mb-3">
+                                <input type="number" class="form-control form-control-sm" name="minPrice" 
+                                       placeholder="Min" th:value="${minPrice}" min="0" step="10000">
+                                <span class="text-muted">-</span>
+                                <input type="number" class="form-control form-control-sm" name="maxPrice" 
+                                       placeholder="Max" th:value="${maxPrice}" min="0" step="10000">
+                            </div>
+                        </div>
+
+                        <div class="filter-section" style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e9ecef; transition: all 0.3s;">
+                            <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-rulers me-2"></i>Size</h5>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="size" value="" 
+                                       id="sizeAll" th:checked="${selectedSize == null}" style="cursor: pointer;">
+                                <label class="form-check-label" for="sizeAll" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">All Sizes</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="size" value="S" 
+                                       id="sizeS" th:checked="${selectedSize == 'S'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="sizeS" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">S</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="size" value="M" 
+                                       id="sizeM" th:checked="${selectedSize == 'M'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="sizeM" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">M</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="size" value="L" 
+                                       id="sizeL" th:checked="${selectedSize == 'L'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="sizeL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">L</label>
+                            </div>
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="radio" name="size" value="XL" 
+                                       id="sizeXL" th:checked="${selectedSize == 'XL'}" style="cursor: pointer;">
+                                <label class="form-check-label" for="sizeXL" style="cursor: pointer; font-weight: 500; color: #495057; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#495057'">XL</label>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary flex-fill" style="font-weight: 600; padding: 12px; border-radius: 10px; transition: all 0.3s;" 
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(255, 107, 157, 0.3)'" 
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                <i class="bi bi-funnel me-2"></i>Apply Filters
+                            </button>
+                            <a th:href="@{/products}" class="btn btn-outline-secondary flex-fill" style="font-weight: 600; padding: 12px; border-radius: 10px; transition: all 0.3s; text-decoration: none;" 
+                               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(108, 117, 125, 0.2)'" 
+                               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Product List -->
+            <div class="col-lg-9">
+                <div class="toolbar">
+                    <div class="result-count">Showing <span th:text="${startItem}">1</span>-<span th:text="${endItem}">12</span> of <span th:text="${totalItems}">48</span> products</div>
+                    <div class="d-flex gap-3 align-items-center">
+                        <form method="GET" class="d-flex gap-2 align-items-center">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="categoryId" th:value="${selectedCategoryId}">
+                            <input type="hidden" name="size" th:value="${selectedSize}">
+                            <input type="hidden" name="minPrice" th:value="${minPrice}">
+                            <input type="hidden" name="maxPrice" th:value="${maxPrice}">
+                            <select class="sort-select" name="sort">
+                                <option value="name" th:selected="${sort == 'name'}">Sort by: Name</option>
+                                <option value="price" th:selected="${sort == 'price'}">Sort by: Price</option>
+                                <option value="category" th:selected="${sort == 'category'}">Sort by: Category</option>
+                            </select>
+                            <select class="sort-select" name="direction">
+                                <option value="asc" th:selected="${direction == 'asc'}">Asc</option>
+                                <option value="desc" th:selected="${direction == 'desc'}">Desc</option>
+                            </select>
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Apply</button>
+                        </form>
+                        <div class="view-toggle">
+                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
+                               class="view-btn active"><i class="bi bi-grid"></i></a>
+                            <a th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage})}" 
+                               class="view-btn"><i class="bi bi-list"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
+                    <div th:each="product : ${products}" class="product-card">
+                        <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
+                            <div class="product-image-placeholder">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        </a>
+                        <div class="product-actions">
+                            <form th:action="@{/wishlist/add}" method="post" style="display: inline; margin: 0;">
+                                <input type="hidden" name="productId" th:value="${product.productId}">
+                                <button type="submit" class="action-btn" title="Thêm vào yêu thích">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="product-info">
+                            <h6>
+                                <a th:href="@{/products/detail/{id}(id=${product.productId})}" 
+                                   class="product-name-link" th:text="${product.productName}">Product Name</a>
+                            </h6>
+                            <p class="text-muted" th:text="${#strings.abbreviate(product.description, 50)}">Description</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary" th:text="${product.category != null ? product.category.categoryName : 'No Category'}">Category</span>
+                                <small class="text-muted" th:text="'ID: ' + ${product.productId}">ID</small>
+                            </div>
+                            <div class="mt-2">
+                                <a th:href="@{/products/detail/{id}(id=${product.productId})}" 
+                                   class="btn btn-outline-primary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${products == null or #lists.isEmpty(products)}" class="text-center py-5">
+                    <i class="bi bi-search" style="font-size: 3rem; color: #636e72;"></i>
+                    <h4 class="mt-3">No products found</h4>
+                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    <a th:href="@{/products}" class="btn btn-primary">Clear Filters</a>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1}" class="pagination">
+                    <!-- Previous button -->
+                    <a th:if="${currentPage > 0}" 
+                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage - 1})}" 
+                       class="page-btn">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    <span th:unless="${currentPage > 0}" class="page-btn" disabled>
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                    
+                    <!-- Page numbers -->
+                    <th:block th:with="startPage=${T(java.lang.Math).max(0, currentPage - 2)}, 
+                                      endPage=${T(java.lang.Math).min(totalPages - 1, currentPage + 2)}">
+                        <!-- First page -->
+                        <a th:if="${startPage > 0}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=0)}" 
+                           class="page-btn">1</a>
+                        <span th:if="${startPage > 1}" class="page-btn">...</span>
+                        
+                        <!-- Page range -->
+                        <a th:each="i : ${#numbers.sequence(startPage, endPage)}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${i})}" 
+                           class="page-btn" th:classappend="${i == currentPage ? 'active' : ''}" 
+                           th:text="${i + 1}"></a>
+                        
+                        <!-- Last page -->
+                        <span th:if="${endPage < totalPages - 2}" class="page-btn">...</span>
+                        <a th:if="${endPage < totalPages - 1}" 
+                           th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${totalPages - 1})}" 
+                           class="page-btn" th:text="${totalPages}"></a>
+                    </th:block>
+                    
+                    <!-- Next button -->
+                    <a th:if="${currentPage < totalPages - 1}" 
+                       th:href="@{/products(keyword=${keyword}, categoryId=${selectedCategoryId}, size=${selectedSize}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, direction=${direction}, pageSize=${pageSize}, page=${currentPage + 1})}" 
+                       class="page-btn">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <span th:unless="${currentPage < totalPages - 1}" class="page-btn" disabled>
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Auto-hide toast notifications after 3 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast-notification');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        });
+    });
+</script>
+</body>
+</html>

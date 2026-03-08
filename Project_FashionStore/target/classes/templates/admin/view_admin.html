@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Admin Panel - FashionStore'">Admin Panel - FashionStore</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #d4ad0f 0%, #ffeaa7 100%);
+            min-height: 100vh;
+        }
+        .hero-section { padding: 80px 0; color: white; text-align: center; }
+        .hero-section h1 { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; text-shadow: 2px 2px 20px rgba(0,0,0,0.2); }
+        .hero-section p { font-size: 1.3rem; opacity: 0.95; margin-bottom: 30px; }
+        .user-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 50px; backdrop-filter: blur(10px); margin-bottom: 40px; }
+        .quick-access { padding: 60px 0; background: #f5f6fa; margin-top: -50px; border-radius: 50px 50px 0 0; }
+        .section-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: #2d3436; margin-bottom: 50px; text-align: center; }
+        .feature-card { background: white; border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%; border: 3px solid transparent; }
+        .feature-card:hover { transform: translateY(-15px); box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .feature-card.dashboard:hover { border-color: #48BB78; }
+        .feature-card.products:hover { border-color: #4299E1; }
+        .feature-card.orders:hover { border-color: #F6AD55; }
+        .feature-card.customers:hover { border-color: #9F7AEA; }
+        .feature-card.staff:hover { border-color: #FC8181; }
+        .feature-card.reports:hover { border-color: #38B2AC; }
+        .feature-icon { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-size: 2rem; color: white; }
+        .icon-dashboard { background: linear-gradient(135deg, #48BB78 0%, #38A169 100%); }
+        .icon-products { background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%); }
+        .icon-orders { background: linear-gradient(135deg, #F6AD55 0%, #ED8936 100%); }
+        .icon-customers { background: linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%); }
+        .icon-staff { background: linear-gradient(135deg, #FC8181 0%, #F56565 100%); }
+        .icon-reports { background: linear-gradient(135deg, #38B2AC 0%, #319795 100%); }
+        .feature-card h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #2d3436; margin-bottom: 15px; }
+        .feature-card p { color: #636e72; margin-bottom: 25px; font-size: 0.95rem; }
+        .btn-feature { padding: 12px 30px; border-radius: 50px; border: none; font-weight: 600; transition: all 0.3s; text-decoration: none; display: inline-block; color: white; }
+        .btn-dashboard { background: linear-gradient(135deg, #48BB78 0%, #38A169 100%); }
+        .btn-products { background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%); }
+        .btn-orders { background: linear-gradient(135deg, #F6AD55 0%, #ED8936 100%); }
+        .btn-customers { background: linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%); }
+        .btn-staff { background: linear-gradient(135deg, #FC8181 0%, #F56565 100%); }
+        .btn-reports { background: linear-gradient(135deg, #38B2AC 0%, #319795 100%); }
+        .btn-feature:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.2); color: white; }
+        .stats-section { background: white; padding: 60px 0; }
+        .stat-card { text-align: center; padding: 30px; }
+        .stat-number { font-size: 3rem; font-weight: 700; color: #48BB78; font-family: 'Playfair Display', serif; }
+        .stat-label { color: #636e72; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .admin-footer { background: #2d3436; color: white; padding: 30px 0; text-align: center; }
+    </style>
+</head>
+<body>
+
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<!-- Hero Section -->
+<section class="hero-section" style="margin-top: 76px;">
+    <div class="container">
+        <div class="user-badge">
+            <i class="bi bi-person-circle"></i>
+            <span>Welcome, <span th:text="${session.fullName} ?: 'Admin'">Admin</span></span>
+            <span> (<span th:text="${session.userRole} ?: 'ADMIN'">ADMIN</span>)</span>
+        </div>
+        <h1>Admin Management Panel</h1>
+        <p>Quản trị toàn bộ hệ thống với quyền hạn cao nhất</p>
+    </div>
+</section>
+
+<!-- Quick Access Section -->
+<section class="quick-access">
+    <div class="container">
+        <h2 class="section-title">Truy Cập Nhanh</h2>
+        <div class="row g-4">
+            <!-- Dashboard Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card dashboard">
+                    <div class="feature-icon icon-dashboard">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <h3>Dashboard</h3>
+                    <p>Xem tổng quan thống kê và báo cáo hệ thống</p>
+                    <a th:href="@{/admin/dashboard}" class="btn-feature btn-dashboard">
+                        <i class="bi bi-arrow-right"></i> Xem Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Products Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card products">
+                    <div class="feature-icon icon-products">
+                        <i class="bi bi-box"></i>
+                    </div>
+                    <h3>Sản Phẩm</h3>
+                    <p>Quản lý danh mục và sản phẩm cửa hàng</p>
+                    <a th:href="@{/admin/products}" class="btn-feature btn-products">
+                        <i class="bi bi-arrow-right"></i> Quản Lý SP
+                    </a>
+                </div>
+            </div>
+
+            <!-- Orders Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card orders">
+                    <div class="feature-icon icon-orders">
+                        <i class="bi bi-cart-check"></i>
+                    </div>
+                    <h3>Đơn Hàng</h3>
+                    <p>Theo dõi và quản lý tất cả đơn hàng</p>
+                    <a th:href="@{/admin/orders}" class="btn-feature btn-orders">
+                        <i class="bi bi-arrow-right"></i> Xem Đơn Hàng
+                    </a>
+                </div>
+            </div>
+
+            <!-- Customers Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card customers">
+                    <div class="feature-icon icon-customers">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h3>Khách Hàng</h3>
+                    <p>Quản lý thông tin khách hàng</p>
+                    <a th:href="@{/admin/customers}" class="btn-feature btn-customers">
+                        <i class="bi bi-arrow-right"></i> Xem KH
+                    </a>
+                </div>
+            </div>
+
+            <!-- Staff Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card staff">
+                    <div class="feature-icon icon-staff">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <h3>Nhân Viên</h3>
+                    <p>Quản lý nhân viên và phân quyền</p>
+                    <a th:href="@{/admin/staff}" class="btn-feature btn-staff">
+                        <i class="bi bi-arrow-right"></i> Quản Lý NV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reports Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card reports">
+                    <div class="feature-icon icon-reports">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h3>Báo Cáo</h3>
+                    <p>Xem báo cáo doanh thu và thống kê</p>
+                    <a th:href="@{/admin/reports}" class="btn-feature btn-reports">
+                        <i class="bi bi-arrow-right"></i> Xem Báo Cáo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">248</div>
+                    <div class="stat-label">Sản Phẩm</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">1,234</div>
+                    <div class="stat-label">Đơn Hàng</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">5,678</div>
+                    <div class="stat-label">Khách Hàng</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Nhân Viên</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="admin-footer">
+    <div class="container">
+        <p class="mb-0">&copy; 2026 FashionStore Admin Panel. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

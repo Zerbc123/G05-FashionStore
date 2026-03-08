@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Báo cáo theo ngày</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                        success: '#C8E6C9',
+                        warning: '#FFF3CD',
+                        danger: '#F8D7DA'
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .admin-sidebar { width: 260px; height: calc(100vh - 64px); }
+        .table-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+
+        thead { border-bottom: 2px solid #F06292; }
+        tbody tr:hover { background-color: #FFF5F7; transition: background 0.2s; }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(314deg) brightness(101%) contrast(90%);
+        }
+    </style>
+</head>
+<body>
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+<div style="margin-top: 80px;" class="flex flex-col min-h-screen">
+
+<!-- ADMIN HEADER -->
+<!--<header class="h-16 bg-admin-gradient flex items-center justify-between px-8 text-white sticky top-0 z-50">
+    <div class="flex items-center gap-4">
+        <i class="fa-solid fa-bars-staggered text-xl cursor-pointer"></i>
+        <span class="text-xl font-heading font-bold tracking-wide">FashionStore Admin</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="relative cursor-pointer">
+            <i class="fa-solid fa-bell text-lg"></i>
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Admin Manager</p>
+                <p class="text-[10px] opacity-80">Quản trị viên</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-grow">
+    <!-- SIDEBAR (Simple Static) -->
+    <aside class="hidden lg:block admin-sidebar bg-white border-r border-divider sticky top-16">
+        <nav class="p-6 space-y-2">
+            <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-box w-5"></i> Sản phẩm
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-receipt w-5"></i> Đơn hàng
+            </a>
+            <div class="pt-4 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-widest pl-3">Báo cáo</div>
+            <a href="report_by_day.html" class="flex items-center gap-3 p-3 bg-secondary-bg text-primary rounded-xl transition font-medium">
+                <i class="fa-solid fa-calendar-day w-5"></i> Báo cáo theo ngày
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-calendar-week w-5"></i> Báo cáo tháng
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-heading font-bold text-text-main">Báo cáo doanh thu theo ngày</h1>
+                <p class="text-text-muted text-sm mt-1">Quản lý và thống kê hoạt động kinh doanh chi tiết.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="handleExport()" class="px-4 py-2.5 bg-white border border-primary text-primary rounded-xl text-sm font-medium hover:bg-secondary-bg transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-export"></i> Xuất báo cáo
+                </button>
+            </div>
+        </div>
+
+        <!-- FILTERS & SELECTORS -->
+        <div class="bg-white p-6 rounded-2xl shadow-soft mb-8 flex flex-wrap items-end gap-6">
+            <!-- Date Selector -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-text-main uppercase tracking-wider">Chọn ngày báo cáo</label>
+                <div class="relative">
+                    <input type="date" id="reportDate" class="w-64 px-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm focus:outline-none focus:border-primary transition" value="2024-05-20">
+                </div>
+            </div>
+
+            <!-- Search within report -->
+            <div class="space-y-2 flex-grow max-w-sm">
+                <label class="text-xs font-bold text-text-main uppercase tracking-wider">Tìm kiếm trong báo cáo</label>
+                <div class="relative">
+                    <input type="text" id="reportSearch" placeholder="Tìm theo mã đơn, tên khách..." class="w-full pl-10 pr-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm focus:outline-none focus:border-primary transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Generate & Search Buttons -->
+            <div class="flex gap-3">
+                <button onclick="generateReport()" class="px-6 py-2.5 bg-admin-gradient text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate"></i> Lấy dữ liệu
+                </button>
+                <button onclick="handleSearch()" class="px-6 py-2.5 bg-text-main text-white rounded-xl text-sm font-semibold hover:bg-black transition">
+                    Tìm kiếm
+                </button>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-soft border-l-4 border-primary">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Tổng doanh thu</p>
+                <h3 class="text-2xl font-bold text-primary">$4,250.00</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft border-l-4 border-blue-400">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Số đơn hàng</p>
+                <h3 class="text-2xl font-bold text-text-main">48</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft border-l-4 border-green-400">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Lợi nhuận gộp</p>
+                <h3 class="text-2xl font-bold text-text-main">$1,840.00</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft border-l-4 border-orange-400">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Đơn hủy/hoàn</p>
+                <h3 class="text-2xl font-bold text-text-main">2</h3>
+            </div>
+        </div>
+
+        <!-- REPORT TABLE -->
+        <div class="table-container">
+            <div class="p-6 border-b border-divider flex items-center justify-between">
+                <h3 class="font-heading font-bold text-lg text-text-main">Danh sách giao dịch ngày <span id="currentDateDisplay" class="text-primary italic">20/05/2024</span></h3>
+                <span class="text-xs text-text-muted">Hiển thị 10 trong 48 kết quả</span>
+            </div>
+            <table class="w-full text-left">
+                <thead>
+                <tr class="text-text-main text-xs font-bold uppercase tracking-wider">
+                    <th class="px-6 py-4">Mã đơn</th>
+                    <th class="px-6 py-4">Khách hàng</th>
+                    <th class="px-6 py-4">Sản phẩm</th>
+                    <th class="px-6 py-4">Thời gian</th>
+                    <th class="px-6 py-4">Phương thức</th>
+                    <th class="px-6 py-4">Tổng tiền</th>
+                    <th class="px-6 py-4">Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody class="text-sm text-text-main">
+                <tr>
+                    <td class="px-6 py-4 font-semibold">#ORD-9921</td>
+                    <td class="px-6 py-4">Lê Minh Anh</td>
+                    <td class="px-6 py-4 text-xs text-text-muted">Silk Scarf, Velvet Dress</td>
+                    <td class="px-6 py-4">08:45 AM</td>
+                    <td class="px-6 py-4">Visa **44</td>
+                    <td class="px-6 py-4 font-bold">$145.00</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">Hoàn thành</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">#ORD-9922</td>
+                    <td class="px-6 py-4">Trần Thanh Vân</td>
+                    <td class="px-6 py-4 text-xs text-text-muted">Lace Top (White)</td>
+                    <td class="px-6 py-4">09:12 AM</td>
+                    <td class="px-6 py-4">MoMo</td>
+                    <td class="px-6 py-4 font-bold">$89.00</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">Hoàn thành</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">#ORD-9923</td>
+                    <td class="px-6 py-4">Nguyễn Hoàng Nam</td>
+                    <td class="px-6 py-4 text-xs text-text-muted">Denim Jacket</td>
+                    <td class="px-6 py-4">10:30 AM</td>
+                    <td class="px-6 py-4">COD</td>
+                    <td class="px-6 py-4 font-bold">$120.00</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold uppercase">Đang giao</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">#ORD-9924</td>
+                    <td class="px-6 py-4">Phạm Thùy Chi</td>
+                    <td class="px-6 py-4 text-xs text-text-muted">Floral Skirt</td>
+                    <td class="px-6 py-4">11:15 AM</td>
+                    <td class="px-6 py-4">Bank Transfer</td>
+                    <td class="px-6 py-4 font-bold">$65.00</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold uppercase">Đã hủy</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">#ORD-9925</td>
+                    <td class="px-6 py-4">Đỗ Kim Ngân</td>
+                    <td class="px-6 py-4 text-xs text-text-muted">Black Heels, Purse</td>
+                    <td class="px-6 py-4">01:05 PM</td>
+                    <td class="px-6 py-4">Visa **12</td>
+                    <td class="px-6 py-4 font-bold">$210.00</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">Hoàn thành</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="p-6 border-t border-divider flex items-center justify-between">
+                <p class="text-xs text-text-muted">Trang 1 của 5</p>
+                <div class="flex gap-2">
+                    <button class="w-8 h-8 rounded-lg border border-divider flex items-center justify-center hover:bg-secondary-bg transition text-text-muted"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                    <button class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-xs">1</button>
+                    <button class="w-8 h-8 rounded-lg border border-divider flex items-center justify-center hover:bg-secondary-bg transition text-text-main font-bold text-xs">2</button>
+                    <button class="w-8 h-8 rounded-lg border border-divider flex items-center justify-center hover:bg-secondary-bg transition text-text-main font-bold text-xs">3</button>
+                    <button class="w-8 h-8 rounded-lg border border-divider flex items-center justify-center hover:bg-secondary-bg transition text-text-muted"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function generateReport() {
+        const date = document.getElementById('reportDate').value;
+        if (!date) {
+            alert("Vui lòng chọn ngày trước khi lấy dữ liệu.");
+            return;
+        }
+
+        // Format date for display
+        const formattedDate = new Date(date).toLocaleDateString('vi-VN');
+        document.getElementById('currentDateDisplay').innerText = formattedDate;
+
+        alert("Đang lấy dữ liệu báo cáo cho ngày: " + formattedDate);
+        // Simulate loading
+    }
+
+    function handleSearch() {
+        const query = document.getElementById('reportSearch').value;
+        if(!query) {
+            alert("Vui lòng nhập từ khóa tìm kiếm.");
+            return;
+        }
+        alert("Đang tìm kiếm trong báo cáo: " + query);
+    }
+
+    function handleExport() {
+        const date = document.getElementById('reportDate').value || "today";
+        alert("Đang chuẩn bị file báo cáo (PDF/Excel) cho ngày " + date + "...");
+        setTimeout(() => {
+            alert("Yêu cầu xuất file thành công! Trình duyệt sẽ tự động tải xuống.");
+        }, 1000);
+    }
+</script>
+</body>
+</html>

@@ -20,8 +20,8 @@ public class Account {
 
     @Column (name = "full_name")
     private String fullName;
-    // Phone number as String to handle various formats and international numbers
-    private String phone;
+    // số điện thoại lưu dưới dạng chuỗi để giữ các ký tự 0 đầu
+    private String phone; // String có thể rỗng hoặc null
 
     @OneToMany (mappedBy = "account")
     private List<Customer> customers;

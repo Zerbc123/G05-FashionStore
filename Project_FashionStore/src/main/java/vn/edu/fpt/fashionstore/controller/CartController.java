@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.CartItem;
@@ -17,6 +14,7 @@ import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +56,10 @@ public class CartController {
     public String viewCart(Model model, HttpSession session) {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+            
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
             double total = cartService.getCartTotal(cartItems);
 
@@ -65,7 +67,7 @@ public class CartController {
             model.addAttribute("total", total);
             
             // Cập nhật số lượng giỏ hàng vào session
-            session.setAttribute("cartCount", cartItems.size());
+            session.setAttribute("cartCount", cartItems != null ? cartItems.size() : 0);
             
             return "cart";
         } catch (RuntimeException e) {
@@ -82,8 +84,13 @@ public class CartController {
                             RedirectAttributes redirectAttributes) {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+
             // Tìm variant dựa trên productId, sizeId và colorId
             Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
+
             
             if (variantId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
@@ -94,13 +101,52 @@ public class CartController {
             
             // Cập nhật số lượng giỏ hàng
             updateCartCount(session, currentCustomer);
-            
+
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
         } catch (RuntimeException e) {
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
             return "redirect:/login";
         }
         return "redirect:/cart";
+    }
+
+    @PostMapping("/buy-now")
+    public String buyNow(@RequestParam("productId") Long productId,
+                         @RequestParam("sizeId") Integer sizeId,
+                         @RequestParam("colorId") Integer colorId,
+                         @RequestParam(value = "quantity", defaultValue = "1") int quantity,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+            // Tìm variant dựa trên productId, sizeId và colorId
+            Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
+            
+
+            if (variantId == null) {
+
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
+                return "redirect:/products/detail/" + productId;
+            }
+            
+            // Thêm vào giỏ hàng và chuyển thẳng đến checkout
+            cartService.addToCart(currentCustomer, variantId, quantity);
+            
+            // Cập nhật số lượng giỏ hàng
+            updateCartCount(session, currentCustomer);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
+            return "redirect:/cart/checkout";
+            
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/login";
+        }
     }
 
     @PostMapping("/update")
@@ -154,7 +200,13 @@ public class CartController {
     
     // Helper method để cập nhật số lượng giỏ hàng vào session
     private void updateCartCount(HttpSession session, Customer customer) {
+        if (customer == null) {
+            session.setAttribute("cartCount", 0);
+            return;
+        }
+        
         List<CartItem> cartItems = cartService.getCartItems(customer);
-        session.setAttribute("cartCount", cartItems.size());
+        session.setAttribute("cartCount", cartItems != null ? cartItems.size() : 0);
     }
+
 }
