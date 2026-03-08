@@ -33,15 +33,15 @@ public class CategoryService {
     }
 
     @Transactional
-    public boolean delete(int cateId) {
+    public boolean delete(int categoryId) {
 
-        boolean isUsed = productRepository.existsByCategory_CateId(cateId);
+        boolean isUsed = productRepository.existsByCategory_CategoryId(categoryId);
 
         if (isUsed) {
             return false;
         }
 
-        categoryRepository.deleteById(cateId);
+        categoryRepository.deleteById(categoryId);
         return true;
     }
 }
