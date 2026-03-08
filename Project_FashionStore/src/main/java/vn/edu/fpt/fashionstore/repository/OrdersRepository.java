@@ -17,16 +17,16 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     @Query("SELECT o.orderDate, SUM(o.totalAmount) as revenue, COUNT(o) as orders " +
            "FROM Orders o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed' " +
+           "AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY o.orderDate " +
            "ORDER BY o.orderDate")
     List<Object[]> getDailyRevenue(@Param("startDate") LocalDate startDate, 
                                    @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT CONCAT(YEAR(o.orderDate), '-', RIGHT(CONCAT('0', CAST(MONTH(o.orderDate) AS STRING)), 2)) as monthYear, SUM(o.totalAmount) as revenue " +
+    @Query("SELECT CONCAT(YEAR(o.orderDate), '-', RIGHT(CONCAT('0', CAST(MONTH(o.orderDate) AS string)), 2)) as monthYear, SUM(o.totalAmount) as revenue " +
            "FROM Orders o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed' " +
+           "AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate) " +
            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)")
     List<Object[]> getMonthlyRevenue(@Param("startDate") LocalDate startDate, 
@@ -35,14 +35,14 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     @Query("SELECT SUM(o.totalAmount) " +
            "FROM Orders o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed'")
+           "AND o.status IN ('Completed', 'Pending')")
     BigDecimal getTotalRevenue(@Param("startDate") LocalDate startDate, 
                               @Param("endDate") LocalDate endDate);
 
     @Query("SELECT COUNT(o) " +
            "FROM Orders o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed'")
+           "AND o.status IN ('Completed', 'Pending')")
     Long getTotalOrders(@Param("startDate") LocalDate startDate, 
                        @Param("endDate") LocalDate endDate);
 }

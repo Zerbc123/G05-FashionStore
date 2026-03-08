@@ -224,6 +224,41 @@ public class AdminController {
         return "admin/best_seller_report";
     }
 
+    // Product Report
+    @GetMapping("/reports/product")
+    public String productReport(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("title", "Product Report");
+        model.addAttribute("report", reportService.getProductReport());
+        return "admin/product_report";
+    }
+
+    // Customer Report
+    @GetMapping("/reports/customer")
+    public String customerReport(HttpSession session, Model model,
+                                @RequestParam(required = false) String startDate,
+                                @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(6);
+        LocalDate end = endDate != null ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Customer Report");
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        model.addAttribute("report", reportService.getCustomerReport(start, end));
+        return "admin/customer_report";
+    }
+
     // Inventory Report
     @GetMapping("/reports/inventory")
     public String inventoryReport(HttpSession session, Model model) {

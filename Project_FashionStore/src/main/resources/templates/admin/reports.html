@@ -47,13 +47,6 @@
 <div class="main-content">
     <div class="container">
         <div class="page-header"><h1><i class="bi bi-graph-up"></i> Sales Reports & Analytics</h1></div>
-        <div class="filter-section">
-            <div class="row">
-                <div class="col-md-3"><select class="form-select"><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 3 Months</option><option>Last Year</option></select></div>
-                <div class="col-md-3"><input type="date" class="form-control"></div>
-                <div class="col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-search"></i> Generate Report</button></div>
-            </div>
-        </div>
         <div class="row">
             <!-- Report Cards -->
             <div class="col-md-4 mb-4">
@@ -97,7 +90,6 @@
         </div>
 
         <div class="row">
-            <!-- Product Report Card -->
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
@@ -105,13 +97,12 @@
                             <i class="bi bi-box"></i>
                         </div>
                         <h5 class="card-title">Product Report</h5>
-                        <p class="card-text">Comprehensive product performance analysis</p>
+                        <p class="card-text">Comprehensive product analysis and overview</p>
                         <a th:href="@{/admin/reports/product}" class="btn btn-primary">View Report</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Customer Report Card -->
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
@@ -119,36 +110,14 @@
                             <i class="bi bi-people"></i>
                         </div>
                         <h5 class="card-title">Customer Report</h5>
-                        <p class="card-text">Customer behavior and registration insights</p>
+                        <p class="card-text">Customer analytics and engagement insights</p>
                         <a th:href="@{/admin/reports/customer}" class="btn btn-primary">View Report</a>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="row">
-            <div class="col-lg-6"><div class="report-card"><h3>Revenue Trend</h3><canvas id="revenueChart"></canvas></div></div>
-            <div class="col-lg-6"><div class="report-card"><h3>Top Products</h3><canvas id="productsChart"></canvas></div></div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12"><div class="report-card"><h3>Monthly Comparison</h3><canvas id="comparisonChart"></canvas></div></div>
-        </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'line',
-        data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [{ label: 'Revenue', data: [12000, 15000, 13000, 18000], borderColor: '#667eea', tension: 0.4 }] }
-    });
-    new Chart(document.getElementById('productsChart'), {
-        type: 'bar',
-        data: { labels: ['T-Shirt', 'Jeans', 'Dress', 'Shoes', 'Bag'], datasets: [{ label: 'Sales', data: [145, 120, 98, 87, 65], backgroundColor: '#667eea' }] }
-    });
-    new Chart(document.getElementById('comparisonChart'), {
-        type: 'line',
-        data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: '2025', data: [35000, 42000, 38000, 45000, 52000, 48000], borderColor: '#667eea' }, { label: '2024', data: [28000, 35000, 32000, 38000, 42000, 40000], borderColor: '#f093fb' }] }
-    });
-</script>
 </body>
 </html>

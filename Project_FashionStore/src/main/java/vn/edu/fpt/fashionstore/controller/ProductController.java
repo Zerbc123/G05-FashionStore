@@ -35,6 +35,7 @@ public class ProductController {
     public String showProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) String size,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String stockStatus,
@@ -73,22 +74,30 @@ public class ProductController {
         System.out.println("=== UI PARAMETERS ===");
         System.out.println("keyword: " + keyword);
         System.out.println("categoryId: " + categoryId);
+        System.out.println("categoryName: " + categoryName);
         System.out.println("size: " + size);
         System.out.println("color: " + color);
         System.out.println("minPrice: " + minPrice);
         System.out.println("maxPrice: " + maxPrice);
         System.out.println("priceRange: " + priceRange);
-        System.out.println("hasFilter: " + hasFilter(keyword, categoryId, size, color, minPrice, maxPrice));
+        System.out.println("hasFilter: " + hasFilter(keyword, categoryId, categoryName, size, color, minPrice, maxPrice));
 
         // Chỉ gọi searchAndFilterProducts khi thực sự có filter
         if (keyword != null && !keyword.isBlank() ||
                 categoryId != null ||
+                (categoryName != null && !categoryName.isBlank()) ||
                 (size != null && !size.isBlank()) ||
                 (color != null && !color.isBlank()) ||
                 minPrice != null ||
                 maxPrice != null) {
             System.out.println("Calling searchAndFilterProducts...");
-            productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
+            
+            // Nếu có categoryName, ưu tiên lọc theo categoryName trước
+            if (categoryName != null && !categoryName.isBlank()) {
+                productPage = productService.filterByCategoryName(categoryName, pageable);
+            } else {
+                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
+            }
         } else {
             System.out.println("Calling getAllProducts...");
             productPage = productService.getAllProducts(pageable);
@@ -102,11 +111,16 @@ public class ProductController {
             pageable = PageRequest.of(0, pageSize, Sort.by(sortDirection, sort));
             if (keyword != null && !keyword.isBlank() ||
                     categoryId != null ||
+                    (categoryName != null && !categoryName.isBlank()) ||
                     (size != null && !size.isBlank()) ||
                     (color != null && !color.isBlank()) ||
                     minPrice != null ||
                     maxPrice != null) {
-                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
+                if (categoryName != null && !categoryName.isBlank()) {
+                    productPage = productService.filterByCategoryName(categoryName, pageable);
+                } else {
+                    productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
+                }
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -123,6 +137,7 @@ public class ProductController {
         model.addAttribute("direction", direction);
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("selectedCategoryName", categoryName);
         model.addAttribute("selectedSize", size);
         model.addAttribute("selectedColor", color);
         model.addAttribute("stockStatus", stockStatus);
@@ -281,8 +296,9 @@ public class ProductController {
     // ========================================================================
     // 3. HÀM PHỤ TRỢ (CHECK FILTER)
     // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String size, String color, Double minPrice, Double maxPrice) {
+    private boolean hasFilter(String keyword, Long categoryId, String categoryName, String size, String color, Double minPrice, Double maxPrice) {
         return (keyword != null && !keyword.isBlank()) || categoryId != null ||
+                (categoryName != null && !categoryName.isBlank()) ||
                 (size != null && !size.isBlank()) || (color != null && !color.isBlank()) || 
                 minPrice != null || maxPrice != null;
     }

@@ -72,6 +72,20 @@ public class ProductService {
         };
         return productRepository.findAll(spec, pageable);
     }
+    
+    // Lọc sản phẩm theo tên danh mục (category name)
+    public Page<Product> filterByCategoryName(String categoryName, Pageable pageable) {
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            if (categoryName == null || categoryName.trim().isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.like(
+                criteriaBuilder.lower(root.get("category").get("categoryName")),
+                "%" + categoryName.toLowerCase() + "%"
+            );
+        };
+        return productRepository.findAll(spec, pageable);
+    }
 
     // Lọc sản phẩm theo nhiều tiêu chí
     public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice, Pageable pageable) {
@@ -80,7 +94,7 @@ public class ProductService {
 
             // Lọc theo danh mục
             if (categoryId != null) {
-                predicates.add(cb.equal(root.get("category").get("cateId"), categoryId));
+                predicates.add(cb.equal(root.get("category").get("categoryId"), categoryId));
             }
 
             // Lọc theo size (nếu có field size trong entity)

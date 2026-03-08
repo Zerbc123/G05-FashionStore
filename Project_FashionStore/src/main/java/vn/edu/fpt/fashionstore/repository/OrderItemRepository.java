@@ -20,7 +20,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
            "JOIN p.category c " +
            "JOIN oi.order o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed' " +
+           "AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productId, p.productName, c.categoryName " +
            "ORDER BY totalSold DESC")
     List<Object[]> getBestSellingProducts(@Param("startDate") LocalDate startDate, 
@@ -33,7 +33,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
            "JOIN p.category c " +
            "JOIN oi.order o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status = 'Completed' " +
+           "AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY c.categoryId, c.categoryName " +
            "ORDER BY revenue DESC")
     List<Object[]> getBestSellingCategories(@Param("startDate") LocalDate startDate, 

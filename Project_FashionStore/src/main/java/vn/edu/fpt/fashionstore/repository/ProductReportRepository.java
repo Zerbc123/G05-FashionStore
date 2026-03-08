@@ -27,8 +27,8 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
            "FROM Product p " +
            "JOIN p.category c " +
            "JOIN p.variants pv " +
-           "LEFT JOIN OrderItem oi ON pv.variantId = oi.variant.variantId " +
-           "LEFT JOIN Orders o ON oi.order.orderId = o.orderId AND o.status = 'Completed' " +
+           "LEFT JOIN OrderItem oi ON pv = oi.variant " +
+           "LEFT JOIN Orders o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
            "ORDER BY soldQuantity DESC")
     List<Object[]> getTopSellingProducts();
@@ -40,18 +40,9 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
            "FROM Product p " +
            "JOIN p.category c " +
            "JOIN p.variants pv " +
-           "LEFT JOIN OrderItem oi ON pv.variantId = oi.variant.variantId " +
-           "LEFT JOIN Orders o ON oi.order.orderId = o.orderId AND o.status = 'Completed' " +
+           "LEFT JOIN OrderItem oi ON pv = oi.variant " +
+           "LEFT JOIN Orders o ON oi.order = o AND o.status IN ('Completed', 'Pending') " +
            "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
            "ORDER BY p.productName")
     List<Object[]> getAllProductsWithSales();
-
-    // Get product summary
-    @Query("SELECT COUNT(DISTINCT p) as totalProducts, " +
-           "SUM(CASE WHEN pv.stock > 0 THEN 1 ELSE 0 END) as activeProducts, " +
-           "SUM(CASE WHEN pv.stock = 0 THEN 1 ELSE 0 END) as outOfStockProducts, " +
-           "SUM(CASE WHEN pv.stock > 0 AND pv.stock < 10 THEN 1 ELSE 0 END) as lowStockProducts " +
-           "FROM Product p " +
-           "JOIN p.variants pv")
-    Object[] getProductSummary();
 }
