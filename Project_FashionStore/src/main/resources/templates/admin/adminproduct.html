@@ -275,9 +275,14 @@
                                 </td>
 
                                 <td>
-                                    <a th:href="@{/admin/products/edit/{id}(id=${product.productId})}"
+                                    <a th:href="@{/admin/edit(id=${product.productId})}"
                                         class="btn btn-sm btn-primary btn-action">
                                         Sửa
+                                    </a>
+
+                                    <a th:href="@{/products/admin/variant/add(productId=${product.productId})}"
+                                        class="btn btn-sm btn-success btn-action">
+                                        <i class="bi bi-plus me-1"></i>Thêm BT
                                     </a>
 
                                     <a th:href="@{/admin/products/delete/{id}(id=${product.productId})}"

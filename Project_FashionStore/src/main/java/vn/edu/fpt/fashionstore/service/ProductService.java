@@ -142,4 +142,23 @@ public class ProductService {
     public Product createProduct(Product product) {
         return productRepository.save(product);
     }
+
+    public Product updateProduct(Long productId, Product productDetails) {
+        Product existingProduct = productRepository.findByProductId(productId);
+        if (existingProduct != null) {
+            existingProduct.setProductName(productDetails.getProductName());
+            existingProduct.setDescription(productDetails.getDescription());
+            existingProduct.setCategory(productDetails.getCategory());
+            return productRepository.save(existingProduct);
+        }
+        return null;
+    }
+
+    public Product getProductWithVariantsById(Long productId) {
+        Product product = productRepository.findByProductId(productId);
+        if (product != null && product.getVariants() == null) {
+            product.setVariants(productVariantRepository.findByProduct_ProductId(productId));
+        }
+        return product;
+    }
 }

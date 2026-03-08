@@ -159,12 +159,18 @@ public class ProductVariantController {
 
     @GetMapping("/delete/{id}")
     public String deleteVariant(@PathVariable int id, RedirectAttributes redirectAttributes) {
-        boolean deleted = productVariantService.deleteVariant(id);
-        if (deleted) {
+        String result = productVariantService.deleteVariantWithOrderCheck(id);
+        
+        if (result.equals("success")) {
             redirectAttributes.addFlashAttribute("success", "Xóa biến thể sản phẩm thành công");
-        } else {
+        } else if (result.equals("Variant not found")) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy biến thể sản phẩm");
+        } else if (result.contains("linked to existing orders")) {
+            redirectAttributes.addFlashAttribute("error", "Không thể xóa biến thể: Biến thể này đã được sử dụng trong đơn hàng");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa biến thể: " + result);
         }
+        
         return "redirect:/admin/product-variants";
     }
 

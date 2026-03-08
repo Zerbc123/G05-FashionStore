@@ -160,12 +160,12 @@ public class AdminController {
 
     // Chỉnh sửa sản phẩm
     @GetMapping("/edit")
-    public String editProduct(HttpSession session, Model model) {
+    public String editProduct(@RequestParam("id") Long productId, HttpSession session, Model model) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Edit Product");
-        return "admin/edit";
+        // Redirect to ProductController's edit endpoint
+        return "redirect:/products/admin/edit?id=" + productId;
     }
 
     // Xem chi tiết đơn hàng

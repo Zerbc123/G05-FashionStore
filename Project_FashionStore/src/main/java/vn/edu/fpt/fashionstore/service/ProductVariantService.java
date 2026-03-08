@@ -24,6 +24,9 @@ public class ProductVariantService {
     
     @Autowired
     private CategorySizeRepository categorySizeRepository;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     public List<ProductVariant> getAllVariants() {
         return productVariantRepository.findAll();
@@ -65,6 +68,28 @@ public class ProductVariantService {
             return true;
         }
         return false;
+    }
+
+    public boolean isVariantLinkedToOrders(int variantId) {
+        // Check if variant exists in any order items
+        return orderItemRepository.existsByProductVariantVariantId(variantId);
+    }
+
+    public String deleteVariantWithOrderCheck(int variantId) {
+        if (!productVariantRepository.existsById(variantId)) {
+            return "Variant not found";
+        }
+        
+        if (isVariantLinkedToOrders(variantId)) {
+            return "Cannot delete variant: It is linked to existing orders";
+        }
+        
+        try {
+            productVariantRepository.deleteById(variantId);
+            return "success";
+        } catch (Exception e) {
+            return "Error deleting variant: " + e.getMessage();
+        }
     }
 
     public List<Color> getAllColors() {
