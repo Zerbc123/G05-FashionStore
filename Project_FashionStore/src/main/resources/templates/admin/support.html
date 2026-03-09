@@ -452,79 +452,54 @@
 
 
         <!-- Pagination Section -->
-        <div th:if="${totalPages > 1}" class="px-6 py-4 border-t border-divider bg-gray-50">
-            <div class="flex items-center justify-between">
-                <div class="text-sm text-text-muted">
-                    Hiển thị <span th:text="${supportRequestPage.numberOfElements}">0</span> 
-                    trên <span th:text="${totalItems}">0</span> yêu cầu hỗ trợ
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <!-- Previous Button -->
-                    <a th:if="${currentPage > 0}" 
-                       th:href="@{/admin/support(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, status=${status})}"
-                       class="px-3 py-2 bg-white border border-divider rounded-lg text-sm font-medium text-text-main hover:bg-primary hover:text-white hover:border-primary transition shadow-sm">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                    <span th:if="${currentPage == 0}" 
-                          class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed">
-                        <i class="fas fa-chevron-left"></i>
-                    </span>
-                    
-                    <!-- Page Numbers -->
-                    <div class="flex items-center gap-1">
-                        <!-- First Page -->
-                        <a th:if="${currentPage > 2}" 
-                           th:href="@{/admin/support(page=0, size=${pageSize}, keyword=${keyword}, status=${status})}"
-                           class="px-3 py-2 bg-white border border-divider rounded-lg text-sm font-medium text-text-main hover:bg-primary hover:text-white hover:border-primary transition shadow-sm">
-                            1
-                        </a>
-                        <span th:if="${currentPage > 3}" class="px-2 py-2 text-sm text-text-muted">...</span>
-                        
-                        <!-- Pages around current -->
-                        <th:block th:with="startPage=${T(java.lang.Math).max(0, currentPage - 1)}, 
-                                          endPage=${T(java.lang.Math).min(totalPages - 1, currentPage + 1)}">
-                            <a th:each="i : ${#numbers.sequence(startPage, endPage)}"
-                               th:href="@{/admin/support(page=${i}, size=${pageSize}, keyword=${keyword}, status=${status})}"
-                               th:classappend="${i == currentPage} ? 'bg-primary text-white border-primary' : 'bg-white text-text-main border-divider hover:bg-primary hover:text-white hover:border-primary'"
-                               class="px-3 py-2 border rounded-lg text-sm font-medium transition shadow-sm">
-                                <span th:text="${i + 1}">1</span>
-                            </a>
-                        </th:block>
-                        
-                        <!-- Last Page -->
-                        <span th:if="${currentPage < totalPages - 3}" class="px-2 py-2 text-sm text-text-muted">...</span>
-                        <a th:if="${currentPage < totalPages - 2}" 
-                           th:href="@{/admin/support(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, status=${status})}"
-                           class="px-3 py-2 bg-white border border-divider rounded-lg text-sm font-medium text-text-main hover:bg-primary hover:text-white hover:border-primary transition shadow-sm">
-                            <span th:text="${totalPages}">1</span>
-                        </a>
-                    </div>
-                    
-                    <!-- Next Button -->
-                    <a th:if="${currentPage < totalPages - 1}" 
-                       th:href="@{/admin/support(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, status=${status})}"
-                       class="px-3 py-2 bg-white border border-divider rounded-lg text-sm font-medium text-text-main hover:bg-primary hover:text-white hover:border-primary transition shadow-sm">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                    <span th:if="${currentPage == totalPages - 1}" 
-                          class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed">
-                        <i class="fas fa-chevron-right"></i>
-                    </span>
-                </div>
-                
-                <!-- Page Size Selector -->
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-text-muted">Hiển thị:</span>
-                    <select onchange="changePageSize(this.value)" 
-                            class="px-3 py-2 border border-divider rounded-lg text-sm font-medium text-text-main bg-white focus:outline-none focus:border-primary">
-                        <option th:value="5" th:selected="${pageSize == 5}">5</option>
-                        <option th:value="10" th:selected="${pageSize == 10}">10</option>
-                        <option th:value="20" th:selected="${pageSize == 20}">20</option>
-                        <option th:value="50" th:selected="${pageSize == 50}">50</option>
-                    </select>
-                </div>
+        <div class="px-6 py-5 flex items-center justify-center bg-white">
+
+            <div class="flex items-center gap-2">
+
+                <!-- Previous -->
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/admin/support(page=${currentPage - 1}, keyword=${keyword}, status=${status})}"
+                   class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition no-underline">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </a>
+
+                <button th:unless="${currentPage > 0}"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted opacity-50 cursor-not-allowed"
+                        disabled>
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
+
+
+                <!-- Page Numbers -->
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+
+                    <a th:if="${i != currentPage}"
+                       th:href="@{/admin/support(page=${i}, keyword=${keyword}, status=${status})}"
+                       class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition text-xs font-bold no-underline"
+                       th:text="${i + 1}">1</a>
+
+                    <button th:unless="${i != currentPage}"
+                            class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white text-xs font-bold shadow-sm"
+                            th:text="${i + 1}">1</button>
+
+                </th:block>
+
+
+                <!-- Next -->
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/admin/support(page=${currentPage + 1}, keyword=${keyword}, status=${status})}"
+                   class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted hover:bg-secondary-bg transition no-underline">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </a>
+
+                <button th:unless="${currentPage < totalPages - 1}"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center border border-divider text-text-muted opacity-50 cursor-not-allowed"
+                        disabled>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+
             </div>
+
         </div>
 
     </div>

@@ -315,15 +315,9 @@
 
         <!-- Pagination Section -->
 
-        <div class="px-6 py-5 flex items-center justify-between bg-white">
+        <div class="px-6 py-5 flex items-center justify-center bg-white">
 
-            <p class="text-xs text-text-muted font-medium" 
 
-               th:text="'Hiển thị ' + ${staffPage.size * staffPage.number + 1} + ' - ' + ${#numbers.formatDecimal(staffPage.size * staffPage.number + staffPage.numberOfElements, 0, 0)} + ' trong tổng số ' + ${staffPage.totalElements} + ' nhân viên'">
-
-               Hiển thị 1 - 5 trong tổng số 0 nhân viên
-
-            </p>
 
             <div class="flex items-center gap-2">
 

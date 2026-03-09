@@ -161,11 +161,8 @@
         </table>
 
         <!-- Pagination Section -->
-        <div class="px-6 py-5 flex items-center justify-between bg-white" th:if="${!deletedStaffPage.content.isEmpty()}">
-            <p class="text-xs text-text-muted font-medium" 
-               th:text="'Hiển thị ' + ${deletedStaffPage.size * deletedStaffPage.number + 1} + ' - ' + ${#numbers.formatDecimal(deletedStaffPage.size * deletedStaffPage.number + deletedStaffPage.numberOfElements, 0, 0)} + ' trong tổng số ' + ${deletedStaffPage.totalElements} + ' nhân viên đã xóa'">
-               Hiển thị 1 - 5 trong tổng số 0 nhân viên đã xóa
-            </p>
+        <div class="px-6 py-5 flex items-center justify-center bg-white" th:if="${!deletedStaffPage.content.isEmpty()}">
+
             <div class="flex items-center gap-2">
                 <!-- Previous -->
                 <a th:if="${currentPage > 0}" 
