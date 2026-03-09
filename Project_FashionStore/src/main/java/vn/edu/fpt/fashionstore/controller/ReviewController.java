@@ -11,6 +11,8 @@ import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.entity.Review;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
+import vn.edu.fpt.fashionstore.repository.ReviewRepository;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ReviewService;
 
 import java.util.Optional;
@@ -27,6 +29,13 @@ public class ReviewController {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    // ĐÃ THÊM: Nhúng 2 công cụ cần thiết vào để không báo đỏ nữa
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     // Lấy thông tin khách hàng đang đăng nhập
     private Customer getCurrentCustomer(HttpSession session) {
@@ -46,19 +55,29 @@ public class ReviewController {
             RedirectAttributes redirectAttributes) {
 
         Customer currentCustomer = getCurrentCustomer(session);
+
+        // 1. KIỂM TRA ĐĂNG NHẬP ĐẦU TIÊN (Để tránh lỗi Null)
         if (currentCustomer == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để đánh giá!");
             return "redirect:/login";
         }
 
-        // Kiểm tra bảo mật: Khách phải mua và nhận hàng (COMPLETED) rồi mới được đánh giá
-        if (!reviewService.canCustomerReviewProduct(currentCustomer, productId)) {
+        // 2. TÍNH TOÁN SỐ LẦN MUA VÀ SỐ LẦN ĐÃ ĐÁNH GIÁ
+        long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, productId);
+        long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, productId);
+
+        // 3. KIỂM TRA ĐIỀU KIỆN ĐÁNH GIÁ (Phải mua rồi và Số lần mua > Số lần đã đánh giá)
+        if (purchaseCount == 0) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn phải mua và nhận hàng thành công mới được đánh giá sản phẩm này!");
-            // ĐÃ SỬA ĐƯỜNG DẪN CHUẨN THEO PRODUCT CONTROLLER CỦA BẠN
             return "redirect:/products/detail/" + productId;
         }
 
-        // Lưu đánh giá vào DB
+        if (purchaseCount <= reviewCount) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn đã hết lượt đánh giá cho lần mua này. Hãy mua thêm để tiếp tục đánh giá nhé!");
+            return "redirect:/products/detail/" + productId;
+        }
+
+        // 4. LƯU ĐÁNH GIÁ VÀO DATABASE
         Product product = productRepository.findById(productId).orElse(null);
         if (product != null) {
             Review review = new Review();
@@ -71,7 +90,6 @@ public class ReviewController {
             redirectAttributes.addFlashAttribute("successMessage", "Cảm ơn bạn đã đánh giá sản phẩm!");
         }
 
-        // ĐÃ SỬA ĐƯỜNG DẪN CHUẨN
         return "redirect:/products/detail/" + productId;
     }
 }

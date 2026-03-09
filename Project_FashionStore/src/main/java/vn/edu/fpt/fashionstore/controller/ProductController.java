@@ -5,12 +5,11 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import vn.edu.fpt.fashionstore.entity.Category;
-import vn.edu.fpt.fashionstore.entity.CategorySize;
-import vn.edu.fpt.fashionstore.entity.Color;
-import vn.edu.fpt.fashionstore.entity.Product;
+import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
+import vn.edu.fpt.fashionstore.repository.ReviewRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.service.ReviewService;
 
@@ -26,8 +25,14 @@ public class ProductController {
     private ReviewService reviewService;
 
     @Autowired
+    private OrderService orderService;
+
+    @Autowired
     private AccountRepository accountRepository;
     // ----------------------------------------------
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @Autowired
     private ProductService productService;
@@ -168,12 +173,19 @@ public class ProductController {
         model.addAttribute("averageRating", averageRating);
 
         // 3. Kiểm tra quyền được đánh giá (đã mua và nhận hàng chưa)
-        boolean canReview = false;
-        vn.edu.fpt.fashionstore.entity.Customer currentCustomer = getCurrentCustomer(session);
+        // Kiểm tra quyền đánh giá mới
+        Customer currentCustomer = getCurrentCustomer(session); // Hàm này bạn tự tùy chỉnh theo code hiện tại của file
         if (currentCustomer != null) {
-            canReview = reviewService.canCustomerReviewProduct(currentCustomer, product.getProductId());
+            // Gọi 2 hàm đếm ra
+            long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, id);
+            long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, id);
+
+            // Nút "Viết đánh giá" chỉ hiện lên khi số lần mua thành công LỚN HƠN số lần đã review
+            model.addAttribute("canReview", purchaseCount > reviewCount);
+        } else {
+            // Khách chưa đăng nhập thì mặc định ẩn nút
+            model.addAttribute("canReview", false);
         }
-        model.addAttribute("canReview", canReview);
 
         return "productdetails";
     }

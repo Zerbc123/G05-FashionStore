@@ -20,4 +20,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // Dành cho Admin lấy tất cả đánh giá để quản lý (cũ nhất xuống dưới, mới nhất lên đầu)
     List<Review> findAllByOrderByReviewDateDesc();
 
+    long countByCustomerAndProduct_ProductId(Customer customer, Long productId);
+
 }
