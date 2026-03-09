@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,17 +16,20 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
-import vn.edu.fpt.fashionstore.entity.CartItem;
-import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.entity.*;
+import vn.edu.fpt.fashionstore.repository.BannerRepository;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import vn.edu.fpt.fashionstore.util.PhoneUtils;
+import vn.edu.fpt.fashionstore.util.DateUtils;
+import vn.edu.fpt.fashionstore.util.AddressUtils;
 
 import java.util.Collections;
 import java.util.Date;
@@ -39,10 +44,19 @@ public class HomeController {
     private final ProductRepository productRepository;
 
     @Autowired
+    private BannerRepository bannerRepository;
+
+    @Autowired
     private org.springframework.mail.javamail.JavaMailSender mailSender;
-    
+
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
         this.accountService = accountService;
@@ -52,43 +66,58 @@ public class HomeController {
 
     @GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
-        // Gọi hàm lấy dữ liệu giao diện
-        List<ProductRepository.ProductHomeInfo> products = productRepository.getAllProductHome();
 
-        // Đẩy sang Thymeleaf
+        // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
+        List<vn.edu.fpt.fashionstore.entity.Banner> banners = bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc();
+        model.addAttribute("banners", banners);
+
+        // 2. TẠO LOGIC LẤY 4 SẢN PHẨM BÁN CHẠY NHẤT
+        // PageRequest.of(0, 4) nghĩa là lấy trang đầu tiên (index 0), và chỉ lấy tối đa 4 phần tử
+        Pageable topFour = PageRequest.of(0, 4);
+        List<ProductRepository.ProductHomeInfo> bestSellingProducts = productRepository.findTopSellingProducts(topFour);
+
+        // Đẩy danh sách này sang HTML
+        model.addAttribute("bestSellingProducts", bestSellingProducts);
+
+        List<ProductRepository.ProductHomeInfo> products = productRepository.getAllProductHome();
         model.addAttribute("products", products);
 
-        // 1. Lấy email từ Session hoặc Google
         String email = (String) session.getAttribute("user");
+        boolean isGoogleLogin = false;
 
         if (email == null && principal != null) {
             email = principal.getAttribute("email");
             session.setAttribute("user", email);
+
+            Optional<Account> accOpt = accountService.findByEmail(email);
+            if (accOpt.isPresent()) {
+                Account acc = accOpt.get();
+                session.setAttribute("userRole", acc.getRole().getRoleName());
+                session.setAttribute("userName", acc.getFullName());
+            }
         }
 
-        // --- SỬA TẠI ĐÂY ---
         if (email == null) {
-            // Nếu là Guest (chưa login), cho họ xem trang chủ luôn
             model.addAttribute("userName", "Guest");
             return "page";
         }
 
-        // 2. Tìm tài khoản trong DB
         Optional<Account> accountOpt = accountService.findByEmail(email);
 
         if (accountOpt.isPresent()) {
-            // --- HÀNH ĐỘNG: LOGIN (Đã có tài khoản) ---
             Account account = accountOpt.get();
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
 
+            if (!"active".equalsIgnoreCase(account.getStatus())) {
+                session.invalidate();
+                return "redirect:/login?error=account_disabled";
+            }
+
             session.setAttribute("userName", account.getFullName());
             session.setAttribute("userRole", roleName);
-            
-            // Cập nhật số lượng giỏ hàng vào session
+
             updateCartCountForCustomer(session, account);
 
-            // 3. KIỂM TRA THÔNG TIN (Dành cho User Google)
-            // Kiểm tra nếu là OAuth2 user bằng cách xem password là null hoặc không có hash prefix
             boolean isOAuthUser = account.getPassword() == null ||
                     account.getPassword().equals("OAUTH2_USER") ||
                     !account.getPassword().startsWith("$2");
@@ -102,29 +131,18 @@ public class HomeController {
                     }
                 }
 
-                // Nếu thiếu Phone hoặc Address thì bắt điền (dù là login lần 1 hay lần n)
-                if (account.getPhone() == null || hasNoAddress) {
+                String ph = account.getPhone();
+                if (ph == null || ph.isEmpty() || hasNoAddress) {
                     return "redirect:/edit-profile?firstLogin=true";
                 }
             }
 
             model.addAttribute("userName", account.getFullName());
-            return "page"; // Đăng nhập thành công, vào trang chủ
-        }
-        else if (principal != null) {
-            // --- HÀNH ĐỘNG: REGISTER (Chưa có tài khoản) ---
-            // Email Google này chưa có trong DB -> Tự động tạo Acc
+            return "page";
+        } else if (principal != null) {
             accountService.registerAccount(email, "OAUTH2_USER", principal.getAttribute("name"), "");
-
-            // Tạo xong thì dắt đi điền SĐT và Địa chỉ luôn
             return "redirect:/edit-profile?firstLogin=true";
         }
-
-        return "redirect:/login";
-    }
-
-    @GetMapping(value = "/login")
-    public String loginPage(){
 
         return "login";
     }
@@ -137,7 +155,6 @@ public class HomeController {
         Account acc = accountService.findByEmail(email).orElse(null);
 
         if (acc != null) {
-            // TÊN BIẾN Ở ĐÂY PHẢI KHỚP VỚI TRONG HTML
             model.addAttribute("account", acc);
 
             Customer cus = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
@@ -146,7 +163,6 @@ public class HomeController {
 
             return "profile";
         }
-
         return "redirect:/login";
     }
 
@@ -155,50 +171,56 @@ public class HomeController {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
-        accountService.findByEmail(email).ifPresent(acc -> {
-            model.addAttribute("account", acc); // Chứa FullName, Email, Phone
+        Optional<Account> accountOpt = accountService.findByEmail(email);
 
-            // Lấy thông tin khách hàng để lấy Address
+        if (accountOpt.isPresent()) {
+            Account acc = accountOpt.get();
+            model.addAttribute("account", acc);
+
             Customer customer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
                     ? acc.getCustomers().get(0) : new Customer();
-            model.addAttribute("customer", customer); // Chứa Address
-        });
+            model.addAttribute("customer", customer);
+        } else {
+            return "redirect:/login?error=account_not_found";
+        }
 
         return "editprofile";
     }
 
     @GetMapping(value = "/order-history")
-    public String orderHistoryPage(HttpSession session){
+    public String orderHistoryPage(HttpSession session, Model model) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
-        return "viewhistory"; // Trả về viewhistory.html
-    }
-
-    @GetMapping(value = "/wishlist")
-    public String wishlistPage(HttpSession session){
-        if (session.getAttribute("user") == null) {
+        
+        try {
+            // Lấy customer hiện tại - dùng logic giống profile method
+            String email = (String) session.getAttribute("user");
+            Account acc = accountService.findByEmail(email).orElse(null);
+            
+            Customer currentCustomer = null;
+            if (acc != null) {
+                currentCustomer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
+                        ? acc.getCustomers().get(0) : new Customer();
+            }
+            
+            // Kiểm tra nếu customer không tồn tại
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+            
+            // Lấy danh sách đơn hàng của customer
+            List<Order> customerOrders = orderService.getOrdersByCustomer(currentCustomer);
+            
+            // Thêm vào model
+            model.addAttribute("orders", customerOrders);
+            model.addAttribute("customerName", currentCustomer.getFullName());
+            
+            return "viewhistory";
+        } catch (Exception e) {
             return "redirect:/login";
         }
-        return "wishlist"; // Trả về wishlist.html
     }
-
-    @GetMapping(value = "/order")
-    public String orderPage(HttpSession session){
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "order"; // Trả về order.html
-    }
-
-    @GetMapping(value = "/orderdetails")
-    public String orderDetailsPage(HttpSession session){
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "orderdetails"; // Trả về orderdetails.html
-    }
-
 
     @PostMapping("/login")
     public String handleLogin(@RequestParam String username,
@@ -206,18 +228,21 @@ public class HomeController {
                               HttpSession session,
                               RedirectAttributes ra) {
 
-        // Gọi hàm authenticate của bạn (so sánh mật khẩu chữ thường)
+        // validate password format (exactly 6 alphanumeric characters)
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            return "redirect:/login";
+        }
+
         Account account = accountService.authenticate(username, password);
 
         if (account != null) {
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
 
-            // LƯU Ý: Ở trang home bạn đang lấy email ra, nên ở đây phải lưu Email vào session
             session.setAttribute("user", account.getEmail());
             session.setAttribute("userRole", roleName);
             session.setAttribute("userName", account.getFullName());
-            
-            // Cập nhật số lượng giỏ hàng vào session
+
             updateCartCountForCustomer(session, account);
 
             if ("Admin".equalsIgnoreCase(roleName)) return "redirect:/admin";
@@ -226,32 +251,21 @@ public class HomeController {
             return "redirect:/home";
         }
 
-        // Nếu sai, truyền lỗi qua FlashAttribute (không bị mất khi redirect)
         ra.addFlashAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
         return "redirect:/login";
     }
 
     @GetMapping("/logout")
     public String logout(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-        session.invalidate(); // Xóa session của app Duy
+        session.invalidate();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
 
-        return "redirect:/login?logout"; // Quay về trang login của Duy thôi
+        return "redirect:/login?logout";
     }
-
-    @GetMapping(value = "change-password")
-    public String changePassword(HttpSession session) {
-        if (session.getAttribute("user") == null) {
-            return "redirect:/login";
-        }
-        return "change_password";
-    }
-
-
 
     @PostMapping("/register")
     public String handleRegister(@RequestParam String firstName,
@@ -263,47 +277,47 @@ public class HomeController {
                                  HttpSession session,
                                  RedirectAttributes ra) {
 
-        // 1. Kiểm tra mật khẩu khớp
         if (!password.equals(confirmPassword)) {
             ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp!");
             return "redirect:/register";
         }
 
-        // 2. Kiểm tra email đã tồn tại chưa
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            return "redirect:/register";
+        }
+
         if (accountService.findByEmail(email).isPresent()) {
             ra.addFlashAttribute("error", "Email này đã được đăng ký!");
             return "redirect:/register";
         }
 
-        // 3. Tạo OTP ngẫu nhiên (6 số)
+        if (!PhoneUtils.isValid(phone)) {
+            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
+            return "redirect:/register";
+        }
+
         String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
 
-        // 4. LƯU TẤT CẢ THÔNG TIN VÀO SESSION
-        // Chúng ta lưu riêng rẽ để tí nữa lấy ra truyền vào hàm registerAccount
         session.setAttribute("tempFirstName", firstName);
         session.setAttribute("tempLastName", lastName);
         session.setAttribute("tempEmail", email);
         session.setAttribute("tempPhone", phone);
         session.setAttribute("tempPass", password);
         session.setAttribute("otpCode", otp);
-
-        // CHÈN THÊM DÒNG NÀY: Lưu thời điểm tạo OTP (miligiây)
         session.setAttribute("otpTimestamp", System.currentTimeMillis());
 
-        // 5. GỬI EMAIL
         try {
             org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
             message.setTo(email);
             message.setSubject("Mã xác nhận đăng ký - Fashion Store");
-            message.setText("Chào " + firstName + ",\n\nMã OTP để hoàn tất đăng ký tài khoản của bạn là: " + otp);
+            message.setText("Chào " + firstName + ",\n\nMã OTP của bạn là: " + otp);
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
             ra.addFlashAttribute("error", "Lỗi gửi mail: " + e.getMessage());
             return "redirect:/register";
         }
 
-        // Chuyển sang trang nhập OTP
         return "redirect:/verify-otp";
     }
 
@@ -313,15 +327,30 @@ public class HomeController {
             @RequestParam String phone,
             @RequestParam String address,
             @RequestParam String gender,
-            // Thêm required = false để tránh lỗi khi người dùng không chọn ngày
             @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
-            HttpSession session) {
+            HttpSession session,
+            RedirectAttributes ra) {
 
         String email = (String) session.getAttribute("user");
-
-        // Nếu email null (hết hạn session) thì đá về login
         if (email == null) return "redirect:/login";
 
+        if (!PhoneUtils.isValid(phone)) {
+            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
+            return "redirect:/edit-profile";
+        }
+
+        // validate date of birth range (server-side) in addition to front-end min/max
+        if (!DateUtils.isValidDOB(dateOfBirth)) {
+            ra.addFlashAttribute("error", "Ngày sinh không hợp lệ. Vui lòng chọn ngày từ 01/01/1950 đến hôm nay.");
+            return "redirect:/edit-profile";
+        }
+
+        if (address == null || address.trim().isEmpty() || !AddressUtils.isValid(address)) {
+            ra.addFlashAttribute("error", "Địa chỉ không được để trống và phải chọn tỉnh/ huyện/ xã cùng số nhà.");
+            return "redirect:/edit-profile";
+        }
+
+        // phone and address both valid, combine is done on client side
         accountService.updateProfile(email, fullName, phone, address, gender, dateOfBirth);
 
         return "redirect:/home";
@@ -332,19 +361,17 @@ public class HomeController {
         String serverOtp = (String) session.getAttribute("otpCode");
         Long otpTimestamp = (Long) session.getAttribute("otpTimestamp");
 
-        // 1. KIỂM TRA HẾT HẠN (60000ms = 1 phút)
         if (otpTimestamp == null || (System.currentTimeMillis() - otpTimestamp) > 30000) {
-            // Xóa các session tạm để giải phóng bộ nhớ
+
             session.removeAttribute("otpCode");
             session.removeAttribute("otpTimestamp");
 
-            ra.addFlashAttribute("error", "Mã OTP đã hết hạn (30 giây). Vui lòng thực hiện đăng ký lại!");
+            ra.addFlashAttribute("error", "Mã OTP đã hết hạn (30 giây). Vui lòng đăng ký lại!");
             return "redirect:/register";
         }
 
-        // 2. KIỂM TRA MÃ ĐÚNG/SAI
         if (serverOtp != null && serverOtp.equals(otp)) {
-            // OTP ĐÚNG -> Lấy thông tin từ session ra để tạo account thực sự
+
             String firstName = (String) session.getAttribute("tempFirstName");
             String lastName = (String) session.getAttribute("tempLastName");
             String email = (String) session.getAttribute("tempEmail");
@@ -353,21 +380,18 @@ public class HomeController {
 
             String fullName = firstName.trim() + " " + lastName.trim();
 
-            // GỌI SERVICE ĐỂ LƯU VÀO DB
-            vn.edu.fpt.fashionstore.entity.Account newAccount = accountService.registerAccount(email, password, fullName, phone);
+            Account newAccount = accountService.registerAccount(email, password, fullName, phone);
 
             if (newAccount != null) {
-                // Đăng ký thành công -> Tự động đăng nhập luôn cho user
                 session.setAttribute("user", newAccount.getEmail());
                 session.setAttribute("userName", newAccount.getFullName());
 
                 Authentication auth = new UsernamePasswordAuthenticationToken(
-                        newAccount.getEmail(), null, java.util.Collections.emptyList());
+                        newAccount.getEmail(), null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-                // Xóa sạch sẽ các session tạm sau khi hoàn tất
                 session.removeAttribute("otpCode");
-                session.removeAttribute("otpTimestamp"); // Xóa luôn timestamp
+                session.removeAttribute("otpTimestamp");
                 session.removeAttribute("tempFirstName");
                 session.removeAttribute("tempLastName");
                 session.removeAttribute("tempEmail");
@@ -380,22 +404,19 @@ public class HomeController {
                 return "redirect:/register";
             }
         } else {
-            ra.addFlashAttribute("error", "Mã OTP không chính xác, vui lòng kiểm tra lại!");
+            ra.addFlashAttribute("error", "Mã OTP không chính xác!");
             return "redirect:/verify-otp";
         }
     }
 
-    // THÊM HÀM NÀY VÀO ĐỂ HIỂN THỊ TRANG NHẬP OTP
     @GetMapping("/verify-otp")
     public String viewOtpPage(HttpSession session) {
-        // Kiểm tra xem có đang trong quá trình đăng ký không (tránh người dùng gõ bừa link)
         if (session.getAttribute("otpCode") == null) {
             return "redirect:/register";
         }
-        return "verifyOTP"; // Tên file HTML của bạn (verify-otp.html)
+        return "verifyOTP";
     }
 
-    // 1. Trang đăng ký sạch sẽ ban đầu (Không có thông báo lỗi)
     @GetMapping("/register")
     public String registerPage() {
         return "register";
@@ -403,11 +424,156 @@ public class HomeController {
 
     @GetMapping("/register-expired")
     public String registerExpiredPage(Model model) {
-        model.addAttribute("error", "Mã xác thực đã hết hạn sau 30 giây. Vui lòng đăng ký lại!");
+        model.addAttribute("error", "Mã OTP đã hết hạn. Vui lòng đăng ký lại!");
         return "register";
     }
-    
-    // Helper method để cập nhật cart count vào session
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage() {
+        return "forgot-password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String sendForgotPasswordOtp(@RequestParam String email, HttpSession session, RedirectAttributes ra) {
+        try {
+            // Kiểm tra email tồn tại trong hệ thống
+            Optional<Account> accountOpt = accountService.findByEmail(email);
+            if (!accountOpt.isPresent()) {
+                ra.addFlashAttribute("error", "Email không tồn tại trong hệ thống!");
+                return "redirect:/forgot-password";
+            }
+
+            // Kiểm tra chống spam OTP
+            Long lastOtpRequestTime = (Long) session.getAttribute("lastOtpRequestTime");
+            Integer otpRequestCount = (Integer) session.getAttribute("otpRequestCount");
+            
+            if (lastOtpRequestTime != null && otpRequestCount != null) {
+                long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
+                
+                // Tính thời gian chờ: 30s, 1p, 2p, 3p, 4p, 5p...
+                long waitTimeSeconds;
+                if (otpRequestCount == 1) {
+                    waitTimeSeconds = 30; // Lần đầu: 30 giây
+                } else {
+                    waitTimeSeconds = otpRequestCount * 60; // Các lần sau: 1p, 2p, 3p...
+                }
+                
+                if (timeSinceLastRequest < waitTimeSeconds * 1000) {
+                    long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
+                    ra.addFlashAttribute("error", "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
+                    return "redirect:/forgot-password";
+                }
+            }
+
+            // Tạo OTP
+            String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
+
+            // Lưu thông tin vào session
+            session.setAttribute("resetEmail", email);
+            session.setAttribute("resetOtpCode", otp);
+            session.setAttribute("resetOtpTimestamp", System.currentTimeMillis());
+            
+            // Cập nhật thông tin chống spam
+            session.setAttribute("lastOtpRequestTime", System.currentTimeMillis());
+            if (otpRequestCount == null) {
+                session.setAttribute("otpRequestCount", 1);
+            } else {
+                session.setAttribute("otpRequestCount", otpRequestCount + 1);
+            }
+
+            // Gửi email
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Mã xác nhận đặt lại mật khẩu - Fashion Store");
+            message.setText("Mã OTP đặt lại mật khẩu của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
+            mailSender.send(message);
+
+            ra.addFlashAttribute("success", "Mã OTP đã được gửi đến email của bạn!");
+            return "redirect:/reset-password";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi gửi email: " + e.getMessage());
+            return "redirect:/forgot-password";
+        }
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPasswordPage(HttpSession session) {
+        if (session.getAttribute("resetOtpCode") == null) {
+            return "redirect:/forgot-password";
+        }
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String handleResetPassword(@RequestParam String otp, 
+                                     @RequestParam String newPassword, 
+                                     @RequestParam String confirmPassword,
+                                     HttpSession session, 
+                                     RedirectAttributes ra) {
+        String serverOtp = (String) session.getAttribute("resetOtpCode");
+        Long otpTimestamp = (Long) session.getAttribute("resetOtpTimestamp");
+        String email = (String) session.getAttribute("resetEmail");
+
+        // Kiểm tra OTP có hết hạn không (5 phút)
+        if (otpTimestamp == null || (System.currentTimeMillis() - otpTimestamp) > 300000) {
+            session.removeAttribute("resetOtpCode");
+            session.removeAttribute("resetOtpTimestamp");
+            session.removeAttribute("resetEmail");
+            session.removeAttribute("lastOtpRequestTime");
+            session.removeAttribute("otpRequestCount");
+            ra.addFlashAttribute("error", "Mã OTP đã hết hạn (5 phút). Vui lòng thử lại!");
+            return "redirect:/forgot-password";
+        }
+
+        // Kiểm tra OTP có đúng không
+        if (serverOtp == null || !serverOtp.equals(otp)) {
+            ra.addFlashAttribute("error", "Mã OTP không chính xác!");
+            return "redirect:/reset-password";
+        }
+
+        // Kiểm tra mật khẩu có khớp không
+        if (!newPassword.equals(confirmPassword)) {
+            ra.addFlashAttribute("error", "Mật khẩu mới và xác nhận mật khẩu không khớp!");
+            return "redirect:/reset-password";
+        }
+
+        // Kiểm tra định dạng mật khẩu
+        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
+            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số!");
+            return "redirect:/reset-password";
+        }
+
+        try {
+            // Cập nhật mật khẩu
+            Optional<Account> accountOpt = accountService.findByEmail(email);
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
+                account.setPassword(passwordEncoder.encode(newPassword));
+                accountService.saveAccount(account);
+            }
+
+            // Xóa session
+            session.removeAttribute("resetOtpCode");
+            session.removeAttribute("resetOtpTimestamp");
+            session.removeAttribute("resetEmail");
+            session.removeAttribute("lastOtpRequestTime");
+            session.removeAttribute("otpRequestCount");
+
+            ra.addFlashAttribute("success", "Mật khẩu đã được cập nhật thành công! Vui lòng đăng nhập.");
+            return "redirect:/login";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi cập nhật mật khẩu: " + e.getMessage());
+            return "redirect:/reset-password";
+        }
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
     private void updateCartCountForCustomer(HttpSession session, Account account) {
         try {
             if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
@@ -418,9 +584,23 @@ public class HomeController {
                 session.setAttribute("cartCount", 0);
             }
         } catch (Exception e) {
-            // Nếu có lỗi, set cartCount = 0
             session.setAttribute("cartCount", 0);
         }
     }
 
+    private Customer getCurrentCustomer(HttpSession session) {
+        try {
+            String email = (String) session.getAttribute("user");
+            if (email == null) return null;
+            
+            Account account = accountService.findByEmail(email).orElse(null);
+            if (account == null || account.getCustomers() == null || account.getCustomers().isEmpty()) {
+                return null;
+            }
+            
+            return account.getCustomers().get(0);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

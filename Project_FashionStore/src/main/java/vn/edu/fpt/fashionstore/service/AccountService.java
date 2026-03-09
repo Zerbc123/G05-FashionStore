@@ -31,6 +31,9 @@ public class AccountService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+
+
     // Khai báo Enum hoặc Constant
     public static final String ROLE_CUSTOMER = "Customer";
 
@@ -76,6 +79,7 @@ public class AccountService {
 
         return account;
     }
+
 
     /**
      * Tìm account theo username
@@ -127,15 +131,12 @@ public class AccountService {
             finalUsername = baseUsername + count++;
         }
 
-        // 2. Xử lý Phone
-        Integer phoneNumber = null;
+        // 2. Xử lý Phone (giữ dưới dạng chuỗi chỉ chứa chữ số)
+        String phoneNumber = null;
         if (phone != null && !phone.trim().isEmpty()) {
-            try {
-                String cleanPhone = phone.replaceAll("[^0-9]", "");
-                if (!cleanPhone.isEmpty()) {
-                    phoneNumber = Integer.parseInt(cleanPhone);
-                }
-            } catch (NumberFormatException e) {
+            // loại bỏ ký tự khác số để chuẩn hóa
+            phoneNumber = phone.replaceAll("[^0-9]", "");
+            if (phoneNumber.isEmpty()) {
                 phoneNumber = null;
             }
         }
@@ -182,13 +183,9 @@ public class AccountService {
         return accountRepository.findByEmail(email).map(account -> {
             // 1. Cập nhật thông tin vào bảng Account
             account.setFullName(fullName);
-            try {
-                // Loại bỏ ký tự không phải số trước khi parse
-                if (phone != null && !phone.isEmpty()) {
-                    account.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                }
-            } catch (Exception e) {
-                // Log lỗi nếu cần: System.out.println("Lỗi format số điện thoại");
+            // Loại bỏ ký tự không phải số để lưu chuỗi chỉ gồm số
+            if (phone != null && !phone.isEmpty()) {
+                account.setPhone(phone.replaceAll("[^0-9]", ""));
             }
 
             // Lưu Account trước để có ID ổn định
@@ -221,11 +218,9 @@ public class AccountService {
                 }    // <--- MỚI THÊM
                 customer.setDateOfBirth(dateOfBirth); // <--- MỚI THÊM
 
-                try {
-                    if (phone != null) {
-                        customer.setPhone(Integer.parseInt(phone.replaceAll("[^0-9]", "")));
-                    }
-                } catch (Exception e) {}
+                if (phone != null) {
+                    customer.setPhone(phone.replaceAll("[^0-9]", ""));
+                }
 
                 // Lưu bảng Customer
                 customerRepository.save(customer);
@@ -286,7 +281,61 @@ public class AccountService {
 
             return savedAccount;
         }
-        return existAccount.get();
+        // Account đã tồn tại: backfill Customer nếu thiếu
+        Account account = existAccount.get();
+        boolean isCustomerRole = account.getRole() != null &&
+                "Customer".equalsIgnoreCase(account.getRole().getRoleName());
+        boolean hasNoCustomer = account.getCustomers() == null || account.getCustomers().isEmpty();
+
+        if (isCustomerRole && hasNoCustomer) {
+            Customer customer = new Customer();
+            customer.setAccount(account);
+            customer.setFullName(fullName != null ? fullName : account.getFullName());
+            customer.setEmail(email);
+            customer.setCreatedDate(new Date());
+            customerRepository.save(customer);
+        }
+        return account;
+    }
+
+    /**
+     * Đổi mật khẩu người dùng
+     * @param email - Email người dùng
+     * @param currentPassword - Mật khẩu hiện tại
+     * @param newPassword - Mật khẩu mới
+     * @return true nếu thành công, false nếu thất bại
+     */
+    @Transactional
+    public boolean changePassword(String email, String currentPassword, String newPassword) {
+        try {
+            // 1. Tìm account theo email
+            Optional<Account> accountOpt = accountRepository.findByEmail(email);
+            if (!accountOpt.isPresent()) {
+                return false;
+            }
+
+            Account account = accountOpt.get();
+
+            // 2. Kiểm tra mật khẩu hiện tại
+            if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+                return false;
+            }
+
+            // 3. Hash mật khẩu mới và lưu
+            account.setPassword(passwordEncoder.encode(newPassword));
+            accountRepository.save(account);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+    public Account getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email).orElse(null);
     }
 
 }

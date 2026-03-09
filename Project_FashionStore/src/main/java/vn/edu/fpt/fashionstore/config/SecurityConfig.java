@@ -30,17 +30,21 @@ public class SecurityConfig {
                         // 1. Tài nguyên tĩnh: Luôn cho phép để giao diện không bị vỡ
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/vendor/**").permitAll()
 
-                        // 2. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
+                        // 2. API endpoints: Cho phép truy cập API
+                        .requestMatchers("/api/**").permitAll()
+
+                        // 3. Trang chủ và xem hàng: Cho phép Guest xem thoải mái
                         .requestMatchers("/", "/home", "/products/**", "/product-details/**", "/search/**").permitAll()
 
-                        // 3. Auth pages: Trang login/register/verify-otp/edit-profile
-                        .requestMatchers("/login", "/register", "/verify-otp", "/edit-profile", "/update-profile").permitAll()
+                        // 4. Auth pages: Trang login/register/verify-otp không cần login
+                        .requestMatchers("/login", "/register", "/verify-otp").permitAll()
 
-                        // 4. CHẶN: Chỉ khi thao tác với Giỏ hàng, Thanh toán, và Profile cá nhân mới yêu cầu Login
-                        // Lưu ý: "/cart/**" sẽ chặn cả trang xem giỏ hàng và API thêm vào giỏ
-                        .requestMatchers("/cart/**", "/checkout/**", "/order/**", "/profile/**").authenticated()
+                        // 5. Admin và Staff routes: Cho phép truy cập, controllers sẽ tự kiểm tra session
+                        // Vì app dùng custom session-based auth, không dùng Spring Security authentication
+                        .requestMatchers("/admin/**", "/staff/**").permitAll()
 
-                        // 5. Các request khác (nếu có)
+                        // 5. Các route khác: Cho phép truy cập, controllers sẽ tự kiểm tra session
+                        // Vì app dùng custom session-based auth, không dùng Spring Security authentication
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable()); // Vẫn dùng Custom Login của bạn

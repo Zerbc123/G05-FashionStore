@@ -17,4 +17,12 @@ public class EmailService {
         message.setText("Mã OTP của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
         mailSender.send(message);
     }
+
+    public void sendForgotPasswordOtp(String toEmail, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Mã xác nhận đặt lại mật khẩu - Fashion Store");
+        message.setText("Mã OTP đặt lại mật khẩu của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
+        mailSender.send(message);
+    }
 }

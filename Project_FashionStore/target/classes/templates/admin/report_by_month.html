@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Báo cáo theo tháng</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                        success: '#C8E6C9',
+                        warning: '#FFF3CD',
+                        danger: '#F8D7DA'
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .admin-sidebar { width: 260px; height: calc(100vh - 64px); }
+        .table-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+
+        thead { border-bottom: 2px solid #F06292; }
+        tbody tr:hover { background-color: #FFF5F7; transition: background 0.2s; }
+
+        input[type="month"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(314deg) brightness(101%) contrast(90%);
+        }
+
+        .stat-card-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card-glow::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(240,98,146,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+<div style="margin-top: 80px;" class="flex flex-col min-h-screen">
+
+<!-- ADMIN HEADER -->
+<header class="h-16 bg-admin-gradient flex items-center justify-between px-8 text-white sticky top-0 z-50">
+    <div class="flex items-center gap-4">
+        <i class="fa-solid fa-bars-staggered text-xl cursor-pointer"></i>
+        <span class="text-xl font-heading font-bold tracking-wide">FashionStore Admin</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="relative cursor-pointer">
+            <i class="fa-solid fa-bell text-lg"></i>
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Admin Manager</p>
+                <p class="text-[10px] opacity-80">Quản trị viên</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-grow">
+    <!-- SIDEBAR -->
+    <aside class="hidden lg:block admin-sidebar bg-white border-r border-divider sticky top-16">
+        <nav class="p-6 space-y-2">
+            <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-box w-5"></i> Sản phẩm
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-receipt w-5"></i> Đơn hàng
+            </a>
+            <div class="pt-4 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-widest pl-3">Báo cáo</div>
+            <a href="report_by_day.html" class="flex items-center gap-3 p-3 text-text-muted hover:bg-secondary-bg hover:text-primary rounded-xl transition">
+                <i class="fa-solid fa-calendar-day w-5"></i> Báo cáo theo ngày
+            </a>
+            <a href="report_by_month.html" class="flex items-center gap-3 p-3 bg-secondary-bg text-primary rounded-xl transition font-medium">
+                <i class="fa-solid fa-calendar-week w-5"></i> Báo cáo tháng
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-heading font-bold text-text-main text-left">Báo cáo doanh thu theo tháng</h1>
+                <div class="w-16 h-0.5 bg-primary mt-2"></div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="handleExport()" class="px-5 py-2.5 bg-white border border-primary text-primary rounded-xl text-sm font-medium hover:bg-secondary-bg transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> Xuất báo cáo (CSV/Excel)
+                </button>
+            </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="bg-white p-6 rounded-2xl shadow-soft mb-8 flex flex-wrap items-end gap-6">
+            <!-- Month Picker -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Chọn tháng & năm</label>
+                <div class="relative">
+                    <input type="month" id="monthPicker" class="w-64 px-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm focus:outline-none focus:border-primary transition" value="2024-05">
+                </div>
+            </div>
+
+            <!-- Search box -->
+            <div class="space-y-2 flex-grow max-w-sm">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Lọc dữ liệu</label>
+                <div class="relative">
+                    <input type="text" id="reportSearch" placeholder="Tìm theo tuần, danh mục..." class="w-full pl-10 pr-4 py-2.5 bg-secondary-bg border border-divider rounded-xl text-sm focus:outline-none focus:border-primary transition">
+                    <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="generateReport()" class="px-6 py-2.5 bg-admin-gradient text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i> Tạo báo cáo
+                </button>
+                <button onclick="handleSearch()" class="px-6 py-2.5 bg-text-main text-white rounded-xl text-sm font-semibold hover:bg-black transition">
+                    Tìm kiếm
+                </button>
+            </div>
+        </div>
+
+        <!-- ANALYTICS SUMMARY -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-soft stat-card-glow">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Doanh thu tháng</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold text-primary">$128,450</h3>
+                    <span class="text-xs text-green-500 font-bold mb-1"><i class="fa-solid fa-arrow-up"></i> 12%</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Đơn hàng mới</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold text-text-main font-heading">1,248</h3>
+                    <span class="text-xs text-green-500 font-bold mb-1"><i class="fa-solid fa-arrow-up"></i> 8%</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Giá trị TB đơn</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold text-text-main font-heading">$102.9</h3>
+                    <span class="text-xs text-red-500 font-bold mb-1"><i class="fa-solid fa-arrow-down"></i> 2%</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-soft">
+                <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Tỷ lệ chuyển đổi</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold text-text-main font-heading">4.2%</h3>
+                    <span class="text-xs text-green-500 font-bold mb-1"><i class="fa-solid fa-arrow-up"></i> 0.5%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTHLY TABLE -->
+        <div class="table-container">
+            <div class="p-6 border-b border-divider flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="font-heading font-bold text-xl text-text-main">Chi tiết doanh thu <span id="currentMonthDisplay" class="text-primary italic">Tháng 05/2024</span></h3>
+                <div class="flex items-center gap-2">
+                    <div class="flex -space-x-2">
+                        <img src="https://i.pravatar.cc/150?u=1" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
+                        <img src="https://i.pravatar.cc/150?u=2" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
+                        <img src="https://i.pravatar.cc/150?u=3" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
+                    </div>
+                    <span class="text-[10px] text-text-muted italic">Được xem bởi 3 quản lý</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                    <tr class="text-text-main text-xs font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Thời gian (Tuần)</th>
+                        <th class="px-6 py-4">Số đơn</th>
+                        <th class="px-6 py-4">Doanh số</th>
+                        <th class="px-6 py-4">Hoàn trả</th>
+                        <th class="px-6 py-4">Sản phẩm bán chạy</th>
+                        <th class="px-6 py-4">Trạng thái mục tiêu</th>
+                    </tr>
+                    </thead>
+                    <tbody class="text-sm text-text-main">
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tuần 1 (01/05 - 07/05)</td>
+                        <td class="px-6 py-5">312 đơn</td>
+                        <td class="px-6 py-5 font-bold text-primary">$32,400.00</td>
+                        <td class="px-6 py-5 text-text-muted">5 (1.6%)</td>
+                        <td class="px-6 py-5">
+                            <span class="text-xs italic">Floral Summer Dress</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-400" style="width: 95%"></div>
+                                </div>
+                                <span class="text-[10px] font-bold">95%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tuần 2 (08/05 - 14/05)</td>
+                        <td class="px-6 py-5">285 đơn</td>
+                        <td class="px-6 py-5 font-bold text-primary">$29,120.50</td>
+                        <td class="px-6 py-5 text-text-muted">3 (1.0%)</td>
+                        <td class="px-6 py-5">
+                            <span class="text-xs italic">Silk Slip Top</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-400" style="width: 88%"></div>
+                                </div>
+                                <span class="text-[10px] font-bold">88%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tuần 3 (15/05 - 21/05)</td>
+                        <td class="px-6 py-5">340 đơn</td>
+                        <td class="px-6 py-5 font-bold text-primary">$35,800.00</td>
+                        <td class="px-6 py-5 text-text-muted">8 (2.3%)</td>
+                        <td class="px-6 py-5">
+                            <span class="text-xs italic">Linen Trousers</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 100%"></div>
+                                </div>
+                                <span class="text-[10px] font-bold">100%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-semibold">Tuần 4 (22/05 - 31/05)</td>
+                        <td class="px-6 py-5">311 đơn</td>
+                        <td class="px-6 py-5 font-bold text-primary">$31,129.50</td>
+                        <td class="px-6 py-5 text-text-muted">4 (1.2%)</td>
+                        <td class="px-6 py-5">
+                            <span class="text-xs italic">Evening Clutch Bag</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-400" style="width: 92%"></div>
+                                </div>
+                                <span class="text-[10px] font-bold">92%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot class="bg-secondary-bg font-bold">
+                    <tr class="text-text-main">
+                        <td class="px-6 py-5">TỔNG THÁNG</td>
+                        <td class="px-6 py-5">1,248 đơn</td>
+                        <td class="px-6 py-5 text-primary text-lg">$128,450.00</td>
+                        <td class="px-6 py-5">20 hoàn</td>
+                        <td class="px-6 py-5" colspan="2"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function generateReport() {
+        const val = document.getElementById('monthPicker').value;
+        if (!val) {
+            alert("Vui lòng chọn tháng.");
+            return;
+        }
+
+        const [year, month] = val.split('-');
+        const displayDate = `Tháng ${month}/${year}`;
+        document.getElementById('currentMonthDisplay').innerText = displayDate;
+
+        alert(`Đang tổng hợp dữ liệu báo cáo cho ${displayDate}...`);
+    }
+
+    function handleSearch() {
+        const query = document.getElementById('reportSearch').value;
+        if(!query) {
+            alert("Vui lòng nhập tiêu chí lọc.");
+            return;
+        }
+        alert("Đang lọc báo cáo theo: " + query);
+    }
+
+    function handleExport() {
+        const val = document.getElementById('monthPicker').value || "current";
+        alert(`Đang chuẩn bị dữ liệu kết xuất cho tháng ${val}...`);
+        setTimeout(() => {
+            alert("File báo cáo đã sẵn sàng. Đang bắt đầu tải xuống (Excel)...");
+        }, 1000);
+    }
+</script>
+</body>
+</html>

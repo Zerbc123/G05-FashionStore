@@ -27,6 +27,9 @@ public class Product {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductVariant> variants;
+    
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Wishlist> wishlists;
 
     public List<ProductVariant> getVariants() {
         return variants;
@@ -34,6 +37,14 @@ public class Product {
 
     public void setVariants(List<ProductVariant> variants) {
         this.variants = variants;
+    }
+    
+    public List<Wishlist> getWishlists() {
+        return wishlists;
+    }
+    
+    public void setWishlists(List<Wishlist> wishlists) {
+        this.wishlists = wishlists;
     }
 
     public Product() {

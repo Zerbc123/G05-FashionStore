@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Banners - Admin</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <style>
+        .banner-preview {
+            width: 150px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-light" style="padding-top: 100px;">
+
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-images text-primary me-2"></i>Quản Lý Banners Trang Chủ</h2>
+        <a th:href="@{/admin/banners/add}" class="btn btn-primary fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> Thêm Banner Mới
+        </a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success fw-bold" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger fw-bold" th:text="${errorMessage}"></div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                <tr>
+                    <th class="ps-3">Hình Ảnh</th>
+                    <th>Tiêu Đề & Link</th>
+                    <th class="text-center">Thứ Tự</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-center">Thao Tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="banner : ${banners}">
+                    <td class="ps-3 py-3">
+                        <img th:src="${banner.imageUrl}" class="banner-preview" alt="Banner Image" onerror="this.src='https://placehold.co/600x200?text=Loi+Hinh+Anh'">
+                    </td>
+                    <td>
+                        <div class="fw-bold fs-5" th:text="${banner.title}">Tiêu đề Banner</div>
+                        <a th:href="${banner.targetLink}" target="_blank" class="small text-muted text-decoration-none">
+                            <i class="bi bi-link-45deg"></i> <span th:text="${banner.targetLink}">/link</span>
+                        </a>
+                    </td>
+                    <td class="text-center fs-5 fw-bold text-primary" th:text="${banner.displayOrder}">1</td>
+                    <td>
+                        <span th:if="${banner.isActive}" class="badge bg-success px-3 py-2 rounded-pill">Đang Hiện</span>
+                        <span th:unless="${banner.isActive}" class="badge bg-secondary px-3 py-2 rounded-pill">Đang Ẩn</span>
+                    </td>
+                    <td class="text-center">
+                        <a th:href="@{'/admin/banners/toggle/' + ${banner.bannerId}}"
+                           class="btn btn-sm me-1" th:classappend="${banner.isActive} ? 'btn-outline-secondary' : 'btn-success'"
+                           th:title="${banner.isActive} ? 'Tắt banner này' : 'Bật banner này'">
+                            <i class="bi" th:classappend="${banner.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
+                        </a>
+                        <a th:href="@{'/admin/banners/edit/' + ${banner.bannerId}}" class="btn btn-sm btn-outline-info me-1" title="Sửa">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a th:href="@{'/admin/banners/delete/' + ${banner.bannerId}}" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa Banner này?');">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(banners)}">
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <i class="bi bi-image fs-1 d-block mb-2"></i>
+                        Chưa có Banner nào. Hãy thêm mới ngay!
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

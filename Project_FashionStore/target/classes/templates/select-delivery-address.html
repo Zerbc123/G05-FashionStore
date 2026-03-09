@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Địa Chỉ Giao Hàng - FashionStore</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-color: #FF6B9D; --secondary-color: #C44569; --bg-light: #fcfcfc; --dark-text: #2C3E50; }
+        body { background-color: var(--bg-light); padding-top: 100px; font-family: 'Poppins', sans-serif; color: var(--dark-text); }
+        .page-title { font-family: 'Playfair Display', serif; font-weight: 700; text-align: center; margin-bottom: 2rem; }
+        .address-box { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #f1f1f1; margin-bottom: 20px; }
+        .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #eee; }
+        .form-control, .form-select { border-radius: 10px; padding: 12px 15px; border: 1px solid #e0e0e0; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(255, 107, 157, 0.25); }
+        
+        .address-option { 
+            border: 1px solid #e0e0e0; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .address-option:hover { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.1); 
+        }
+        .address-option.selected { 
+            border-color: var(--primary-color); 
+            background: #fff0f5; 
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.15); 
+        }
+        .address-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .btn-primary-custom { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 600; transition: all 0.3s; }
+        .btn-primary-custom:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 107, 157, 0.3); }
+        .btn-secondary-custom { background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 600; transition: all 0.3s; }
+        .btn-secondary-custom:hover { background: #5a6268; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container mb-5">
+    <h2 class="page-title">Chọn Địa Chỉ Giao Hàng</h2>
+
+    <form th:action="@{/order/checkout/update-delivery-address}" method="POST">
+        <!-- Địa chỉ hiện tại từ profile -->
+        <div class="address-box">
+            <h4 class="section-title"><i class="bi bi-person-check me-2"></i>Địa chỉ mặc định</h4>
+            <div class="address-option" onclick="selectAddress('profile')" id="profileAddress">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-geo-alt-fill text-primary mt-1"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold mb-1">Địa chỉ từ hồ sơ</div>
+                        <div class="text-muted" th:text="${currentAddress != null ? currentAddress : 'Chưa có địa chỉ trong hồ sơ'}">
+                            123 Nguyễn Trãi, Phường Cầu Kho, Quận 1, TP. Hồ Chí Minh
+                        </div>
+                    </div>
+                </div>
+                <input type="radio" name="addressOption" value="profile" checked style="display: none;">
+            </div>
+        </div>
+
+        <!-- Địa chỉ mới cho đơn hàng này -->
+        <div class="address-box">
+            <h4 class="section-title"><i class="bi bi-plus-circle me-2"></i>Địa chỉ mới cho đơn hàng này</h4>
+            <div class="address-option" onclick="selectAddress('new')" id="newAddress">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
+                        <select id="orderProvince" name="province" class="form-select" required>
+                            <option value="">Đang tải tỉnh/thành...</option>
+                        </select>
+                        <div id="orderProvinceLoadingIndicator" style="margin-top: 0.5rem;">
+                            <span style="color: #666; font-size: 0.9rem;">Vui lòng chờ tải danh sách...</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phường/Xã (Sau sáp nhập)<span class="text-danger">*</span></label>
+                        <select id="orderWard" name="ward" class="form-select" required disabled>
+                            <option value="">Chọn Phường/Xã</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Số nhà & Tên đường <span class="text-danger">*</span></label>
+                        <input type="text" id="orderHouse" name="house" class="form-control" placeholder="Vi du: 123 Nguyen Trai" required />
+                    </div>
+                    <input type="hidden" id="orderAddress" name="newAddress" />
+                </div>
+                <input type="radio" name="addressOption" value="new" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Hidden field để lưu địa chỉ cuối cùng -->
+        <input type="hidden" name="finalAddress" id="finalAddress" />
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn-primary-custom me-3">
+                <i class="bi bi-check-circle me-2"></i>Xác nhận địa chỉ
+            </button>
+            <a th:href="@{/order/checkout}" class="btn-secondary-custom text-decoration-none">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let orderProvincesList = [];
+
+function selectAddress(type) {
+    document.querySelectorAll('.address-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    if (type === 'profile') {
+        document.getElementById('profileAddress').classList.add('selected');
+        document.querySelector('input[name="addressOption"][value="profile"]').checked = true;
+    } else {
+        document.getElementById('newAddress').classList.add('selected');
+        document.querySelector('input[name="addressOption"][value="new"]').checked = true;
+    }
+}
+
+function loadOrderProvinces() {
+    const provSelect = document.getElementById('orderProvince');
+    const loadingIndicator = document.getElementById('orderProvinceLoadingIndicator');
+    
+    fetch('/fashionstore/address-api?depth=2')
+    fetch('/fashionstore/address-api?depth=2')
+        .then(res => {
+            if (!res.ok) throw new Error('API failed');
+            return res.json();
+        })
+        .then(data => {
+            orderProvincesList = data;
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
+            data.forEach(p => provSelect.add(new Option(p.name, p.name)));
+        })
+        .catch(err => {
+            console.error('Fetch failed', err);
+            if (loadingIndicator) {
+                loadingIndicator.innerHTML = '<span style="color: red;">Không thể tải dữ liệu. Vui lòng thử lại</span>';
+            }
+        });
+}
+
+function populateOrderWards(provinceName) {
+    const prov = orderProvincesList.find(p => p.name === provinceName);
+    const wardSelect = document.getElementById('orderWard');
+    
+    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+    wardSelect.disabled = true;
+    
+    if (prov && prov.wards) {
+        prov.wards.forEach(w => {
+            wardSelect.add(new Option(w.name, w.name));
+        });
+        wardSelect.disabled = false;
+    }
+}
+
+function combineOrderAddress() {
+    const house = document.getElementById('orderHouse').value.trim();
+    const ward = document.getElementById('orderWard').value;
+    const province = document.getElementById('orderProvince').value;
+    
+    if (house && ward && province) {
+        document.getElementById('orderAddress').value = house + ', ' + ward + ', ' + province;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadOrderProvinces();
+    
+    const provElem = document.getElementById('orderProvince');
+    if (provElem) {
+        provElem.addEventListener('change', function() {
+            populateOrderWards(this.value);
+            combineOrderAddress();
+        });
+    }
+    
+    const wardElem = document.getElementById('orderWard');
+    if (wardElem) {
+        wardElem.addEventListener('change', combineOrderAddress);
+    }
+    
+    const houseElem = document.getElementById('orderHouse');
+    if (houseElem) {
+        houseElem.addEventListener('input', combineOrderAddress);
+    }
+    
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const selectedOption = document.querySelector('input[name="addressOption"]:checked').value;
+            
+            if (selectedOption === 'profile') {
+                const currentAddress = /*[[${currentAddress}]]*/ '';
+                document.getElementById('finalAddress').value = currentAddress;
+            } else {
+                combineOrderAddress();
+                const orderAddr = document.getElementById('orderAddress').value;
+                document.getElementById('finalAddress').value = orderAddr;
+                
+                if (!orderAddr || orderAddr.trim() === '') {
+                    e.preventDefault();
+                    alert('Vui long chon day du dia chi (Tinh, Phuong, So nha)');
+                    return false;
+                }
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
