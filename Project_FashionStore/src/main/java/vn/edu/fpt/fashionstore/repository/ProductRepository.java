@@ -1,5 +1,6 @@
 package vn.edu.fpt.fashionstore.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -50,9 +51,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     // 1. Định nghĩa Interface "Hứng" dữ liệu (Nằm ngay trong file này)
     public interface ProductHomeInfo {
         Long getId();             // Hứng alias 'id'
+
         String getName();         // Hứng alias 'name'
+
         Double getPrice();        // Hứng alias 'price' (Giá thấp nhất)
+
         String getImage();        // Hứng alias 'image' (Ảnh đại diện)
+
         String getCategoryName(); // Hứng alias 'categoryName'
     }
 
@@ -68,4 +73,20 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "LEFT JOIN p.category c " +          // Kết nối bảng danh mục
             "GROUP BY p.productId, p.productName, c.categoryName")
     List<ProductHomeInfo> getAllProductHome();
+
+    // ĐÃ SỬA LẠI: Trả về ProductHomeInfo thay vì Product để giao diện HTML đọc được
+    @Query("SELECT " +
+            "p.productId as id, " +
+            "p.productName as name, " +
+            "c.categoryName as categoryName, " +
+            "MIN(v.price) as price, " +
+            "MIN(v.imageUrl) as image " +
+            "FROM OrderItem oi " +
+            "JOIN oi.productVariant v " +
+            "JOIN v.product p " +
+            "LEFT JOIN p.category c " +
+            "WHERE oi.order.status = 'COMPLETED' " +
+            "GROUP BY p.productId, p.productName, c.categoryName " +
+            "ORDER BY SUM(oi.quantity) DESC")
+    List<ProductHomeInfo> findTopSellingProducts(Pageable pageable);
 }

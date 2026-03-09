@@ -100,7 +100,7 @@
                     <span class="price-old">399.000₫</span>
                 </div>
 
-                <form th:action="@{/cart/add}" method="POST">
+                <form id="mainCartForm" th:action="@{/cart/add}" method="POST">
                     <input type="hidden" name="productId" th:value="${product.productId}">
                     
                     <div class="mb-4">
@@ -125,7 +125,7 @@
                     </div>
 
                     <div class="d-flex gap-3">
-                        <button type="submit" class="btn-add-cart flex-fill">
+                        <button type="button" class="btn-add-cart flex-fill" onclick="addToCart()">
                             <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
                         </button>
                         <button type="button" class="btn-buy-now flex-fill" onclick="buyNow()">
@@ -133,14 +133,7 @@
                         </button>
                     </div>
                 </form>
-                
-                <!-- Form ẩn cho MUA NGAY -->
-                <form id="buyNowForm" th:action="@{/cart/buy-now}" method="POST" style="display: none;">
-                    <input type="hidden" name="productId" th:value="${product.productId}">
-                    <input type="hidden" name="sizeId" id="buyNowSizeId">
-                    <input type="hidden" name="colorId" id="buyNowColorId">
-                    <input type="hidden" name="quantity" value="1">
-                </form>
+
             </div>
         </div>
 
@@ -164,35 +157,47 @@
                 </div>
 
                 <div class="tab-pane fade" id="danhgia">
+
+                    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                        <i class="bi bi-check-circle-fill"></i> <span th:text="${successMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${errorMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
                     <div class="rating-summary d-flex align-items-center justify-content-between">
-                        <div class="text-center">
-                            <h2 class="display-4 fw-bold mb-0 text-primary">4.5</h2>
-                            <div class="text-warning mb-1 small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
-                            <span class="text-muted small">128 đánh giá</span>
-                        </div>
-                        <div class="flex-grow-1 px-5">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="small" style="width:20px">5</span><i class="bi bi-star-fill text-warning small"></i>
-                                <div class="progress flex-grow-1" style="height:8px"><div class="progress-bar bg-warning" style="width:85%"></div></div>
+                        <div class="text-center" th:if="${#lists.size(reviews) > 0}">
+                            <h2 class="display-4 fw-bold mb-0 text-primary" th:text="${averageRating}">4.5</h2>
+                            <div class="text-warning mb-1 small">
+                                <i class="bi bi-star-fill"></i>
                             </div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="small" style="width:20px">4</span><i class="bi bi-star-fill text-warning small"></i>
-                                <div class="progress flex-grow-1" style="height:8px"><div class="progress-bar bg-warning" style="width:10%"></div></div>
-                            </div>
+                            <span class="text-muted small" th:text="${#lists.size(reviews)} + ' đánh giá'"></span>
                         </div>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#reviewForm">
+                        <div class="text-center" th:if="${#lists.size(reviews) == 0}">
+                            <p class="text-muted fst-italic mb-0">Chưa có đánh giá nào.</p>
+                        </div>
+
+                        <button th:if="${canReview}" class="btn btn-outline-primary btn-sm rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse">
                             Viết Đánh Giá
                         </button>
                     </div>
 
-                    <div class="collapse" id="reviewForm">
+                    <div class="alert alert-light border mb-4 text-center shadow-sm" th:unless="${canReview}">
+                        <i class="bi bi-info-circle-fill text-primary"></i> Bạn cần đặt mua và nhận sản phẩm này thành công để có thể viết đánh giá.
+                    </div>
+
+                    <div class="collapse mb-5" id="reviewFormCollapse" th:if="${canReview}">
                         <div class="review-box shadow-sm border">
-                            <h6 class="fw-bold mb-3">Đánh giá của bạn về sản phẩm này</h6>
-                            <form th:action="@{/products/review}" method="POST">
+                            <h6 class="fw-bold mb-3 text-success"><i class="bi bi-pencil-square"></i> Đánh giá của bạn về sản phẩm này</h6>
+
+                            <form th:action="@{/review/add}" method="POST">
                                 <input type="hidden" name="productId" th:value="${product.productId}">
+
                                 <div class="mb-3">
                                     <label class="small text-muted mb-1">Bạn thấy sản phẩm thế nào? (Chọn số sao)</label>
-                                    <div class="star-rating">
+                                    <div class="star-rating" style="justify-content: flex-end;">
                                         <input type="radio" id="star5" name="rating" value="5" required/><label for="star5"><i class="bi bi-star-fill"></i></label>
                                         <input type="radio" id="star4" name="rating" value="4" /><label for="star4"><i class="bi bi-star-fill"></i></label>
                                         <input type="radio" id="star3" name="rating" value="3" /><label for="star3"><i class="bi bi-star-fill"></i></label>
@@ -200,52 +205,45 @@
                                         <input type="radio" id="star1" name="rating" value="1" /><label for="star1"><i class="bi bi-star-fill"></i></label>
                                     </div>
                                 </div>
+
                                 <div class="mb-3">
                                     <textarea name="comment" class="form-control" rows="3" placeholder="Nhập cảm nhận của bạn về chất liệu, kiểu dáng..." required></textarea>
                                 </div>
+
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-primary btn-sm px-4">Gửi đánh giá</button>
                                 </div>
                             </form>
+
                         </div>
                     </div>
 
-                    <div class="comment-list">
-                        <h5 class="fw-bold mb-4">Khách hàng nhận xét</h5>
+                    <div class="comment-list mt-4">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Khách hàng nhận xét</h5>
 
-                        <div class="comment-item d-flex">
-                            <div class="comment-avatar">NA</div>
+                        <div class="comment-item d-flex" th:each="review : ${reviews}">
+                            <div class="comment-avatar me-3" style="background: transparent;">
+                                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${review.customer.fullName} + '&background=random'}" class="rounded-circle" width="50" height="50">
+                            </div>
+
                             <div class="comment-content">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <div class="comment-author">Nguyễn Anh Tuấn <span class="badge bg-light text-success ms-1 small fw-normal"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span></div>
-                                        <div class="text-warning small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                                        <div class="comment-author">
+                                            [[${review.customer.fullName}]]
+                                            <span class="badge bg-light text-success ms-1 small fw-normal"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                                        </div>
+                                        <div class="mb-1">
+                                            <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                               th:class="${i <= review.rating ? 'bi bi-star-fill text-warning small' : 'bi bi-star text-warning small'}"></i>
+                                        </div>
                                     </div>
-                                    <div class="comment-date">10/11/2025</div>
+                                    <div class="comment-date" th:text="${#dates.format(review.reviewDate, 'dd/MM/yyyy HH:mm')}"></div>
                                 </div>
-                                <div class="comment-text">
-                                    Áo vải rất đẹp, dày dặn vừa phải, mặc cực kỳ mát. Mình cao 1m7 nặng 65kg mặc size L vừa in luôn. Shop tư vấn nhiệt tình, giao hàng nhanh. Chắc chắn sẽ quay lại!
-                                </div>
-                                <div class="shop-reply">
-                                    <div class="fw-bold small text-primary mb-1">Phản hồi của FashionStore:</div>
-                                    <div class="small">Cảm ơn bạn Tuấn đã tin tưởng và ủng hộ shop ạ! Chúc bạn có một ngày tuyệt vời nhé ❤️</div>
-                                </div>
+                                <div class="comment-text" th:text="${review.comment}"></div>
                             </div>
                         </div>
 
-                        <div class="comment-item d-flex">
-                            <div class="comment-avatar" style="background: #ffeaa7; color: #d63031;">TH</div>
-                            <div class="comment-content">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="comment-author">Trần Hoàng</div>
-                                        <div class="text-warning small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                                    </div>
-                                    <div class="comment-date">08/11/2025</div>
-                                </div>
-                                <div class="comment-text">Đẹp như hình, đáng tiền mua.</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -255,33 +253,47 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 
-<!-- Form ẩn dùng tên hoàn toàn mới để tránh trùng lặp -->
-<form id="hiddenBuyNowForm" th:action="@{/order/checkout}" method="POST" style="display: none;">
+
+<form id="directCheckoutForm" th:action="@{/order/checkout}" method="POST" style="display: none;">
     <input type="hidden" name="productId" th:value="${product.productId}">
-    <input type="hidden" name="sizeId" id="hiddenSizeId">
-    <input type="hidden" name="colorId" id="hiddenColorId">
+    <input type="hidden" name="sizeId" id="directSizeId">
+    <input type="hidden" name="colorId" id="directColorId">
     <input type="hidden" name="quantity" value="1">
 </form>
 
-<!-- Sau đó mới đến các script -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // --- HÀM CHO NÚT THÊM VÀO GIỎ HÀNG ---
+    function addToCart() {
+        const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+        const selectedColor = document.querySelector('input[name="colorId"]:checked');
+
+        if (!selectedSize || !selectedColor) {
+            alert('⚠️ Vui lòng chọn Kích thước và Màu sắc trước khi thêm vào giỏ hàng!');
+            return;
+        }
+
+        // Nếu đã chọn đủ, submit form Thêm vào giỏ hàng
+        document.getElementById('mainCartForm').submit();
+    }
+
+    // --- HÀM CHO NÚT MUA NGAY ---
     function buyNow() {
         const selectedSize = document.querySelector('input[name="sizeId"]:checked');
         const selectedColor = document.querySelector('input[name="colorId"]:checked');
 
         if (!selectedSize || !selectedColor) {
-            alert('Vui lòng chọn size và màu sắc!');
+            alert('⚠️ Vui lòng chọn Kích thước và Màu sắc trước khi mua!');
             return;
         }
 
-        // Gán giá trị vào các ID đã đổi tên
-        document.getElementById('hiddenSizeId').value = selectedSize.value;
-        document.getElementById('hiddenColorId').value = selectedColor.value;
+        // Gán giá trị vào form ẩn
+        document.getElementById('directSizeId').value = selectedSize.value;
+        document.getElementById('directColorId').value = selectedColor.value;
 
-        // Submit form với ID mới
-        document.getElementById('hiddenBuyNowForm').submit();
+        // Bấm cò: Submit thẳng sang trang Thanh Toán
+        document.getElementById('directCheckoutForm').submit();
     }
 </script>
 

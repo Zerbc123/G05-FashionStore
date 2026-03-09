@@ -17,6 +17,8 @@ import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.repository.VoucherRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
+import vn.edu.fpt.fashionstore.service.ReturnRequestService;
+import vn.edu.fpt.fashionstore.service.VoucherService;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.Date;
@@ -28,11 +30,14 @@ import java.util.Optional;
 public class OrderController {
 
     @Autowired
+    private ReturnRequestService returnRequestService;
+
+    @Autowired
     private CartService cartService;
 
     @Autowired
     private OrderService orderService;
-    
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -42,23 +47,26 @@ public class OrderController {
     @Autowired
     private VoucherRepository voucherRepository;
 
+    @Autowired
+    private VoucherService voucherService;
+
     // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
         String email = (String) session.getAttribute("user");
         if (email == null) {
             throw new RuntimeException("Bạn chưa đăng nhập!");
         }
-        
+
         Optional<Account> accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
             throw new RuntimeException("Không tìm thấy tài khoản!");
         }
-        
+
         Account account = accountOpt.get();
         if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
             throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
         }
-        
+
         return account.getCustomers().get(0);
     }
 
@@ -73,34 +81,47 @@ public class OrderController {
             if (currentCustomer == null) {
                 return "redirect:/login";
             }
-            
+
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
 
-            // Nếu giỏ hàng trống thì không cho vào trang checkout
             if (cartItems == null || cartItems.isEmpty()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
                 return "redirect:/cart";
             }
 
             double total = cartService.getCartTotal(cartItems);
+            double discountAmount = 0.0;
+            double finalTotal = total;
 
-            // Gửi dữ liệu ra cột bên phải
+            // KIỂM TRA XEM CÓ VOUCHER TRONG SESSION KHÔNG
+            Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+
+            if (appliedVoucher != null) {
+                if (appliedVoucher.getMinOrderValue() != null && total < appliedVoucher.getMinOrderValue()) {
+                    session.removeAttribute("appliedVoucher");
+                    model.addAttribute("errorMessage", "Mã giảm giá đã bị gỡ vì giỏ hàng không đủ điều kiện (" + String.format("%,.0f", appliedVoucher.getMinOrderValue()) + "đ)!");
+                } else {
+                    discountAmount = appliedVoucher.getDiscountValue();
+                    finalTotal = total - discountAmount;
+                    if (finalTotal < 0) finalTotal = 0; // Chống âm tiền
+                    model.addAttribute("appliedVoucher", appliedVoucher);
+                }
+            }
+
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
+            model.addAttribute("discountAmount", discountAmount);
+            model.addAttribute("finalTotal", finalTotal);
 
-            // Lấy danh sách voucher hợp lệ từ database
+            // Lấy danh sách voucher hợp lệ
             List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
             model.addAttribute("validVouchers", validVouchers);
 
-            // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
             model.addAttribute("fullName", currentCustomer.getFullName());
-            
-            // Sử dụng chuỗi điện thoại trực tiếp (đã lưu với số 0 đầu nếu có)
             String phoneStr = currentCustomer.getPhone();
             if (phoneStr == null) phoneStr = "";
             model.addAttribute("phone", phoneStr);
-            
-            // Ưu tiên địa chỉ từ session (đã chọn từ trang chọn địa chỉ), nếu không có thì dùng từ profile
+
             String deliveryAddress = (String) session.getAttribute("deliveryAddress");
             if (deliveryAddress != null && !deliveryAddress.trim().isEmpty()) {
                 model.addAttribute("address", deliveryAddress);
@@ -116,7 +137,46 @@ public class OrderController {
     }
 
     // =======================================================
-    // 2. XỬ LÝ KHI BẤM NÚT "ĐẶT HÀNG" (MANUAL VALIDATION)
+    // HÀM MỚI: XỬ LÝ ÁP DỤNG VOUCHER TỪ TRANG CHECKOUT
+    // =======================================================
+    @PostMapping("/apply-voucher")
+    public String applyVoucher(
+            @RequestParam("voucherCode") String voucherCode,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            double cartTotal = cartService.getCartTotal(cartItems);
+
+            if (voucherCode == null || voucherCode.trim().isEmpty()) {
+                session.removeAttribute("appliedVoucher");
+                redirectAttributes.addFlashAttribute("successMessage", "Đã hủy áp dụng mã giảm giá.");
+                return "redirect:/order/checkout";
+            }
+
+            Voucher voucher = voucherService.getValidVoucherByCode(voucherCode);
+
+            if (voucher != null) {
+                if (voucher.getMinOrderValue() != null && cartTotal < voucher.getMinOrderValue()) {
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Đơn hàng phải từ " + String.format("%,.0f", voucher.getMinOrderValue()) + "đ mới được áp dụng mã này!");
+                } else {
+                    session.setAttribute("appliedVoucher", voucher);
+                    redirectAttributes.addFlashAttribute("successMessage", "Áp dụng voucher thành công!");
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Mã giảm giá không hợp lệ hoặc đã hết hạn!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+        }
+
+        return "redirect:/order/checkout";
+    }
+
+    // =======================================================
+    // 2. XỬ LÝ KHI BẤM NÚT "ĐẶT HÀNG"
     // =======================================================
     @PostMapping("/checkout/place-order")
     public String placeOrder(
@@ -131,103 +191,59 @@ public class OrderController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        // Lấy customer hiện tại
         Customer currentCustomer = getCurrentCustomer(session);
-        
-        // Kiểm tra nếu customer không tồn tại
         if (currentCustomer == null) {
             return "redirect:/login";
         }
 
         boolean hasError = false;
 
-        // Bắt lỗi: Tên rỗng hoặc chứa số/ký tự đặc biệt
         if (fullName.trim().isEmpty()) {
             model.addAttribute("errorFullName", "Vui lòng nhập họ và tên của bạn.");
             hasError = true;
         } else if (!fullName.matches("^[\\p{L}\\s]+$")) {
-            // Regex: \p{L} là chữ cái bất kỳ (hỗ trợ tiếng Việt), \s là khoảng trắng
             model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái, không nhập số hay ký tự đặc biệt.");
             hasError = true;
         }
 
-        // Bắt lỗi: Số điện thoại
         if (phone.trim().isEmpty() || !phone.matches("^0[0-9]{9}$")) {
             model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (Bắt buộc 10 số và bắt đầu bằng 0).");
             hasError = true;
         }
 
-        // Bắt lỗi: Địa chỉ giao hàng
         if (deliveryAddress.trim().isEmpty()) {
             model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
             hasError = true;
         }
 
-        // Nếu có lỗi -> Phải Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
         if (hasError) {
-            try {
-                List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
-                double subtotal = cartService.getCartTotal(cartItems);
-
-                // Gửi lại data giỏ hàng
-                model.addAttribute("cartItems", cartItems);
-                model.addAttribute("total", subtotal);
-                
-                // Lấy danh sách voucher hợp lệ từ database
-                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
-                model.addAttribute("validVouchers", validVouchers);
-
-                // Giữ nguyên chữ khách đã nhập
-                model.addAttribute("fullName", fullName);
-                model.addAttribute("phone", phone);
-                model.addAttribute("address", deliveryAddress);
-                model.addAttribute("note", note);
-
-                return "checkout"; // Trả lại trang để khách sửa lỗi
-            } catch (Exception e) {
-                return "redirect:/login";
-            }
+            return checkoutPage(model, session, redirectAttributes); // Quay lại trang và báo lỗi
         }
-        
-        // TẠO ĐƠN HÀNG THỰC TẾ QUA ORDER SERVICE
+
         try {
-            
-            // Sử dụng địa chỉ từ session hoặc từ form
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
-            
-            // Cập nhật tổng tiền đơn hàng với giá trị từ frontend
             order.setTotalAmount(totalAmount);
-            
-            // Lưu Order vào database
             orderRepository.save(order);
-            
-            // Xóa địa chỉ tạm thời khỏi session sau khi đã đặt hàng
+
             session.removeAttribute("deliveryAddress");
-            
-            // XÓA CÁC SESSION ATTRIBUTE CÓ THỂ GHI ĐÈ LÊN ORDERID
             session.removeAttribute("orderId");
-            session.removeAttribute("productImage");
-            session.removeAttribute("productName");
-            session.removeAttribute("sizeName");
-            session.removeAttribute("colorName");
-            
+            session.removeAttribute("appliedVoucher"); // XÓA VOUCHER SAU KHI ĐẶT HÀNG
+
             redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng của bạn: #" + order.getOrderId());
-            
-            // Lấy thông tin đơn hàng và trả về template trực tiếp
+
             model.addAttribute("orderCode", "#" + order.getOrderId());
             model.addAttribute("orderId", order.getOrderId().toString());
             model.addAttribute("orderDate", order.getOrderDate());
-            model.addAttribute("deliveryAddress", deliveryAddress); // Sử dụng địa chỉ đã chọn
+            model.addAttribute("deliveryAddress", deliveryAddress);
             model.addAttribute("orderStatus", order.getStatus());
             model.addAttribute("totalAmount", order.getTotalAmount());
             model.addAttribute("customerName", currentCustomer.getFullName());
             model.addAttribute("customerPhone", currentCustomer.getPhone());
             model.addAttribute("customerEmail", currentCustomer.getEmail());
-            
-            // Lấy order items thật
+
             List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
             model.addAttribute("orderItems", orderItems);
-            
+
             return "order-confirmation";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
@@ -247,11 +263,10 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để tiếp tục!");
                 return "redirect:/login";
             }
-            
-            // Lấy địa chỉ hiện tại từ profile
+
             String currentAddress = currentCustomer.getAddress();
             model.addAttribute("currentAddress", currentAddress);
-            
+
             return "select-delivery-address";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
@@ -274,19 +289,16 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để tiếp tục!");
                 return "redirect:/login";
             }
-            
-            // Lưu địa chỉ vào session để sử dụng khi đặt hàng
+
             if ("profile".equals(addressOption)) {
-                // Sử dụng địa chỉ từ profile
                 session.setAttribute("deliveryAddress", currentCustomer.getAddress());
             } else if ("new".equals(addressOption) && finalAddress != null && !finalAddress.trim().isEmpty()) {
-                // Sử dụng địa chỉ mới cho đơn hàng này
                 session.setAttribute("deliveryAddress", finalAddress);
             } else {
                 redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn địa chỉ giao hàng!");
                 return "redirect:/order/checkout/select-delivery-address";
             }
-            
+
             return "redirect:/order/checkout";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
@@ -294,51 +306,44 @@ public class OrderController {
         }
     }
 
-    // Trang xác nhận đơn hàng
     @GetMapping("/confirmation")
     public String orderConfirmationPage(
             @RequestParam(value = "orderId", required = false) Long orderId,
-            Model model, 
-            HttpSession session, 
+            Model model,
+            HttpSession session,
             RedirectAttributes redirectAttributes) {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
-            
-            // Lấy thông tin khách hàng
+
             model.addAttribute("customerName", currentCustomer.getFullName());
             model.addAttribute("customerPhone", currentCustomer.getPhone());
             model.addAttribute("customerEmail", currentCustomer.getEmail());
-            
-            // Lấy đơn hàng vừa tạo
+
             if (orderId != null) {
                 Order order = orderService.getOrderById(orderId);
-                
-                // Kiểm tra quyền sở hữu
+
                 if (!orderService.isOrderOwnedByCustomer(orderId, currentCustomer)) {
                     redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xem đơn hàng này!");
                     return "redirect:/login";
                 }
-                
-                // Lấy thông tin đơn hàng thật
+
                 model.addAttribute("orderCode", "#" + order.getOrderId());
                 model.addAttribute("orderId", order.getOrderId().toString());
                 model.addAttribute("orderDate", order.getOrderDate());
                 model.addAttribute("deliveryAddress", order.getCustomer().getAddress());
                 model.addAttribute("orderStatus", order.getStatus());
                 model.addAttribute("totalAmount", order.getTotalAmount());
-                
-                // Lấy order items thật
+
                 List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
                 model.addAttribute("orderItems", orderItems);
-                
+
                 return "order-confirmation";
-                
+
             } else {
-                // Fallback nếu không có orderId (trường hợp lỗi)
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thông tin đơn hàng!");
                 return "redirect:/cart";
             }
-            
+
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để xem xác nhận đơn hàng.");
             return "redirect:/login";
@@ -352,11 +357,10 @@ public class OrderController {
     @Transactional(readOnly = true)
     public String orderDetailsPage(
             @PathVariable("oid") String orderId,
-            Model model, 
-            HttpSession session, 
+            Model model,
+            HttpSession session,
             RedirectAttributes redirectAttributes) {
-        
-        // XÓA TẤT CẢ CÁC ATTRIBUTE CÓ THỂ GHI ĐÈ LÊN ORDERID
+
         session.removeAttribute("orderId");
         session.removeAttribute("productImage");
         session.removeAttribute("productName");
@@ -365,11 +369,10 @@ public class OrderController {
         session.removeAttribute("deliveryAddress");
         session.removeAttribute("selectedProductId");
         session.removeAttribute("selectedVariantId");
-        
+
         try {
             Customer currentCustomer = getCurrentCustomer(session);
-            
-            // Chuyển orderId từ String sang Long
+
             Long orderIdLong;
             try {
                 orderIdLong = Long.parseLong(orderId);
@@ -377,52 +380,84 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "ID đơn hàng không hợp lệ!");
                 return "redirect:/cart";
             }
-            
-            // Lấy đơn hàng từ database
+
             Order order = orderService.getOrderById(orderIdLong);
-            
-            // Kiểm tra quyền sở hữu (customer chỉ xem được đơn hàng của mình)
+
             if (!orderService.isOrderOwnedByCustomer(orderIdLong, currentCustomer)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xem đơn hàng này!");
                 return "redirect:/cart";
             }
-            
-            // Lấy thông tin khách hàng
+
             model.addAttribute("customerName", currentCustomer.getFullName());
             model.addAttribute("customerPhone", currentCustomer.getPhone());
             model.addAttribute("customerEmail", currentCustomer.getEmail());
-            // Lấy delivery address an toàn
-            String deliveryAddress = (order.getCustomer() != null && order.getCustomer().getAddress() != null) 
-                ? order.getCustomer().getAddress() 
-                : (currentCustomer.getAddress() != null ? currentCustomer.getAddress() : "N/A");
+            String deliveryAddress = (order.getCustomer() != null && order.getCustomer().getAddress() != null)
+                    ? order.getCustomer().getAddress()
+                    : (currentCustomer.getAddress() != null ? currentCustomer.getAddress() : "N/A");
             model.addAttribute("deliveryAddress", deliveryAddress);
-            
-            // Lấy thông tin đơn hàng thật
+
             model.addAttribute("orderCode", "#" + order.getOrderId());
             model.addAttribute("orderId", order.getOrderId().toString());
             model.addAttribute("orderDate", order.getOrderDate());
             model.addAttribute("orderStatus", order.getStatus());
-            
-            // Lấy order items thật
+
             List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
             model.addAttribute("orderItems", orderItems);
             model.addAttribute("totalAmount", order.getTotalAmount());
-            
-            // Check if user is admin/staff
+
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
             boolean isStaff = "Staff".equals(userRole);
             model.addAttribute("isAdmin", isAdmin);
             model.addAttribute("isStaff", isStaff);
-            
+
+            // --- KIỂM TRA YÊU CẦU TRẢ HÀNG ---
+            boolean hasReturnRequest = returnRequestService.hasReturnRequest(order);
+            model.addAttribute("hasReturnRequest", hasReturnRequest);
+            if (hasReturnRequest) {
+                model.addAttribute("returnRequest", returnRequestService.getReturnRequestByOrder(order));
+            }
+
             return "order-details";
-            
+
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để xem chi tiết đơn hàng.");
             return "redirect:/login";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng.");
             return "redirect:/cart";
+        }
+    }
+    // =======================================================
+    // 7. XỬ LÝ KHÁCH HÀNG YÊU CẦU TRẢ HÀNG
+    // =======================================================
+    @PostMapping("/details/{oid}/return")
+    public String requestReturn(
+            @PathVariable("oid") String orderId,
+            @RequestParam("reason") String reason,
+            @RequestParam("description") String description,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+            Long orderIdLong = Long.parseLong(orderId);
+            Order order = orderService.getOrderById(orderIdLong);
+
+            // Chỉ đơn hàng COMPLETED (Đã giao) mới được trả hàng
+            if (order.getStatus() != vn.edu.fpt.fashionstore.entity.OrderStatus.COMPLETED) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có thể trả hàng khi đơn hàng đã giao thành công!");
+                return "redirect:/order/details/" + orderId;
+            }
+
+            // Gọi Service để tạo yêu cầu
+            returnRequestService.createReturnRequest(order, currentCustomer, reason, description);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu Trả hàng/Hoàn tiền đã được gửi. Shop sẽ phản hồi sớm nhất!");
+            return "redirect:/order/details/" + orderId;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/order/details/" + orderId;
         }
     }
 
@@ -439,13 +474,12 @@ public class OrderController {
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
             boolean isStaff = "Staff".equals(userRole);
-            
+
             if (!isAdmin && !isStaff) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền cập nhật trạng thái đơn hàng.");
                 return "redirect:/order/details/" + orderId;
             }
-            
-            // Chuyển orderId từ String sang Long
+
             Long orderIdLong;
             try {
                 orderIdLong = Long.parseLong(orderId);
@@ -453,8 +487,7 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "ID đơn hàng không hợp lệ!");
                 return "redirect:/order/details/" + orderId;
             }
-            
-            // Chuyển status string sang enum
+
             vn.edu.fpt.fashionstore.entity.OrderStatus statusEnum;
             try {
                 statusEnum = vn.edu.fpt.fashionstore.entity.OrderStatus.valueOf(newStatus);
@@ -462,17 +495,16 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Trạng thái không hợp lệ!");
                 return "redirect:/order/details/" + orderId;
             }
-            
-            // Cập nhật trạng thái qua OrderService
+
             if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CONFIRMED) {
                 orderService.confirmOrder(orderIdLong, userRole);
             } else if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CANCELLED) {
                 orderService.cancelOrder(orderIdLong, userRole, "Đã hủy bởi " + userRole);
             }
-            
+
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đơn hàng thành công!");
             return "redirect:/order/details/" + orderId;
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật trạng thái.");
             return "redirect:/order/details/" + orderId;
@@ -489,8 +521,7 @@ public class OrderController {
             RedirectAttributes redirectAttributes) {
         try {
             Customer currentCustomer = getCurrentCustomer(session);
-            
-            // Chuyển orderId từ String sang Long
+
             Long orderIdLong;
             try {
                 orderIdLong = Long.parseLong(orderId);
@@ -498,19 +529,17 @@ public class OrderController {
                 redirectAttributes.addFlashAttribute("errorMessage", "ID đơn hàng không hợp lệ!");
                 return "redirect:/order/details/" + orderId;
             }
-            
-            // Kiểm tra quyền sở hữu và khả năng hủy đơn hàng
+
             if (!orderService.canCustomerCancelOrder(orderIdLong, currentCustomer)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không thể hủy đơn hàng này!");
                 return "redirect:/order/details/" + orderId;
             }
-            
-            // Hủy đơn hàng qua OrderService
+
             orderService.cancelOrder(orderIdLong, currentCustomer.getEmail(), "Khách hàng yêu cầu hủy đơn hàng");
-            
+
             redirectAttributes.addFlashAttribute("successMessage", "Đơn hàng đã được hủy thành công.");
             return "redirect:/order/details/" + orderId;
-            
+
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đăng nhập để hủy đơn hàng.");
             return "redirect:/login";
@@ -521,7 +550,6 @@ public class OrderController {
     }
 
 
-    // Thêm phương thức POST này để nhận dữ liệu từ nút "MUA NGAY"
     @PostMapping("/checkout")
     public String buyNowCheckout(
             @RequestParam("productId") Long productId,
@@ -532,23 +560,12 @@ public class OrderController {
 
         try {
             Customer currentCustomer = getCurrentCustomer(session);
-
-            // 1. Logic xử lý "Mua ngay":
-            // Thay vì lấy từ Cart, bạn cần lấy thông tin Variant từ productId, sizeId, colorId
-            // Sau đó đưa vào model để hiển thị ở trang checkout.
-
-            // TẠM THỜI: Để trang checkout không bị lỗi do thiếu data giỏ hàng:
-            // Bạn có thể xử lý logic "Mua ngay" tại đây hoặc chuyển hướng:
-
-            // Lưu thông tin mua ngay vào session nếu trang checkout của bạn
-            // đang được viết chỉ để đọc từ giỏ hàng (CartService)
             session.setAttribute("isBuyNow", true);
             session.setAttribute("buyNowProductId", productId);
             session.setAttribute("buyNowSizeId", sizeId);
             session.setAttribute("buyNowColorId", colorId);
             session.setAttribute("buyNowQty", quantity);
 
-            // Sau khi xử lý xong, gọi lại logic hiển thị trang checkout
             return checkoutPage(model, session, redirectAttributes);
 
         } catch (RuntimeException e) {

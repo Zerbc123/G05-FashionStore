@@ -26,6 +26,7 @@
             --light-bg: #FFF9F9;
             --pastel-purple: #E8D5F2;
             --pastel-blue: #C5E3F6;
+            --pastel-yellow: #FFF3CD;
         }
         
         * {
@@ -757,39 +758,64 @@
 </head>
 <body>
 <!-- Header -->
+<!--Quản lí banners-->
 <div th:replace="~{fragments/header :: header}"></div>
 
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6 hero-content">
-                <!-- Nút Admin Panel - Chỉ hiện cho ADMIN -->
-                <div th:if="${session.userRole == 'ADMIN'}" style="margin-bottom: 1.5rem;">
-                    <a th:href="@{/admin}" class="btn" style="background: linear-gradient(135deg, #48BB78, #38A169); color: white; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 10px 30px rgba(72, 187, 120, 0.3); transition: all 0.3s ease;">
-                        <i class="bi bi-shield-fill-check" style="font-size: 1.2rem;"></i>
-                        <span>Admin Panel</span>
-                        <i class="bi bi-arrow-right"></i>
+<div th:if="${not #lists.isEmpty(banners)}" id="heroBannerCarousel" class="carousel slide" data-bs-ride="carousel">
+
+    <div class="carousel-indicators">
+        <button th:each="banner, iterStat : ${banners}"
+                type="button"
+                data-bs-target="#heroBannerCarousel"
+                th:data-bs-slide-to="${iterStat.index}"
+                th:classappend="${iterStat.first} ? 'active' : ''"
+                th:aria-current="${iterStat.first} ? 'true' : 'false'">
+        </button>
+    </div>
+
+    <div class="carousel-inner">
+        <div th:each="banner, iterStat : ${banners}" class="carousel-item" th:classappend="${iterStat.first} ? 'active' : ''" data-bs-interval="4000">
+            <div th:if="${iterStat.first}" style="position: absolute; top: 20px; left: 20px; z-index: 10;">
+                <div th:if="${session.userRole == 'ADMIN'}" class="mb-2">
+                    <a th:href="@{/admin}" class="btn" style="background: linear-gradient(135deg, #48BB78, #38A169); color: white; padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 600; text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                        <i class="bi bi-shield-fill-check me-2"></i>Admin Panel
                     </a>
                 </div>
-                
-                <!-- Nút Staff Panel - Chỉ hiện cho STAFF -->
-                <div th:if="${session.userRole == 'STAFF'}" style="margin-bottom: 1.5rem;">
-                    <a th:href="@{/staff}" class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
-                        <i class="bi bi-shield-check" style="font-size: 1.2rem;"></i>
-                        <span>Staff Panel</span>
-                        <i class="bi bi-arrow-right"></i>
+                <div th:if="${session.userRole == 'STAFF'}">
+                    <a th:href="@{/staff}" class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 600; text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                        <i class="bi bi-shield-check me-2"></i>Staff Panel
                     </a>
                 </div>
-                
-                <h1 class="hero-title">Phong Cách<br>Của Riêng Bạn</h1>
-                <p class="hero-subtitle">Khám phá bộ sưu tập thời trang mới nhất dành cho giới trẻ. Trendy, chất lượng và giá cả phải chăng.</p>
-                <a href="/fashionstore/products" class="btn btn-primary-custom" style="display: inline-block; text-decoration: none;">Mua Ngay <i class="bi bi-arrow-right ms-2"></i></a>
+            </div>
+
+            <a th:href="${banner.targetLink}">
+                <img th:src="${banner.imageUrl}" class="d-block w-100" style="height: 80vh; object-fit: cover;" th:alt="${banner.title}">
+            </a>
+
+            <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.4); border-radius: 15px; padding: 20px; bottom: 40px;">
+                <h2 class="fw-bold" style="font-family: 'Playfair Display', serif;" th:text="${banner.title}"></h2>
             </div>
         </div>
     </div>
-    <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800" alt="Fashion Model" class="hero-image">
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 20px;"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 20px;"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<section th:if="${#lists.isEmpty(banners)}" class="hero-section">
+    <div class="container text-center py-5">
+        <h1 class="hero-title mt-5">Phong Cách Của Riêng Bạn</h1>
+        <p class="hero-subtitle mb-4">Khám phá bộ sưu tập thời trang mới nhất dành cho giới trẻ.</p>
+        <a href="/fashionstore/products" class="btn btn-primary-custom">Mua Ngay <i class="bi bi-arrow-right ms-2"></i></a>
+    </div>
 </section>
+
 
 <!-- Categories Section -->
 <section class="category-section" id="categories">
@@ -838,7 +864,7 @@
         <h2 class="section-title">Sản Phẩm Bán Chạy</h2>
         <div class="row">
 
-            <div class="col-lg-3 col-md-6" th:each="product : ${products}">
+            <div class="col-lg-3 col-md-6" th:each="product : ${bestSellingProducts}">
                 <div class="product-card">
                     <div class="product-image-wrapper">
                         <a th:href="@{/products/detail/{id}(id=${product.id})}">
