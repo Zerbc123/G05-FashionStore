@@ -27,6 +27,7 @@ public class ProductVariantController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "variantId") String sort,
             @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String search,
             Model model) {
         
         // Sort
@@ -36,26 +37,57 @@ public class ProductVariantController {
         
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
         
-        // Get paginated variants
-        Page<ProductVariant> variantPage = productVariantService.getAllVariants(pageable);
+        // Get paginated variants with search functionality
+        Page<ProductVariant> variantPage;
+        if (search != null && !search.trim().isEmpty()) {
+            variantPage = productVariantService.searchVariants(search.trim(), pageable);
+        } else {
+            variantPage = productVariantService.getAllVariants(pageable);
+        }
         List<ProductVariant> variants = variantPage.getContent();
         
-        // Calculate statistics
-        long totalVariants = variantPage.getTotalElements();
-        long inStockCount = variants.stream().filter(v -> v.getStock() > 20).count();
-        long lowStockCount = variants.stream().filter(v -> v.getStock() > 0 && v.getStock() <= 20).count();
-        long outOfStockCount = variants.stream().filter(v -> v.getStock() == 0).count();
+        // Calculate comprehensive statistics for all products
+        long totalProducts = productVariantService.getTotalProducts();
+        long totalVariants = productVariantService.getTotalVariants();
+        long inStockCount = productVariantService.getInStockVariantCount();
+        long lowStockCount = productVariantService.getLowStockVariantCount();
+        long outOfStockCount = productVariantService.getOutOfStockVariantCount();
+        
+        // Product-level statistics
+        long productsInStock = productVariantService.getProductsInStock();
+        long productsLowStock = productVariantService.getProductsLowStock();
+        long productsOutOfStock = productVariantService.getProductsOutOfStock();
+        
+        // Additional statistics
+        double averagePrice = productVariantService.getAveragePrice();
+        long totalStockQuantity = productVariantService.getTotalStockQuantity();
+        long lowStockThreshold = productVariantService.getLowStockVariantThreshold();
         
         model.addAttribute("variants", variants);
         model.addAttribute("variantPage", variantPage);
+        
+        // Variant-level statistics
         model.addAttribute("totalVariants", totalVariants);
         model.addAttribute("inStockCount", inStockCount);
         model.addAttribute("lowStockCount", lowStockCount);
         model.addAttribute("outOfStockCount", outOfStockCount);
+        
+        // Product-level statistics
+        model.addAttribute("totalProducts", totalProducts);
+        model.addAttribute("productsInStock", productsInStock);
+        model.addAttribute("productsLowStock", productsLowStock);
+        model.addAttribute("productsOutOfStock", productsOutOfStock);
+        
+        // Additional statistics
+        model.addAttribute("averagePrice", averagePrice);
+        model.addAttribute("totalStockQuantity", totalStockQuantity);
+        model.addAttribute("lowStockThreshold", lowStockThreshold);
+        
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", pageSize);
         model.addAttribute("sort", sort);
         model.addAttribute("direction", direction);
+        model.addAttribute("search", search != null ? search : "");
         
         return "admin/productvariants";
     }

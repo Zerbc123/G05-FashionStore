@@ -36,6 +36,10 @@ public class ProductVariantService {
         return productVariantRepository.findAll(pageable);
     }
 
+    public Page<ProductVariant> searchVariants(String searchTerm, Pageable pageable) {
+        return productVariantRepository.searchVariants(searchTerm, pageable);
+    }
+
     public Optional<ProductVariant> getVariantById(int variantId) {
         return productVariantRepository.findById(variantId);
     }
@@ -102,5 +106,73 @@ public class ProductVariantService {
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    // Enhanced statistics methods for comprehensive product analysis
+    public long getTotalProducts() {
+        return productRepository.count();
+    }
+
+    public long getTotalVariants() {
+        return productVariantRepository.count();
+    }
+
+    public long getInStockVariantCount() {
+        return productVariantRepository.countByStockGreaterThan(20);
+    }
+
+    public long getLowStockVariantCount() {
+        return productVariantRepository.countByStockBetween(1, 20);
+    }
+
+    public long getOutOfStockVariantCount() {
+        return productVariantRepository.countByStockEquals(0);
+    }
+
+    public double getAveragePrice() {
+        return productVariantRepository.findAll().stream()
+            .filter(v -> v.getPrice() != null)
+            .mapToDouble(ProductVariant::getPrice)
+            .average()
+            .orElse(0.0);
+    }
+
+    public long getProductsOutOfStock() {
+        return productRepository.findAll().stream()
+            .filter(product -> {
+                List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(product.getProductId());
+                return variants.isEmpty() || variants.stream().allMatch(v -> v.getStock() == 0);
+            })
+            .count();
+    }
+
+    public long getProductsInStock() {
+        return productRepository.findAll().stream()
+            .filter(product -> {
+                List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(product.getProductId());
+                return !variants.isEmpty() && variants.stream().anyMatch(v -> v.getStock() > 0);
+            })
+            .count();
+    }
+
+    public long getProductsLowStock() {
+        return productRepository.findAll().stream()
+            .filter(product -> {
+                List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(product.getProductId());
+                return !variants.isEmpty() && 
+                       variants.stream().anyMatch(v -> v.getStock() > 0 && v.getStock() <= 20) &&
+                       variants.stream().noneMatch(v -> v.getStock() > 20);
+            })
+            .count();
+    }
+
+    public long getTotalStockQuantity() {
+        return productVariantRepository.findAll().stream()
+            .mapToLong(v -> v.getStock() != null ? v.getStock() : 0)
+            .sum();
+    }
+
+    public long getLowStockVariantThreshold() {
+        return 20; // Threshold for low stock
     }
 }

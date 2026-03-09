@@ -220,58 +220,68 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
+            <!-- Variant Statistics -->
             <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="stats-card">
+                <div class="col-12 mb-3">
+                    <h4 class="text-center mb-3" style="color: var(--secondary-color); font-weight: 600;">
+                        <i class="bi bi-layers me-2"></i>Thống Kê Biến Thể Sản Phẩm
+                    </h4>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="stats-card" style="border-top: 3px solid var(--primary-color);">
                         <div class="stats-value" th:text="${totalVariants != null ? totalVariants : 0}">0</div>
                         <div class="stats-label">Tổng biến thể</div>
+                        <small class="text-muted">Tất cả biến thể</small>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
+                <div class="col-md-4">
+                    <div class="stats-card" style="border-top: 3px solid #28a745;">
                         <div class="stats-value" th:text="${inStockCount != null ? inStockCount : 0}">0</div>
                         <div class="stats-label">Còn hàng</div>
+                        <small class="text-muted">>&nbsp;<span th:text="${lowStockThreshold != null ? lowStockThreshold : 20}">20</span></small>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
+                <div class="col-md-4">
+                    <div class="stats-card" style="border-top: 3px solid #ffc107;">
                         <div class="stats-value" th:text="${lowStockCount != null ? lowStockCount : 0}">0</div>
                         <div class="stats-label">Sắp hết</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-value" th:text="${outOfStockCount != null ? outOfStockCount : 0}">0</div>
-                        <div class="stats-label">Hết hàng</div>
+                        <small class="text-muted">1-<span th:text="${lowStockThreshold != null ? lowStockThreshold : 20}">20</span></small>
                     </div>
                 </div>
             </div>
 
             <!-- Search Box -->
             <div class="search-box">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <input type="text" id="searchInput" class="form-control search-input" 
-                               placeholder="Tìm kiếm biến thể...">
+                <form th:action="@{/admin/product-variants}" method="get">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <input type="text" name="search" id="searchInput" class="form-control search-input" 
+                                   th:value="${search}" placeholder="Tìm kiếm biến thể...">
+                        </div>
+                        <div class="col-md-2">
+                            <select id="stockFilter" class="form-select search-input">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="instock">Còn hàng</option>
+                                <option value="lowstock">Sắp hết</option>
+                                <option value="outstock">Hết hàng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-outline-secondary me-2" onclick="clearSearch()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Đặt lại
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search me-1"></i> Tìm kiếm
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <select id="stockFilter" class="form-select search-input">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="instock">Còn hàng</option>
-                            <option value="lowstock">Sắp hết</option>
-                            <option value="outstock">Hết hàng</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Đặt lại
-                        </button>
-                        <button class="btn btn-primary" onclick="applyFilters()">
-                            <i class="bi bi-search me-1"></i> Tìm kiếm
-                        </button>
-                    </div>
-                </div>
+                    <!-- Preserve pagination and sorting parameters -->
+                    <input type="hidden" name="page" th:value="${currentPage}">
+                    <input type="hidden" name="pageSize" th:value="${pageSize}">
+                    <input type="hidden" name="sort" th:value="${sort}">
+                    <input type="hidden" name="direction" th:value="${direction}">
+                </form>
             </div>
 
             <!-- Variants Table -->
@@ -384,7 +394,7 @@
                             <ul class="pagination">
                                 <!-- Previous -->
                                 <li class="page-item" th:class="${variantPage.hasPrevious() ? 'page-item' : 'page-item disabled'}">
-                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number - 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}" tabindex="-1">
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number - 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction}, search=${search})}" tabindex="-1">
                                         Previous
                                     </a>
                                 </li>
@@ -392,13 +402,13 @@
                                 <!-- Page numbers -->
                                 <li th:each="pageNum : ${#numbers.sequence(0, variantPage.totalPages - 1)}" 
                                     th:class="${pageNum == variantPage.number ? 'page-item active' : 'page-item'}">
-                                    <a class="page-link" th:href="@{/admin/product-variants(page=${pageNum}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}" 
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${pageNum}, pageSize=${pageSize}, sort=${sort}, direction=${direction}, search=${search})}" 
                                        th:text="${pageNum + 1}">1</a>
                                 </li>
                                 
                                 <!-- Next -->
                                 <li class="page-item" th:class="${variantPage.hasNext() ? 'page-item' : 'page-item disabled'}">
-                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number + 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction})}">
+                                    <a class="page-link" th:href="@{/admin/product-variants(page=${variantPage.number + 1}, pageSize=${pageSize}, sort=${sort}, direction=${direction}, search=${search})}">
                                         Next
                                     </a>
                                 </li>
@@ -452,13 +462,12 @@
             const searchInput = document.getElementById('searchInput');
             const stockFilter = document.getElementById('stockFilter');
 
-            function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase();
+            // Client-side stock filtering (since search is now server-side)
+            function filterTableByStock() {
                 const stockStatus = stockFilter.value;
                 const rows = document.querySelectorAll('#variantsTable tbody .variant-row');
 
                 rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
                     const stockBadge = row.querySelector('.badge-stock');
                     let stockMatch = true;
 
@@ -472,26 +481,16 @@
                         }
                     }
 
-                    const searchMatch = text.includes(searchTerm);
-                    row.style.display = searchMatch && stockMatch ? '' : 'none';
+                    row.style.display = stockMatch ? '' : 'none';
                 });
             }
 
-            searchInput.addEventListener('keyup', filterTable);
-            stockFilter.addEventListener('change', filterTable);
+            stockFilter.addEventListener('change', filterTableByStock);
         });
 
-        function applyFilters() {
-            // Trigger the filter
-            const event = new Event('keyup');
-            document.getElementById('searchInput').dispatchEvent(event);
-        }
-
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('stockFilter').value = '';
-            const event = new Event('keyup');
-            document.getElementById('searchInput').dispatchEvent(event);
+        function clearSearch() {
+            // Clear search and redirect to first page
+            window.location.href = '/fashionstore/admin/product-variants?page=0&pageSize=10&sort=variantId&direction=asc';
         }
     </script>
 </body>
