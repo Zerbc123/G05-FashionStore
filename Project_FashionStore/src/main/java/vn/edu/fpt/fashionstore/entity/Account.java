@@ -1,6 +1,10 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "Account")
@@ -12,18 +16,27 @@ public class Account {
     private Integer accountId;
 
     @Column(name = "username")
+    @NotBlank(message = "Username không được để trống")
+    @Size(min = 3, max = 50, message = "Username phải từ 3-50 ký tự")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username chỉ được chứa chữ, số và dấu gạch dưới")
     private String username;
 
     @Column(name = "password")
     private String password;
 
     @Column(name = "email")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không hợp lệ")
     private String email;
 
     @Column(name = "full_name")
+    @NotBlank(message = "Họ và tên không được để trống")
+    @Size(min = 2, max = 100, message = "Họ và tên phải từ 2-100 ký tự")
     private String fullName;
 
     @Column(name = "phone")
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^(0)[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số")
     private String phone;
 
     @Column(name = "status")
@@ -32,7 +45,6 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
-
 
     public Integer getAccountId() {
         return accountId;

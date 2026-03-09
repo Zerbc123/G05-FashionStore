@@ -158,4 +158,5 @@ public class AdminController {
         model.addAttribute("title", "Reports");
         return "admin/reports";
     }
+
 }

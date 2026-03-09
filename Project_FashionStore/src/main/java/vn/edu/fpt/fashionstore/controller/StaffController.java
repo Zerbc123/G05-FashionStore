@@ -46,16 +46,6 @@ public class StaffController {
         return "staff/conformorder";
     }
 
-    // Customer Support
-    @GetMapping("/support")
-    public String support(HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Customer Support");
-        return "staff/staffsupport";
-    }
-
     // Quản lý kho (Inventory Management)
     @GetMapping("/inventory")
     public String inventory(HttpSession session, Model model) {
