@@ -1,6 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "Role")
@@ -14,6 +15,16 @@ public class Role {
     @Column(name = "role_name")
     private String roleName;
 
+    @OneToMany(mappedBy = "role")
+    private List<Account> accounts;
+
+    public Role() {
+    }
+
+    public Role(Integer roleId, String roleName) {
+        this.roleId = roleId;
+        this.roleName = roleName;
+    }
 
     public Integer getRoleId() {
         return roleId;
@@ -29,5 +40,13 @@ public class Role {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<Account> accounts) {
+        this.accounts = accounts;
     }
 }

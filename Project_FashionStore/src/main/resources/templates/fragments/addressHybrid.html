@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Fragment địa chỉ hybrid: Dropdown tỉnh/thành + Input chi tiết -->
+<style>
+.address-hybrid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.address-section {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fafafa;
+}
+.address-section-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+.address-help-text {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+}
+</style>
+
+<div th:fragment="addressHybrid(address)" class="address-hybrid-container">
+    <!-- Phần 1: Chọn Tỉnh/Thành phố -->
+    <div class="address-section">
+        <div class="address-section-title">
+            <i class="bi bi-geo-alt-fill me-2"></i>Tỉnh/Thành phố <span class="text-danger">*</span>
+        </div>
+        <select name="province" class="form-select" required>
+            <option value="">Chọn tỉnh/thành phố</option>
+            <option value="Hà Nội">Hà Nội</option>
+            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+            <option value="Đà Nẵng">Đà Nẵng</option>
+            <option value="Hải Phòng">Hải Phòng</option>
+            <option value="Cần Thơ">Cần Thơ</option>
+            <option value="An Giang">An Giang</option>
+            <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+            <option value="Bắc Giang">Bắc Giang</option>
+            <option value="Bắc Kạn">Bắc Kạn</option>
+            <option value="Bạc Liêu">Bạc Liêu</option>
+            <option value="Bắc Ninh">Bắc Ninh</option>
+            <option value="Bến Tre">Bến Tre</option>
+            <option value="Bình Định">Bình Định</option>
+            <option value="Bình Dương">Bình Dương</option>
+            <option value="Bình Phước">Bình Phước</option>
+            <option value="Bình Thuận">Bình Thuận</option>
+            <option value="Cà Mau">Cà Mau</option>
+            <option value="Cao Bằng">Cao Bằng</option>
+            <option value="Đắk Lắk">Đắk Lắk</option>
+            <option value="Đắk Nông">Đắk Nông</option>
+            <option value="Điện Biên">Điện Biên</option>
+            <option value="Đồng Nai">Đồng Nai</option>
+            <option value="Đồng Tháp">Đồng Tháp</option>
+            <option value="Gia Lai">Gia Lai</option>
+            <option value="Hà Giang">Hà Giang</option>
+            <option value="Hà Nam">Hà Nam</option>
+            <option value="Hà Tĩnh">Hà Tĩnh</option>
+            <option value="Hải Dương">Hải Dương</option>
+            <option value="Hậu Giang">Hậu Giang</option>
+            <option value="Hòa Bình">Hòa Bình</option>
+            <option value="Hưng Yên">Hưng Yên</option>
+            <option value="Khánh Hòa">Khánh Hòa</option>
+            <option value="Kiên Giang">Kiên Giang</option>
+            <option value="Kon Tum">Kon Tum</option>
+            <option value="Lai Châu">Lai Châu</option>
+            <option value="Lâm Đồng">Lâm Đồng</option>
+            <option value="Lạng Sơn">Lạng Sơn</option>
+            <option value="Lào Cai">Lào Cai</option>
+            <option value="Long An">Long An</option>
+            <option value="Nam Định">Nam Định</option>
+            <option value="Ninh Bình">Ninh Bình</option>
+            <option value="Ninh Thuận">Ninh Thuận</option>
+            <option value="Phú Thọ">Phú Thọ</option>
+            <option value="Phú Yên">Phú Yên</option>
+            <option value="Quảng Bình">Quảng Bình</option>
+            <option value="Quảng Nam">Quảng Nam</option>
+            <option value="Quảng Ngãi">Quảng Ngãi</option>
+            <option value="Quảng Ninh">Quảng Ninh</option>
+            <option value="Quảng Trị">Quảng Trị</option>
+            <option value="Sóc Trăng">Sóc Trăng</option>
+            <option value="Sơn La">Sơn La</option>
+            <option value="Tây Ninh">Tây Ninh</option>
+            <option value="Thái Bình">Thái Bình</option>
+            <option value="Thái Nguyên">Thái Nguyên</option>
+            <option value="Thanh Hóa">Thanh Hóa</option>
+            <option value="Thừa Thiên Huế">Thừa Thiên Huế</option>
+            <option value="Tiền Giang">Tiền Giang</option>
+            <option value="Trà Vinh">Trà Vinh</option>
+            <option value="Tuyên Quang">Tuyên Quang</option>
+            <option value="Vĩnh Long">Vĩnh Long</option>
+            <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+            <option value="Yên Bái">Yên Bái</option>
+        </select>
+        <small class="text-danger" th:if="${errorProvince}" th:text="${errorProvince}"></small>
+        <div class="address-help-text">Chọn tỉnh/thành phố để đảm bảo giao hàng đúng khu vực</div>
+    </div>
+
+    <!-- Phần 2: Địa chỉ chi tiết -->
+    <div class="address-section">
+        <div class="address-section-title">
+            <i class="bi bi-house-fill me-2"></i>Địa chỉ chi tiết <span class="text-danger">*</span>
+        </div>
+        <textarea 
+            name="address" 
+            class="form-control" 
+            rows="3" 
+            placeholder="Ví dụ: Số 123, đường Nguyễn Trãi, phường 1, quận 5"
+            th:text="${address}"
+            required></textarea>
+        <div class="address-help-text">
+            Vui lòng nhập đầy đủ: Số nhà, đường, phường/xã, quận/huyện.<br>
+            Ví dụ: "Số 123, đường Nguyễn Trãi, phường 1, quận 5"
+        </div>
+    </div>
+
+    <!-- Hidden field để combine địa chỉ đầy đủ -->
+    <input type="hidden" name="fullAddress" id="fullAddress" />
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+function combineFullAddress() {
+    const province = document.querySelector('select[name="province"]').value;
+    const address = document.querySelector('textarea[name="address"]').value;
+    
+    if (province && address) {
+        const fullAddress = address + ', ' + province;
+        document.getElementById('fullAddress').value = fullAddress;
+    }
+}
+
+// Thêm event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const provinceSelect = document.querySelector('select[name="province"]');
+    const addressTextarea = document.querySelector('textarea[name="address"]');
+    
+    if (provinceSelect) {
+        provinceSelect.addEventListener('change', combineFullAddress);
+    }
+    if (addressTextarea) {
+        addressTextarea.addEventListener('input', combineFullAddress);
+    }
+});
+/*]]>*/
+</script>
+</div>

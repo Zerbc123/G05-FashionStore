@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 @Entity
 @Table(name = "Account")
 public class Account {
@@ -45,6 +47,24 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @OneToMany(mappedBy = "account")
+    private List<Customer> customers;
+
+    public Account() {
+    }
+
+    public Account(Integer accountId, String username, String password, String email,
+                   String fullName, String phone, String status, Role role) {
+        this.accountId = accountId;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.fullName = fullName;
+        this.phone = phone;
+        this.status = status;
+        this.role = role;
+    }
 
     public Integer getAccountId() {
         return accountId;
@@ -108,5 +128,13 @@ public class Account {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public List<Customer> getCustomers() {
+        return customers;
+    }
+
+    public void setCustomers(List<Customer> customers) {
+        this.customers = customers;
     }
 }

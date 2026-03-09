@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Products</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                            dark: '#D81B60',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        status: {
+                            success: '#C8E6C9',
+                            successText: '#2E7D32',
+                            warning: '#FFF3CD',
+                            warningText: '#856404',
+                            danger: '#F8D7DA',
+                            dangerText: '#721C24',
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-header': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                        'btn-gradient': 'linear-gradient(135deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FFF5F7; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        /* Table Styles */
+        .admin-table thead th {
+            border-bottom: 2px solid #F06292;
+            color: #2F2F2F;
+            font-weight: 600;
+            padding-bottom: 12px;
+        }
+        .admin-table tbody tr {
+            transition: all 0.2s;
+            border-bottom: 1px solid #EAEAEA;
+        }
+        .admin-table tbody tr:hover {
+            background-color: #FFF0F5;
+        }
+        .admin-table td {
+            padding: 16px 12px;
+            vertical-align: middle;
+        }
+
+        /* Sidebar Link Active State */
+        .sidebar-link.active {
+            background-color: #FFF5F7;
+            color: #F06292;
+            border-right: 4px solid #F06292;
+        }
+    </style>
+</head>
+<body>
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+<div style="margin-top: 80px;" class="flex h-screen overflow-hidden text-text-main">
+
+<!-- SIDEBAR (Consistent with Staff Page) -->
+<aside class="w-64 bg-white shadow-soft z-20 hidden md:flex flex-col">
+    <div class="h-16 flex items-center justify-center border-b border-gray-100">
+        <h2 class="text-2xl font-heading font-bold text-primary">FashionStore</h2>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-6">
+        <ul class="space-y-1">
+            <li>
+                <a href="index.html" class="sidebar-link flex items-center px-6 py-3 text-text-muted hover:bg-secondary-bg hover:text-primary transition">
+                    <i class="fa-solid fa-chart-line w-6"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="products.html" class="sidebar-link active flex items-center px-6 py-3 text-primary bg-secondary-bg transition">
+                    <i class="fa-solid fa-box-open w-6"></i>
+                    <span class="font-medium">Products</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3 text-text-muted hover:bg-secondary-bg hover:text-primary transition">
+                    <i class="fa-solid fa-cart-shopping w-6"></i>
+                    <span class="font-medium">Orders</span>
+                </a>
+            </li>
+            <li>
+                <a href="staff.html" class="sidebar-link flex items-center px-6 py-3 text-text-muted hover:bg-secondary-bg hover:text-primary transition">
+                    <i class="fa-solid fa-users w-6"></i>
+                    <span class="font-medium">Staff Management</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3 text-text-muted hover:bg-secondary-bg hover:text-primary transition">
+                    <i class="fa-solid fa-clipboard-list w-6"></i>
+                    <span class="font-medium">Logs</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="p-4 border-t border-gray-100">
+        <button onclick="window.location.href='index.html'" class="flex items-center gap-3 text-text-muted hover:text-red-500 transition px-2">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span class="font-medium">Logout</span>
+        </button>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT WRAPPER -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- ADMIN HEADER -->
+    <header class="bg-admin-header h-16 shadow-md flex items-center justify-between px-6 z-10">
+        <button class="md:hidden text-white text-xl">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <h2 class="text-white font-heading font-bold text-lg md:hidden">Products</h2>
+        <div class="hidden md:block text-white font-medium opacity-90">
+            Admin Panel &bull; Products
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="relative text-white hover:opacity-80 transition">
+                <i class="fa-regular fa-bell text-xl"></i>
+            </button>
+            <div class="flex items-center gap-3 border-l border-white/30 pl-4 ml-2">
+                <div class="text-right hidden sm:block">
+                    <p class="text-white text-sm font-semibold leading-tight">Jane Doe</p>
+                    <p class="text-white/80 text-xs">Super Admin</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Jane+Doe&background=fff&color=F06292" alt="Admin" class="w-9 h-9 rounded-full border-2 border-white cursor-pointer">
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto p-6 md:p-8">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Page Title & Actions -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl text-text-main font-bold mb-1">Product List</h1>
+                    <div class="w-16 h-1 bg-primary rounded-full"></div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <!-- Search -->
+                    <div class="relative">
+                        <input type="text" placeholder="Search products..." class="pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm w-full sm:w-64 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+
+                    <!-- Add Button (Contextual) -->
+                    <button class="bg-btn-gradient text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-soft hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- PRODUCT TABLE CARD -->
+            <div class="bg-white rounded-2xl shadow-soft overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full admin-table text-left border-collapse">
+                        <thead>
+                        <tr>
+                            <th class="pl-6">Image</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th class="text-right pr-6">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                        <!-- Product 1 -->
+                        <tr id="row-1">
+                            <td class="pl-6">
+                                <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
+                                    <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover" alt="Dress">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-text-main">Velvet Midi Dress</div>
+                                <div class="text-xs text-text-muted">SKU: VMD-001</div>
+                            </td>
+                            <td class="text-sm">Dresses</td>
+                            <td class="font-medium">$129.00</td>
+                            <td class="text-sm">45</td>
+                            <td><span class="px-3 py-1 rounded-full bg-status-success text-status-successText text-xs font-medium">In Stock</span></td>
+                            <td class="text-right pr-6">
+                                <button class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition mr-1"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                <!-- DELETE BUTTON -->
+                                <button onclick="openDeleteModal('1', 'Velvet Midi Dress')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </td>
+                        </tr>
+
+                        <!-- Product 2 -->
+                        <tr id="row-2">
+                            <td class="pl-6">
+                                <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
+                                    <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover" alt="Blouse">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-text-main">Silk Bow Blouse</div>
+                                <div class="text-xs text-text-muted">SKU: SBB-023</div>
+                            </td>
+                            <td class="text-sm">Tops</td>
+                            <td class="font-medium">$89.00</td>
+                            <td class="text-sm">12</td>
+                            <td><span class="px-3 py-1 rounded-full bg-status-warning text-status-warningText text-xs font-medium">Low Stock</span></td>
+                            <td class="text-right pr-6">
+                                <button class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition mr-1"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                <!-- DELETE BUTTON -->
+                                <button onclick="openDeleteModal('2', 'Silk Bow Blouse')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </td>
+                        </tr>
+
+                        <!-- Product 3 -->
+                        <tr id="row-3">
+                            <td class="pl-6">
+                                <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
+                                    <img src="https://images.unsplash.com/photo-1550614000-4b9519e0037a?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover" alt="Hat">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-text-main">Woven Summer Hat</div>
+                                <div class="text-xs text-text-muted">SKU: WSH-102</div>
+                            </td>
+                            <td class="text-sm">Accessories</td>
+                            <td class="font-medium">$45.00</td>
+                            <td class="text-sm">0</td>
+                            <td><span class="px-3 py-1 rounded-full bg-status-danger text-status-dangerText text-xs font-medium">Out of Stock</span></td>
+                            <td class="text-right pr-6">
+                                <button class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition mr-1"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                <!-- DELETE BUTTON -->
+                                <button onclick="openDeleteModal('3', 'Woven Summer Hat')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+
+    <!-- Modal Card -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 md:p-8 transform transition-all scale-100">
+
+        <!-- Icon -->
+        <div class="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-6">
+            <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+        </div>
+
+        <!-- Text Content -->
+        <div class="text-center mb-8">
+            <h3 class="text-2xl font-heading font-bold text-text-main mb-2">Delete Product</h3>
+            <p class="text-text-muted text-sm leading-relaxed">
+                Are you sure you want to delete <span id="deleteProductName" class="font-bold text-text-main"></span>?
+                <br>This action cannot be undone and the product will be removed from sale immediately.
+            </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4">
+            <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl border border-gray-200 text-text-main font-medium hover:bg-gray-50 transition">
+                Cancel
+            </button>
+            <button onclick="confirmDelete()" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium shadow-md hover:bg-red-600 hover:shadow-lg transition">
+                Confirm Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Script for Delete Logic -->
+<script>
+    let currentDeleteId = null;
+
+    function openDeleteModal(id, name) {
+        currentDeleteId = id;
+        document.getElementById('deleteProductName').textContent = `"${name}"`;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        currentDeleteId = null;
+    }
+
+    function confirmDelete() {
+        if (currentDeleteId) {
+            // Simulate Deletion
+            const row = document.getElementById(`row-${currentDeleteId}`);
+            if (row) {
+                row.style.transition = 'all 0.5s';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 500);
+            }
+
+            // Close modal
+            closeDeleteModal();
+
+            // Optional: Show success alert or toast
+            // alert('Product has been deleted successfully.');
+        }
+    }
+</script>
+</body>
+</html>

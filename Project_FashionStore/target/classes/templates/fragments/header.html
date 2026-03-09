@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- Header Fragment -->
+<nav class="navbar navbar-expand-lg" th:fragment="header">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/home}">FashionStore</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/home}">Trang chủ</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link" th:href="@{/products}">Sản phẩm <i class="bi bi-chevron-down ms-1" style="font-size: 0.8rem;"></i></a>
+                    <div class="mega-dropdown">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="dropdown-category">
+                                    <h4 class="category-title">
+                                        <i class="bi bi-bag"></i>
+                                        Quần
+                                    </h4>
+                                    <ul class="brand-list">
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Adidas</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Nike</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Puma</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Levi's</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Uniqlo</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Zara</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="dropdown-category">
+                                    <h4 class="category-title">
+                                        <i class="bi bi-person"></i>
+                                        Áo
+                                    </h4>
+                                    <ul class="brand-list">
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Adidas</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Nike</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Puma</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">H&M</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Uniqlo</a></li>
+                                        <li class="brand-item"><a th:href="@{/}" class="brand-link">Gucci</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="dropdown-category">
+                                    <h4 class="category-title">
+                                        <i class="bi bi-watch"></i>
+                                        Phụ kiện
+                                    </h4>
+                                    <a th:href="@{/}" class="simple-category">Túi xách</a>
+                                    <a th:href="@{/}" class="simple-category">Giày dép</a>
+                                    <a th:href="@{/}" class="simple-category">Mũ nón</a>
+                                    <a th:href="@{/}" class="simple-category">Kính mắt</a>
+                                    <a th:href="@{/}" class="simple-category">Đồng hồ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/new}">Hàng mới</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/promo}">Khuyến mãi</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/about}">Giới thiệu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/contact}">Liên hệ</a>
+                </li>
+            </ul>
+            <div class="nav-icons">
+                <i class="bi bi-search nav-icon"></i>
+                <a th:href="@{/cart}" style="position: relative; text-decoration: none; color: inherit;">
+                    <i class="bi bi-cart3 nav-icon"></i>
+                    <span class="cart-badge" th:if="${session.cartCount != null and session.cartCount > 0}" th:text="${session.cartCount}">0</span>
+                </a>
+                
+                <!-- Khi chưa login: Hiển thị 2 nút -->
+                <div th:if="${session.user == null}" style="display: flex; gap: 0.8rem; align-items: center;">
+                    <a th:href="@{/login}" class="btn btn-sm" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                    </a>
+                    <a th:href="@{/register}" class="btn btn-sm btn-outline" style="border: 2px solid var(--primary-color); color: var(--primary-color); background: transparent; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                        <i class="bi bi-person-plus me-1"></i>Đăng ký
+                    </a>
+                </div>
+                
+                <!-- Khi đã login: Hiển thị icon user với dropdown -->
+                <div th:if="${session.user != null}" class="user-dropdown-wrapper">
+                    <a href="#" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <i class="bi bi-person nav-icon"></i>
+                        <span th:text="${session.userName != null ? session.userName : session.user}"
+                              style="font-weight: 500; font-size: 0.9rem;"></span>
+                    </a>
+
+                    <div class="user-dropdown">
+                        <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item" style="background: linear-gradient(135deg, #48BB78, #38A169); color: white;">
+                            <i class="bi bi-shield-fill-check"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                        <div th:if="${session.userRole == 'ADMIN'}" class="user-dropdown-divider"></div>
+
+                        <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Staff Panel</span>
+                        </a>
+                        <div th:if="${session.userRole == 'STAFF'}" class="user-dropdown-divider"></div>
+
+                        <a th:href="@{/profile}" class="user-dropdown-item">
+                            <i class="bi bi-person-circle"></i>
+                            <span>Thông tin tài khoản</span>
+                        </a>
+                        <a th:href="@{/order-history}" class="user-dropdown-item">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Đơn hàng của tôi</span>
+                        </a>
+                        <a th:href="@{/wishlist}" class="user-dropdown-item">
+                            <i class="bi bi-heart"></i>
+                            <span>Sản phẩm yêu thích</span>
+                        </a>
+                        <a th:href="@{/edit-profile}" class="user-dropdown-item">
+                            <i class="bi bi-gear"></i>
+                            <span>Cài đặt</span>
+                        </a>
+                        <div class="user-dropdown-divider"></div>
+                        <a th:href="@{/logout}" class="user-dropdown-item logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Đăng xuất</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Header Fragment - CSS thuần -->
+<div th:fragment="adminheader">
+    <style>
+        .admin-header-simple {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
+            padding: 0.8rem 1.5rem; /* Thu nhỏ padding trên/dưới một chút */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .admin-header-simple .brand {
+            font-size: 1.3rem; /* Thu nhỏ font logo một chút */
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap; /* Đảm bảo logo không rớt dòng */
+        }
+        .admin-header-simple .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 2px; /* Ép khoảng cách giữa các nút sát lại */
+            overflow-x: auto; /* Nếu màn hình bé quá sẽ cho phép trượt ngang thay vì che mất chữ */
+            scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
+        }
+        .admin-header-simple .nav-menu::-webkit-scrollbar {
+            display: none; /* Ẩn thanh cuộn Chrome/Edge */
+        }
+        .admin-header-simple .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px; /* Thu gọn khoảng trống bên trong mỗi nút */
+            border-radius: 15px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px; /* Giảm khoảng cách giữa Icon và Chữ */
+            font-size: 0.85rem; /* Giảm font size xuống để vừa vặn hơn */
+            white-space: nowrap; /* Bắt buộc chữ nằm trên 1 hàng */
+        }
+        .admin-header-simple .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+    <nav class="admin-header-simple">
+        <a class="brand" th:href="@{/admin}">
+            <i class="bi bi-shield-fill-check"></i>
+            <span>Admin Panel</span>
+        </a>
+        <ul class="nav-menu">
+            <li><a th:href="@{/admin}"><i class="bi bi-house-door"></i> Home</a></li>
+            <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+            <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> Products</a></li>
+            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
+            <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> Orders</a></li>
+            <li><a th:href="@{/admin/returns}"><i class="bi bi-arrow-return-left"></i> Returns</a></li>
+            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
+            <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
+            <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
+            <li><a th:href="@{/admin/customers}"><i class="bi bi-people"></i> Customers</a></li>
+            <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
+            <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
+            <li><a th:href="@{/admin/profile}"><i class="bi bi-globe"></i> Profile</a></li>
+            <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Staff Header Fragment -->
+<nav class="navbar navbar-expand-lg staff-navbar fixed-top" th:fragment="staffheader">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/staff}">
+            <i class="bi bi-shield-check"></i>
+            <span>Staff Panel</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#staffNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="staffNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff}">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/dashboard}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/orders}">
+                        <i class="bi bi-cart-check"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/support}">
+                        <i class="bi bi-headset"></i> Support
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/inventory}">
+                        <i class="bi bi-box-seam"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/profile}">
+                        <i class="bi bi-globe"></i> Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+    /* Staff Navbar - Phiên bản đẹp hơn với gradient */
+    .staff-navbar {
+        background: linear-gradient(135deg, #FFF9F9 0%, #FFE8EE 50%, #FFF3F7 100%);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 30px rgba(255, 107, 157, 0.15);
+        padding: 1rem 0;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid rgba(255, 107, 157, 0.1);
+    }
+    
+    .staff-navbar .navbar-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #FF6B9D 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        position: relative;
+    }
+    
+    .staff-navbar .navbar-brand i {
+        background: linear-gradient(135deg, #FF6B9D, #C44569);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.8rem;
+    }
+    
+    .staff-navbar .navbar-brand:hover {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+    }
+    
+    .staff-navbar .nav-link {
+        color: #2C3E50;
+        margin: 0 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 25px;
+        position: relative;
+    }
+    
+    .staff-navbar .nav-link i {
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .staff-navbar .nav-link:hover {
+        background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(196, 69, 105, 0.1));
+        color: #FF6B9D;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.2);
+    }
+    
+    .staff-navbar .nav-link:hover i {
+        transform: scale(1.2);
+        color: #C44569;
+    }
+    
+    .staff-navbar .nav-link.active {
+        background: linear-gradient(135deg, #FF6B9D, #C44569);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 20px rgba(255, 107, 157, 0.3);
+    }
+    
+    .staff-navbar .nav-link.active i {
+        color: white;
+    }
+    
+    /* Admin Navbar - Phiên bản đẹp hơn với gradient xanh lá */
+    .admin-navbar {
+        background: linear-gradient(135deg, #F0FFF4 0%, #C6F6D5 50%, #E6FFFA 100%);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 30px rgba(72, 187, 120, 0.15);
+        padding: 1rem 0;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid rgba(72, 187, 120, 0.1);
+    }
+    
+    .admin-navbar .navbar-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #48BB78 0%, #38A169 50%, #48BB78 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        position: relative;
+    }
+    
+    .admin-navbar .navbar-brand i {
+        background: linear-gradient(135deg, #48BB78, #38A169);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.8rem;
+    }
+    
+    .admin-navbar .navbar-brand:hover {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+    }
+    
+    .admin-navbar .nav-link {
+        color: #2C3E50;
+        margin: 0 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 25px;
+        position: relative;
+    }
+    
+    .admin-navbar .nav-link i {
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .admin-navbar .nav-link:hover {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+        color: #48BB78;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.2);
+    }
+    
+    .admin-navbar .nav-link:hover i {
+        transform: scale(1.2);
+        color: #38A169;
+    }
+    
+    .admin-navbar .nav-link.active {
+        background: linear-gradient(135deg, #48BB78, #38A169);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
+    }
+    
+    .admin-navbar .nav-link.active i {
+        color: white;
+    }
+    
+    .admin-navbar .brand-link:hover i {
+        transform: scale(1.2);
+        color: #38A169;
+    }
+        
+    .brand-link.active {
+        background: linear-gradient(135deg, #48BB78, #38A169);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
+    }
+        
+    .brand-link.active i {
+        color: white;
+    }
+</style>
+</body>
+</html>

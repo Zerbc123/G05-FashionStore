@@ -4,12 +4,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import vn.edu.fpt.fashionstore.entity.Account;
 import org.springframework.data.repository.query.Param;
-import java.util.List;
 
+import vn.edu.fpt.fashionstore.entity.Account;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Integer> {
+
+    // LOGIN
+    Optional<Account> findByUsername(String username);
+
+    Optional<Account> findByEmail(String email);
 
     // CHECK TRÙNG
     boolean existsByUsername(String username);
@@ -22,42 +29,43 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
             Pageable pageable
     );
 
-
-    // SEARCH
+    // SEARCH ACCOUNT ACTIVE + LOCKED
     @Query("""
-    SELECT a FROM Account a
-    WHERE a.status IN ('ACTIVE', 'LOCKED')
-    AND (
-        LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
-    )
-""")
+        SELECT a FROM Account a
+        WHERE a.status IN ('ACTIVE', 'LOCKED')
+        AND (
+            LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
     Page<Account> searchNotDeleted(
             @Param("keyword") String keyword,
             Pageable pageable
     );
 
-    // LẤY TẤT CẢ ACCOUNT BỊ XÓA (INACTIVE) - PHÂN TRANG
+    // LẤY ACCOUNT INACTIVE (ĐÃ XÓA)
     Page<Account> findByStatus(
             String status,
             Pageable pageable
     );
 
-    // TÌM KIẾM ACCOUNT BỊ XÓA (INACTIVE)
+    // SEARCH ACCOUNT INACTIVE
     @Query("""
-    SELECT a FROM Account a
-    WHERE a.status = 'INACTIVE'
-    AND (
-        LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
-    )
-""")
+        SELECT a FROM Account a
+        WHERE a.status = 'INACTIVE'
+        AND (
+            LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
     Page<Account> searchDeleted(
             @Param("keyword") String keyword,
             Pageable pageable
     );
 
+    // LẤY ACCOUNT THEO ROLE
     List<Account> findByRole_RoleName(String roleName);
+
 }
