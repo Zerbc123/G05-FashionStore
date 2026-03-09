@@ -52,4 +52,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "LEFT JOIN FETCH o.customer " +
             "WHERE o.orderId = :orderId")
     Order findByOrderIdWithDetails(@Param("orderId") Long orderId);
+
+    // Lấy danh sách đơn hàng của khách hàng theo customerId
+    List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);
 }

@@ -227,27 +227,6 @@ public class AdminController {
         return "orderdetails";
     }
 
-    // Quản lý khách hàng
-    @GetMapping("/customers")
-    public String customers(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Customer Management");
-        return "admin/admincustomer";
-    }
-
-    // Xem chi tiết khách hàng
-    @GetMapping("/customers/details/{id}")
-    public String customerDetails(@PathVariable String id, HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Customer Details");
-        model.addAttribute("customerId", id);
-        return "profile";
-    }
-
     // ======== ADMIN PROFILE ========
 
     @GetMapping("/profile")
@@ -268,17 +247,6 @@ public class AdminController {
         model.addAttribute("admin", admin);
 
         return "admin/admin_profile";
-    }
-
-    // Chỉnh sửa khách hàng
-    @GetMapping("/customers/edit/{id}")
-    public String editCustomer(@PathVariable String id, HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Edit Customer");
-        model.addAttribute("customerId", id);
-        return "editprofile";
     }
 
     // Quản lý nhân viên
