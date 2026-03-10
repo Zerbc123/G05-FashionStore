@@ -123,7 +123,6 @@ public class OrderController {
             @RequestParam(value = "fullName", defaultValue = "") String fullName,
             @RequestParam(value = "phone", defaultValue = "") String phone,
             @RequestParam(value = "deliveryAddress", defaultValue = "") String deliveryAddress,
-            @RequestParam(value = "note", required = false) String note,
             @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
             @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
             @RequestParam(value = "totalAmount", defaultValue = "0") Double totalAmount,
@@ -131,106 +130,105 @@ public class OrderController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        // Lấy customer hiện tại
+        // 1. Lấy customer hiện tại
         Customer currentCustomer = getCurrentCustomer(session);
-        
-        // Kiểm tra nếu customer không tồn tại
         if (currentCustomer == null) {
             return "redirect:/login";
         }
 
+        // 2. Kiểm tra lỗi nhập liệu (Validation)
         boolean hasError = false;
 
-        // Bắt lỗi: Tên rỗng hoặc chứa số/ký tự đặc biệt
         if (fullName.trim().isEmpty()) {
             model.addAttribute("errorFullName", "Vui lòng nhập họ và tên của bạn.");
             hasError = true;
         } else if (!fullName.matches("^[\\p{L}\\s]+$")) {
-            // Regex: \p{L} là chữ cái bất kỳ (hỗ trợ tiếng Việt), \s là khoảng trắng
-            model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái, không nhập số hay ký tự đặc biệt.");
+            model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái.");
             hasError = true;
         }
 
-        // Bắt lỗi: Số điện thoại
         if (phone.trim().isEmpty() || !phone.matches("^0[0-9]{9}$")) {
-            model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (Bắt buộc 10 số và bắt đầu bằng 0).");
+            model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0).");
             hasError = true;
         }
 
-        // Bắt lỗi: Địa chỉ giao hàng
         if (deliveryAddress.trim().isEmpty()) {
             model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
             hasError = true;
         }
 
-        // Nếu có lỗi -> Phải Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
+        // Nếu có lỗi -> Load lại trang checkout
         if (hasError) {
             try {
                 List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
-                double subtotal = cartService.getCartTotal(cartItems);
-
-                // Gửi lại data giỏ hàng
                 model.addAttribute("cartItems", cartItems);
-                model.addAttribute("total", subtotal);
-                
-                // Lấy danh sách voucher hợp lệ từ database
-                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
-                model.addAttribute("validVouchers", validVouchers);
+                model.addAttribute("total", cartService.getCartTotal(cartItems));
+                model.addAttribute("validVouchers", voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date()));
 
-                // Giữ nguyên chữ khách đã nhập
                 model.addAttribute("fullName", fullName);
                 model.addAttribute("phone", phone);
                 model.addAttribute("address", deliveryAddress);
                 model.addAttribute("note", note);
-
-                return "checkout"; // Trả lại trang để khách sửa lỗi
+                return "checkout";
             } catch (Exception e) {
                 return "redirect:/login";
             }
         }
-        
-        // TẠO ĐƠN HÀNG THỰC TẾ QUA ORDER SERVICE
+
+        // 3. TẠO ĐƠN HÀNG TRONG DATABASE
         try {
-            
-            // Sử dụng địa chỉ từ session hoặc từ form
+            // Tạo object Order từ giỏ hàng (Service này nên xử lý việc copy items từ Cart sang OrderItem)
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
-            
-            // Cập nhật tổng tiền đơn hàng với giá trị từ frontend
+
+            // Cập nhật các thông tin từ form
             order.setTotalAmount(totalAmount);
-            
-            // Lưu Order vào database
+            order.setPaymentMethod(paymentMethod); // Quan trọng để biết khách chọn gì
+
+            // Thiết lập trạng thái ban đầu
+            if ("MOMO".equals(paymentMethod)) {
+                order.setStatus("WAITING_FOR_PAYMENT"); // Chờ thanh toán online
+            } else {
+                order.setStatus("PENDING"); // Chờ xác nhận (đối với COD)
+            }
+
+            // Lưu chính thức vào DB để lấy OrderID
             orderRepository.save(order);
-            
-            // Xóa địa chỉ tạm thời khỏi session sau khi đã đặt hàng
+
+            // Làm sạch Session
             session.removeAttribute("deliveryAddress");
-            
-            // XÓA CÁC SESSION ATTRIBUTE CÓ THỂ GHI ĐÈ LÊN ORDERID
             session.removeAttribute("orderId");
-            session.removeAttribute("productImage");
-            session.removeAttribute("productName");
-            session.removeAttribute("sizeName");
-            session.removeAttribute("colorName");
-            
-            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng của bạn: #" + order.getOrderId());
-            
-            // Lấy thông tin đơn hàng và trả về template trực tiếp
-            model.addAttribute("orderCode", "#" + order.getOrderId());
-            model.addAttribute("orderId", order.getOrderId().toString());
-            model.addAttribute("orderDate", order.getOrderDate());
-            model.addAttribute("deliveryAddress", deliveryAddress); // Sử dụng địa chỉ đã chọn
-            model.addAttribute("orderStatus", order.getStatus());
-            model.addAttribute("totalAmount", order.getTotalAmount());
-            model.addAttribute("customerName", currentCustomer.getFullName());
-            model.addAttribute("customerPhone", currentCustomer.getPhone());
-            model.addAttribute("customerEmail", currentCustomer.getEmail());
-            
-            // Lấy order items thật
-            List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
-            model.addAttribute("orderItems", orderItems);
-            
-            return "order-confirmation";
+            // ... xóa các session rác khác nếu cần ...
+
+            // 4. KIỂM TRA PHƯƠNG THỨC THANH TOÁN ĐỂ ĐIỀU HƯỚNG
+            if ("MOMO".equals(paymentMethod)) {
+                // REDIRECT SANG CỔNG THANH TOÁN MOMO
+                // Ép kiểu amount sang long vì MoMo không nhận số thập phân
+                long amountLong = totalAmount.longValue();
+                String orderInfo = "Thanh toan don hang #" + order.getOrderId();
+
+                return "redirect:/fashionstore/payment/momo/create?orderId=" + order.getOrderId()
+                        + "&amount=" + amountLong
+                        + "&orderInfo=" + orderInfo;
+            } else {
+                // THANH TOÁN COD: Hiển thị trang hoàn tất đơn hàng trực tiếp
+                model.addAttribute("orderCode", "#" + order.getOrderId());
+                model.addAttribute("orderId", order.getOrderId().toString());
+                model.addAttribute("orderDate", order.getOrderDate());
+                model.addAttribute("deliveryAddress", deliveryAddress);
+                model.addAttribute("orderStatus", order.getStatus());
+                model.addAttribute("totalAmount", order.getTotalAmount());
+                model.addAttribute("customerName", currentCustomer.getFullName());
+                model.addAttribute("customerPhone", currentCustomer.getPhone());
+                model.addAttribute("customerEmail", currentCustomer.getEmail());
+
+                List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
+                model.addAttribute("orderItems", orderItems);
+
+                return "order-confirmation";
+            }
+
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
             return "redirect:/order/checkout";
         }
     }

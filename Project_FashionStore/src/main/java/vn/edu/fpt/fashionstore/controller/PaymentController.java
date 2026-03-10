@@ -70,7 +70,7 @@ public class PaymentController {
             if ("0".equals(resultCode) && isValid) {
                 return "redirect:/order/checkout/success?orderId=" + orderId + "&transId=" + transId;
             } else {
-                return "redirect:/order/checkout?error=payment_failed";
+                return "ordersuccsess";
             }
         } catch (Exception e) {
             return "redirect:/fashionstore/order/checkout";
