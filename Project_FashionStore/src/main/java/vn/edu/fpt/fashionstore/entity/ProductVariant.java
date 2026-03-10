@@ -3,6 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "ProductVariant")
@@ -14,25 +15,32 @@ public class ProductVariant {
     private int variantId;
 
     // ===== FK tới Product =====
+    @NotNull(message = "Product is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
     // ===== FK tới Color =====
+    @NotNull(message = "Color is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id")
     private Color color;
 
     // ===== FK tới CategorySize =====
+    @NotNull(message = "Size is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_size_id")
     private CategorySize categorySize;
 
 
 
+    @NotNull(message = "Price is required")
+    @Min(value = 0, message = "Price must be greater than or equal to 0")
     @Column(name = "price")
     private Double price;
 
+    @NotNull(message = "Stock is required")
+    @Min(value = 0, message = "Stock must be greater than or equal to 0")
     @Column(name = "stock")
     private Integer stock;
 

@@ -489,13 +489,263 @@
 
     // Form validation
     document.getElementById('productForm').addEventListener('submit', function(e) {
+        // Clear previous validation errors
+        clearValidationErrors();
+        
         const variants = document.querySelectorAll('#variantsContainer .variant-row');
         if (variants.length === 0) {
             e.preventDefault();
-            alert('Please add at least one product variant.');
+            showAlert('Please add at least one product variant.', 'danger');
             return false;
         }
+        
+        let hasError = false;
+        let firstErrorField = null;
+        
+        // Validate product name
+        const productName = document.getElementById('productName');
+        if (productName.value.trim() === '') {
+            e.preventDefault();
+            showFieldError(productName, 'Product name is required');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        } else if (productName.value.trim().length < 3) {
+            e.preventDefault();
+            showFieldError(productName, 'Product name must be at least 3 characters long');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        } else if (/\d/.test(productName.value.trim())) {
+            e.preventDefault();
+            showFieldError(productName, 'Product name cannot contain numbers');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        }
+        
+        // Validate category
+        const categoryId = document.getElementById('categoryId');
+        if (categoryId.value === '') {
+            e.preventDefault();
+            showFieldError(categoryId, 'Please select a category');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = categoryId;
+        }
+        
+        // Validate each variant
+        for (let i = 0; i < variants.length; i++) {
+            const variant = variants[i];
+            const variantIndex = i + 1;
+            
+            const colorSelect = variant.querySelector('select[name="colorIds"]');
+            const sizeSelect = variant.querySelector('select[name="sizeIds"]');
+            const priceInput = variant.querySelector('input[name="prices"]');
+            const stockInput = variant.querySelector('input[name="stocks"]');
+            const imageInput = variant.querySelector('input[name="variantImages"]');
+            
+            if (colorSelect.value === '') {
+                e.preventDefault();
+                showFieldError(colorSelect, 'Color is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = colorSelect;
+            }
+            
+            if (sizeSelect.value === '') {
+                e.preventDefault();
+                showFieldError(sizeSelect, 'Size is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = sizeSelect;
+            }
+            
+            if (priceInput.value === '' || parseFloat(priceInput.value) < 0) {
+                e.preventDefault();
+                showFieldError(priceInput, 'Price must be greater than or equal to 0');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = priceInput;
+            }
+            
+            if (stockInput.value === '' || parseInt(stockInput.value) < 0) {
+                e.preventDefault();
+                showFieldError(stockInput, 'Stock must be greater than or equal to 0');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = stockInput;
+            }
+            
+            if (imageInput.files.length === 0) {
+                e.preventDefault();
+                showFieldError(imageInput, 'Image is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = imageInput;
+            } else {
+                // Validate image file type
+                const file = imageInput.files[0];
+                if (!file.type.startsWith('image/')) {
+                    e.preventDefault();
+                    showFieldError(imageInput, 'Only image files are allowed');
+                    hasError = true;
+                    if (!firstErrorField) firstErrorField = imageInput;
+                } else if (file.size > 5 * 1024 * 1024) {
+                    e.preventDefault();
+                    showFieldError(imageInput, 'Image size must be less than 5MB');
+                    hasError = true;
+                    if (!firstErrorField) firstErrorField = imageInput;
+                }
+            }
+        }
+        
+        // If there are errors, focus on first error field and show summary
+        if (hasError) {
+            e.preventDefault();
+            showAlert('Please fix the errors below before submitting.', 'danger');
+            if (firstErrorField) {
+                firstErrorField.focus();
+            }
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding Product...';
+        submitBtn.disabled = true;
+        
+        // Reset button if form submission fails (handled by server)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
     });
+    
+    // Function to show field-level error
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        
+        // Remove any existing error message for this field
+        const existingFeedback = field.parentNode.querySelector('.invalid-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+        
+        // Add new error message
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.textContent = message;
+        field.parentNode.appendChild(feedback);
+    }
+    
+    // Function to clear all validation errors
+    function clearValidationErrors() {
+        // Remove all invalid classes
+        const invalidFields = document.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => field.classList.remove('is-invalid'));
+        
+        // Remove all error messages
+        const errorMessages = document.querySelectorAll('.invalid-feedback');
+        errorMessages.forEach(msg => msg.remove());
+    }
+    
+    // Function to show alerts
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the form
+        const form = document.getElementById('productForm');
+        form.insertBefore(alertDiv, form.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Real-time validation for product name
+    document.getElementById('productName').addEventListener('input', function() {
+        const value = this.value.trim();
+        
+        // Check for numbers
+        if (/\d/.test(value)) {
+            showFieldError(this, 'Product name cannot contain numbers');
+        } else if (value.length > 0 && value.length < 3) {
+            showFieldError(this, 'Product name must be at least 3 characters long');
+        } else {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) feedback.remove();
+        }
+    });
+    
+    // Prevent number input in product name
+    document.getElementById('productName').addEventListener('keypress', function(e) {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 86 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 88 && (e.ctrlKey === true || e.metaKey === true))) {
+            return;
+        }
+        
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            // Allow letters and special characters, but not numbers
+            if (e.keyCode >= 48 && e.keyCode <= 57) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Real-time validation for price and stock inputs
+    document.addEventListener('input', function(e) {
+        if (e.target.name === 'prices') {
+            const value = parseFloat(e.target.value);
+            if (isNaN(value) || value < 0) {
+                showFieldError(e.target, 'Price must be greater than or equal to 0');
+            } else {
+                e.target.classList.remove('is-invalid');
+                const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        }
+        
+        if (e.target.name === 'stocks') {
+            const value = parseInt(e.target.value);
+            if (isNaN(value) || value < 0) {
+                showFieldError(e.target, 'Stock must be greater than or equal to 0');
+            } else {
+                e.target.classList.remove('is-invalid');
+                const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        }
+    });
+    
+    // Clear field error when user starts typing in other fields
+    document.addEventListener('focus', function(e) {
+        if (e.target.classList.contains('is-invalid')) {
+            // Clear error when user focuses on the field
+            setTimeout(() => {
+                if (e.target.value.trim() !== '') {
+                    e.target.classList.remove('is-invalid');
+                    const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                    if (feedback) feedback.remove();
+                }
+            }, 100);
+        }
+    }, true);
 </script>
 </body>
 </html>

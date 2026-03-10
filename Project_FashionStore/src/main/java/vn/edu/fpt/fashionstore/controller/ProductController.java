@@ -7,9 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.validation.Valid;
 
 import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.CategorySize;
@@ -253,51 +255,155 @@ public class ProductController {
             @RequestParam("prices") List<Double> prices,
             @RequestParam("stocks") List<Integer> stocks,
             @RequestParam("variantImages") List<MultipartFile> variantImages,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model) {
         
         try {
+            // Validate basic product information
+            if (productName == null || productName.trim().isEmpty()) {
+                model.addAttribute("error", "Product name is required");
+                return showAddProductForm(model);
+            }
+            
+            if (productName.trim().length() < 3) {
+                model.addAttribute("error", "Product name must be at least 3 characters long");
+                return showAddProductForm(model);
+            }
+            
+            // Check if product name contains numbers
+            if (productName.matches(".*\\d.*")) {
+                model.addAttribute("error", "Product name cannot contain numbers");
+                return showAddProductForm(model);
+            }
+            
+            if (categoryId == null) {
+                model.addAttribute("error", "Category is required");
+                return showAddProductForm(model);
+            }
+            
+            // Validate variants
+            if (colorIds == null || colorIds.isEmpty()) {
+                model.addAttribute("error", "At least one product variant is required");
+                return showAddProductForm(model);
+            }
+            
+            // Check if all variant arrays have the same size
+            if (sizeIds == null || sizeIds.size() != colorIds.size() ||
+                prices == null || prices.size() != colorIds.size() ||
+                stocks == null || stocks.size() != colorIds.size() ||
+                variantImages == null || variantImages.size() != colorIds.size()) {
+                model.addAttribute("error", "All variant fields must be provided for each variant");
+                return showAddProductForm(model);
+            }
+            
+            // Validate each variant
+            for (int i = 0; i < colorIds.size(); i++) {
+                if (colorIds.get(i) == null) {
+                    model.addAttribute("error", "Color is required for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                if (sizeIds.get(i) == null) {
+                    model.addAttribute("error", "Size is required for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                if (prices.get(i) == null || prices.get(i) < 0) {
+                    model.addAttribute("error", "Price must be greater than or equal to 0 for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                if (stocks.get(i) == null || stocks.get(i) < 0) {
+                    model.addAttribute("error", "Stock must be greater than or equal to 0 for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                if (variantImages.get(i) == null || variantImages.get(i).isEmpty()) {
+                    model.addAttribute("error", "Image is required for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                
+                // Validate image file type
+                String contentType = variantImages.get(i).getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    model.addAttribute("error", "Only image files are allowed for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                
+                // Validate image file size (max 5MB)
+                if (variantImages.get(i).getSize() > 5 * 1024 * 1024) {
+                    model.addAttribute("error", "Image size must be less than 5MB for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+            }
+            
+            // Check if category exists
+            Category category = categoryRepository.findById(categoryId).orElse(null);
+            if (category == null) {
+                model.addAttribute("error", "Selected category not found");
+                return showAddProductForm(model);
+            }
+            
             // Create new product
             Product product = new Product();
-            product.setProductName(productName);
-            product.setDescription(description);
-            
-            Category category = categoryRepository.findById(categoryId).orElse(null);
+            product.setProductName(productName.trim());
+            product.setDescription(description != null ? description.trim() : "");
             product.setCategory(category);
+            product.setAccountId(1L); // Set default account ID - you might want to get this from current user
             
             // Save product first
             product = productRepository.save(product);
             
             // Create product variants
             for (int i = 0; i < colorIds.size(); i++) {
-                if (i < sizeIds.size() && i < prices.size() && i < stocks.size() && i < variantImages.size()) {
-                    ProductVariant variant = new ProductVariant();
-                    variant.setProduct(product);
-                    
-                    Color color = colorRepository.findById(colorIds.get(i)).orElse(null);
-                    variant.setColor(color);
-                    
-                    CategorySize size = categorySizeRepository.findById(sizeIds.get(i)).orElse(null);
-                    variant.setCategorySize(size);
-                    
-                    variant.setPrice(prices.get(i));
-                    variant.setStock(stocks.get(i));
-                    
-                    // Upload image to Cloudinary
-                    if (!variantImages.get(i).isEmpty()) {
-                        String imageUrl = cloudinaryService.uploadImage(variantImages.get(i));
-                        variant.setImageUrl(imageUrl);
-                    }
-                    
-                    productVariantRepository.save(variant);
+                ProductVariant variant = new ProductVariant();
+                variant.setProduct(product);
+                
+                Color color = colorRepository.findById(colorIds.get(i)).orElse(null);
+                if (color == null) {
+                    model.addAttribute("error", "Selected color not found for variant " + (i + 1));
+                    return showAddProductForm(model);
                 }
+                variant.setColor(color);
+                
+                CategorySize size = categorySizeRepository.findById(sizeIds.get(i)).orElse(null);
+                if (size == null) {
+                    model.addAttribute("error", "Selected size not found for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                variant.setCategorySize(size);
+                
+                variant.setPrice(prices.get(i));
+                variant.setStock(stocks.get(i));
+                
+                // Upload image to Cloudinary
+                String imageUrl = cloudinaryService.uploadImage(variantImages.get(i));
+                if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                    model.addAttribute("error", "Failed to upload image for variant " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                variant.setImageUrl(imageUrl);
+                
+                productVariantRepository.save(variant);
             }
             
             redirectAttributes.addAttribute("success", "true");
-            return "redirect:/admin/products/add";
+            return "redirect:/products/admin/add";
             
+        } catch (jakarta.validation.ConstraintViolationException e) {
+            // Handle validation errors from entity annotations
+            String errorMessage = "Validation error: ";
+            for (jakarta.validation.ConstraintViolation<?> violation : e.getConstraintViolations()) {
+                errorMessage += violation.getMessage() + ". ";
+            }
+            model.addAttribute("error", errorMessage.trim());
+            return showAddProductForm(model);
         } catch (Exception e) {
-            redirectAttributes.addAttribute("error", "Failed to add product: " + e.getMessage());
-            return "redirect:/admin/products/add";
+            // Handle other exceptions
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.contains("ConstraintViolationImpl")) {
+                // Extract just the message from the complex error
+                model.addAttribute("error", "Product name cannot contain numbers");
+            } else {
+                model.addAttribute("error", "Failed to add product: " + e.getMessage());
+            }
+            return showAddProductForm(model);
         }
     }
 
@@ -522,5 +628,29 @@ public class ProductController {
             redirectAttributes.addFlashAttribute("error", "Failed to update variant: " + e.getMessage());
             return "redirect:/products/admin/variant/edit?variantId=" + variantId;
         }
+    }
+
+    // ========================================================================
+    // 10. ADMIN - DELETE PRODUCT
+    // ========================================================================
+    @PostMapping("/admin/delete")
+    public String deleteProduct(
+            @RequestParam("productId") Long productId,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            boolean success = productService.deleteProduct(productId);
+            if (success) {
+                redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm");
+            }
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa sản phẩm: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/products";
     }
 }
