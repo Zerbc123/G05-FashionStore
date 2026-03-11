@@ -7,11 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import jakarta.validation.Valid;
 
 import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.entity.CategorySize;
@@ -53,6 +51,9 @@ public class ProductController {
     
     @Autowired
     private ProductVariantRepository productVariantRepository;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     // ========================================================================
     // 1. DANH SÁCH SẢN PHẨM (LIST)
@@ -561,7 +562,7 @@ public class ProductController {
             productVariantRepository.save(variant);
             
             redirectAttributes.addFlashAttribute("success", "Thêm biến thể thành công!");
-            return "redirect:/admin/product-variants";
+            return "redirect:/products/variants?productId=" + productId;
             
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to add variant: " + e.getMessage());
@@ -622,7 +623,9 @@ public class ProductController {
             productVariantRepository.save(variant);
             
             redirectAttributes.addFlashAttribute("success", "Cập nhật biến thể thành công!");
-            return "redirect:/admin/product-variants";
+            // Get productId from variant to redirect to product variants page
+            Long productId = variant.getProduct().getProductId();
+            return "redirect:/products/variants?productId=" + productId;
             
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to update variant: " + e.getMessage());
@@ -631,7 +634,44 @@ public class ProductController {
     }
 
     // ========================================================================
-    // 10. ADMIN - DELETE PRODUCT
+    // 10. ADMIN - DELETE VARIANT
+    // ========================================================================
+    @GetMapping("/admin/variant/delete")
+    public String deleteVariant(
+            @RequestParam("variantId") Integer variantId,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            // Get variant info to obtain productId before deletion
+            ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
+            
+            if (variant == null) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy biến thể sản phẩm");
+                return "redirect:/admin/products";
+            }
+            
+            // Check if variant is linked to orders
+            boolean isLinkedToOrders = orderItemRepository.existsByProductVariantVariantId(variantId);
+            if (isLinkedToOrders) {
+                redirectAttributes.addFlashAttribute("error", "Không thể xóa biến thể: Biến thể này đã được sử dụng trong đơn hàng");
+                return "redirect:/products/variants?productId=" + variant.getProduct().getProductId();
+            }
+            
+            // Delete the variant
+            productVariantRepository.deleteById(variantId);
+            redirectAttributes.addFlashAttribute("success", "Xóa biến thể sản phẩm thành công");
+            
+            // Redirect to product variants page
+            return "redirect:/products/variants?productId=" + variant.getProduct().getProductId();
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa biến thể: " + e.getMessage());
+            return "redirect:/admin/products";
+        }
+    }
+
+    // ========================================================================
+    // 11. ADMIN - DELETE PRODUCT
     // ========================================================================
     @PostMapping("/admin/delete")
     public String deleteProduct(

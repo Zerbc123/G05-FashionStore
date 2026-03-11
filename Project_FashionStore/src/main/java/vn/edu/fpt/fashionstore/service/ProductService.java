@@ -185,17 +185,17 @@ public class ProductService {
             return false;
         }
         
-        // Check if product has any order items
-        boolean hasOrderItems = orderItemRepository.existsByProductVariantProductProductId(productId);
-        if (hasOrderItems) {
-            throw new RuntimeException("Không thể xóa sản phẩm này vì có đơn hàng liên quan");
-        }
+        // // Check if product has any order items
+        // boolean hasOrderItems = orderItemRepository.existsByProductVariantProductProductId(productId);
+        // if (hasOrderItems) {
+        //     throw new RuntimeException("Không thể xóa sản phẩm này vì có đơn hàng liên quan");
+        // }
         
-        // Check if all variants are out of stock
-        long inStockVariantsCount = productVariantRepository.countInStockVariantsByProductId(productId);
-        if (inStockVariantsCount > 0) {
-            throw new RuntimeException("Không thể xóa sản phẩm này vì vẫn còn biến thể trong kho");
-        }
+        // // Check if all variants are out of stock
+        // long inStockVariantsCount = productVariantRepository.countInStockVariantsByProductId(productId);
+        // if (inStockVariantsCount > 0) {
+        //     throw new RuntimeException("Không thể xóa sản phẩm này vì vẫn còn biến thể trong kho");
+        // }
         
         // Delete all variants first (due to foreign key constraint)
         productVariantRepository.deleteByProduct_ProductId(productId);
