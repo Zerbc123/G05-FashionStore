@@ -361,54 +361,8 @@
 
     // Form validation before submit
     document.addEventListener('DOMContentLoaded', function() {
-        const checkoutForm = document.getElementById('checkoutForm');
-
-        if (checkoutForm) {
-            checkoutForm.addEventListener('submit', function(e) {
-                // Lấy phương thức thanh toán
-                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-
-                // Xử lý riêng cho MOMO (Vì MOMO phải gọi sang một đường dẫn API khác)
-                if (paymentMethod === 'MOMO') {
-                    e.preventDefault();
-
-                    const fullName = document.querySelector('input[name="fullName"]').value.trim();
-                    const totalAmount = document.getElementById('hiddenTotalAmount').value;
-                    const orderId = 'ORD-' + Date.now();
-                    const orderInfo = 'Thanh toan don hang - ' + fullName;
-
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/fashionstore/payment/momo/create';
-
-                    const orderIdInput = document.createElement('input');
-                    orderIdInput.type = 'hidden';
-                    orderIdInput.name = 'orderId';
-                    orderIdInput.value = orderId;
-                    form.appendChild(orderIdInput);
-
-                    const amountInput = document.createElement('input');
-                    amountInput.type = 'hidden';
-                    amountInput.name = 'amount';
-                    amountInput.value = totalAmount;
-                    form.appendChild(amountInput);
-
-                    const orderInfoInput = document.createElement('input');
-                    orderInfoInput.type = 'hidden';
-                    orderInfoInput.name = 'orderInfo';
-                    orderInfoInput.value = orderInfo;
-                    form.appendChild(orderInfoInput);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                    return false;
-                }
-
-                // NẾU LÀ COD: Để cho form submit tự nhiên bay thẳng về Java Backend
-                // Java Backend sẽ tự kiểm tra và trả về lỗi màu đỏ trên giao diện (nếu có)
-                return true;
-            });
-        }
+        // NẾU LÀ COD hoặc MOMO: Để cho form submit tự nhiên bay thẳng về Java Backend
+        // Java Backend sẽ xử lý redirect hoặc logic tương ứng
     });
 </script>
 

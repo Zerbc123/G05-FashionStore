@@ -99,10 +99,14 @@ public class MomoService {
                 return false;
             }
 
+            // Some MOMO API versions omit accessKey in the query param response,
+            // we must use our accessKey from properties if it's missing in params
+            String accessKey = responseData.getOrDefault("accessKey", momoConfig.getAccessKey());
+
             // Build raw signature data for verification
             String rawSignature = String.format(
                     "accessKey=%s&amount=%s&extraData=%s&message=%s&orderId=%s&orderInfo=%s&orderType=%s&partnerCode=%s&payType=%s&requestId=%s&responseTime=%s&resultCode=%s&transId=%s",
-                    responseData.getOrDefault("accessKey", ""),
+                    accessKey,
                     responseData.getOrDefault("amount", ""),
                     responseData.getOrDefault("extraData", ""),
                     responseData.getOrDefault("message", ""),
@@ -119,6 +123,7 @@ public class MomoService {
 
             // Generate signature and compare
             String computedSignature = MomoUtils.generateSignature(rawSignature, momoConfig.getSecretKey());
+
             return signature.equals(computedSignature);
 
         } catch (Exception e) {
