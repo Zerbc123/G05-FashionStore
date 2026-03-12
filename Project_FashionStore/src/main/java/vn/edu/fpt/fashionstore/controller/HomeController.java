@@ -64,7 +64,10 @@ public class HomeController {
         this.productRepository = productRepository;
     }
 
-    @GetMapping("/home")
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/home";
+    }@GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
 
         // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
@@ -245,8 +248,16 @@ public class HomeController {
 
             updateCartCountForCustomer(session, account);
 
-            if ("Admin".equalsIgnoreCase(roleName)) return "redirect:/admin";
-            if ("Staff".equalsIgnoreCase(roleName)) return "redirect:/staff";
+            if ("Admin".equalsIgnoreCase(roleName)) {
+                return "redirect:/admin";
+            }
+
+            if ("Nhân viên bán hàng (Sale)".equalsIgnoreCase(roleName) ||
+                "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
+                "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
+                "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
+                return "redirect:/staff";
+            }
 
             return "redirect:/home";
         }

@@ -128,17 +128,6 @@ public class AdminController {
         return "editprofile";
     }
 
-    
-    // Quản lý nhân viên
-    @GetMapping("/staff")
-    public String staff(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Staff Management");
-        return "admin/view_staff";
-    }
-
     // Thêm nhân viên mới
     @GetMapping("/staff/add_old")
     public String addStaff(HttpSession session, Model model) {

@@ -1,6 +1,9 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,33 +15,39 @@ public class SupportRequest {
     private Long id;
 
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
+    @NotBlank(message = "Tiêu đề không được để trống")
+    @Size(min = 5, max = 255, message = "Tiêu đề phải từ 5-255 ký tự")
     private String title;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
+    @NotBlank(message = "Mô tả không được để trống")
+    @Size(min = 10, message = "Mô tả phải có ít nhất 10 ký tự")
     private String description;
 
-    @Column(columnDefinition = "NVARCHAR(100)")
+    @Column(name = "customer_name", columnDefinition = "NVARCHAR(100)")
+    @NotBlank(message = "Tên khách hàng không được để trống")
+    @Size(max = 100, message = "Tên khách hàng không quá 100 ký tự")
     private String customerName;
 
-    @Column(columnDefinition = "NVARCHAR(100)")
+    @Column(name = "customer_email", columnDefinition = "NVARCHAR(100)")
+    @Email(message = "Email khách hàng không hợp lệ")
     private String customerEmail;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SupportStatus status;
 
-    @Column(columnDefinition = "DATETIME2(0)")
+    @Column(name = "created_at", columnDefinition = "DATETIME2(0)")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", columnDefinition = "DATETIME2(0)")
     private LocalDateTime updatedAt;
-
 
     @Column(name = "assigned_staff_id")
     private Integer assignedStaffId;
 
     @Column(name = "assigned_staff_name", columnDefinition = "NVARCHAR(100)")
     private String assignedStaffName;
-
 
     @PrePersist
     public void prePersist() {

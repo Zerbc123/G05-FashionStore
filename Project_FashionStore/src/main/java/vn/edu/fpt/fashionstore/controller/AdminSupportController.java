@@ -1,12 +1,14 @@
 package vn.edu.fpt.fashionstore.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
@@ -29,13 +31,13 @@ public class AdminSupportController {
     // Kiểm tra quyền truy cập ADMIN hoặc STAFF
     private boolean hasAccess(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "ADMIN".equals(role) || "STAFF".equals(role);
+        return "Admin".equalsIgnoreCase(role) || "Staff".equalsIgnoreCase(role);
     }
 
     // Kiểm tra quyền admin (cho các thao tác đặc biệt)
     private boolean isAdmin(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "ADMIN".equals(role);
+        return "Admin".equalsIgnoreCase(role);
     }
 
     @GetMapping({"", "/"})
@@ -55,9 +57,9 @@ public class AdminSupportController {
         Page<SupportRequest> supportRequestPage;
         
         if (keyword != null && !keyword.trim().isEmpty() && status != null) {
-            supportRequestPage = supportRequestService.findByKeywordAndStatus(keyword, status, pageable);
+            supportRequestPage = supportRequestService.findByCustomerKeywordAndStatus(keyword, status, pageable);
         } else if (keyword != null && !keyword.trim().isEmpty()) {
-            supportRequestPage = supportRequestService.findByKeyword(keyword, pageable);
+            supportRequestPage = supportRequestService.findByCustomerKeyword(keyword, pageable);
         } else if (status != null) {
             supportRequestPage = supportRequestService.findByStatus(status, pageable);
         } else {
@@ -152,12 +154,21 @@ public class AdminSupportController {
 
     @PostMapping("/create")
     public String createSupportRequest(
-            @ModelAttribute SupportRequest supportRequest,
+            @Valid @ModelAttribute SupportRequest supportRequest,
+            BindingResult bindingResult,
             HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model) {
         
         if (!isAdmin(session)) {
             return "redirect:/login";
+        }
+        
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("title", "Create Support Request");
+            model.addAttribute("supportRequest", supportRequest);
+            model.addAttribute("statuses", SupportStatus.values());
+            return "admin/support_create";
         }
         
         try {
@@ -170,17 +181,16 @@ public class AdminSupportController {
     }
 
     @PostMapping("/assign/{id}")
-    public String assignStaff(
-            @PathVariable Long id,
-            @RequestParam Integer staffId,
-            RedirectAttributes redirectAttributes) {
+    public String assignStaff(@PathVariable Long id,
+                              @RequestParam Integer staffId,
+                              RedirectAttributes redirectAttributes) {
 
         supportRequestService.assignStaff(id, staffId);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Phân công staff thành công!");
+        redirectAttributes.addFlashAttribute("successMessage", "Phân công nhân viên thành công");
 
         return "redirect:/admin/support/view/" + id;
     }
-
-
 }
+
+

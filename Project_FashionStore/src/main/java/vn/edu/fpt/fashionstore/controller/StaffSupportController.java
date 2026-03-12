@@ -9,7 +9,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import vn.edu.fpt.fashionstore.entity.SupportStatus;
 import vn.edu.fpt.fashionstore.service.SupportRequestService;
+import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.entity.Account;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,14 +24,85 @@ import org.springframework.data.domain.Pageable;
 public class StaffSupportController {
 
     private final SupportRequestService supportRequestService;
+    private final AccountService accountService;
 
     // Kiểm tra quyền truy cập STAFF
     private boolean isStaff(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "STAFF".equals(role) || "ADMIN".equals(role);
+        return role != null &&
+                (role.contains("Nhân viên bán hàng (Sale)")
+                        || role.contains("Quản lý kho (Stock)")
+                        || role.contains("Hỗ trợ khách hàng (Support)")
+                        || role.contains("Quản lý cửa hàng (Manager)")
+                        || role.equalsIgnoreCase("Admin"));
     }
 
-    @GetMapping({"", "/"})
+    // Lấy ID của staff đang đăng nhập
+    private Integer getCurrentStaffId(HttpSession session) {
+        String email = (String) session.getAttribute("user");
+        if (email == null) return null;
+        
+        Optional<Account> accountOpt = accountService.findByEmail(email);
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+            return account.getAccountId();
+        }
+        return null;
+    }
+
+    @GetMapping
+    public String staffSupportPage(
+            @RequestParam(value = "status", required = false) String status,
+            HttpSession session, Model model) {
+        if (!isStaff(session)) {
+            return "redirect:/login";
+        }
+
+        // Lấy danh sách support requests của staff hiện tại
+        Integer currentStaffId = getCurrentStaffId(session);
+        List<SupportRequest> assignedRequests = new ArrayList<>();
+        
+        // Thống kê
+        long openTicketsCount = 0;
+        long inProgressCount = 0;
+        long resolvedTodayCount = 0;
+        long avgResponseMinutes = 0;
+        
+        if (currentStaffId != null) {
+            // Lấy danh sách theo filter
+            if (status != null && !status.isEmpty()) {
+                SupportStatus statusEnum = SupportStatus.valueOf(status);
+                assignedRequests = supportRequestService.getRequestsByStaffAndStatus(currentStaffId, statusEnum);
+            } else {
+                assignedRequests = supportRequestService.getRequestsByStaff(currentStaffId);
+            }
+            
+            // Lấy thống kê cho staff
+            List<SupportRequest> openTickets = supportRequestService.getRequestsByStaffAndStatus(currentStaffId, SupportStatus.OPEN);
+            List<SupportRequest> inProgressTickets = supportRequestService.getRequestsByStaffAndStatus(currentStaffId, SupportStatus.IN_PROGRESS);
+            List<SupportRequest> resolvedToday = supportRequestService.getRequestsByStaffAndDate(currentStaffId, java.time.LocalDate.now());
+            avgResponseMinutes = supportRequestService.getAverageResponseTimeForStaff(currentStaffId);
+            
+            openTicketsCount = openTickets.size();
+            inProgressCount = inProgressTickets.size();
+            resolvedTodayCount = resolvedToday.size();
+        }
+
+        model.addAttribute("title", "Customer Support Tickets");
+        model.addAttribute("assignedRequests", assignedRequests);
+        model.addAttribute("currentStaffId", currentStaffId);
+        model.addAttribute("status", status);
+        
+        // Thêm thống kê vào model
+        model.addAttribute("openTicketsCount", openTicketsCount);
+        model.addAttribute("inProgressCount", inProgressCount);
+        model.addAttribute("resolvedTodayCount", resolvedTodayCount);
+        model.addAttribute("avgResponseMinutes", avgResponseMinutes);
+
+        return "staff/staffsupport";
+    }
+
+    @GetMapping("/list")
     public String listSupportRequests(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) SupportStatus status,
@@ -70,11 +145,19 @@ public class StaffSupportController {
         }
         
         SupportRequest supportRequest = supportRequestService.findById(id);
+        Integer currentStaffId = getCurrentStaffId(session);
+        
+        // Kiểm tra xem staff có được phân công cho request này không
+        if (supportRequest.getAssignedStaffId() != null && 
+            !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
+            return "redirect:/staff/support?error=not_assigned";
+        }
+        
         model.addAttribute("title", "Chi tiết yêu cầu hỗ trợ");
         model.addAttribute("supportRequest", supportRequest);
-        model.addAttribute("isAdmin", false); // Staff không có quyền admin
-        model.addAttribute("hasAccess", true); // Staff có quyền truy cập
-        return "admin/support_detail";
+        model.addAttribute("currentStaffId", currentStaffId);
+        
+        return "staff/support_detail";
     }
 
     @PostMapping("/update-status/{id}")
@@ -89,12 +172,22 @@ public class StaffSupportController {
         }
         
         try {
+            SupportRequest supportRequest = supportRequestService.findById(id);
+            Integer currentStaffId = getCurrentStaffId(session);
+            
+            // Kiểm tra xem staff có được phân công cho request này không
+            if (supportRequest.getAssignedStaffId() != null && 
+                !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền cập nhật yêu cầu này!");
+                return "redirect:/staff/support";
+            }
+            
             supportRequestService.updateStatus(id, status);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
         }
-        return "redirect:/staff/support";
+        return "redirect:/staff/support/view/" + id;
     }
 
     // Staff không thể tạo và xóa yêu cầu, chỉ có thể xử lý

@@ -22,6 +22,11 @@ public interface SupportRequestService {
 
     Page<SupportRequest> findByKeywordAndStatus(String keyword, SupportStatus status, Pageable pageable);
 
+    // Thêm method tìm kiếm mở rộng
+    Page<SupportRequest> findByCustomerKeyword(String keyword, Pageable pageable);
+
+    Page<SupportRequest> findByCustomerKeywordAndStatus(String keyword, SupportStatus status, Pageable pageable);
+
     SupportRequest findById(Long id);
 
     void updateStatus(Long id, SupportStatus status);
@@ -31,4 +36,11 @@ public interface SupportRequestService {
     void create(SupportRequest request);
 
     boolean isStaffAssigned(Integer staffId);
+
+    // Thống kê cho staff
+    List<SupportRequest> getRequestsByStaffAndStatus(Integer staffId, SupportStatus status);
+    
+    List<SupportRequest> getRequestsByStaffAndDate(Integer staffId, java.time.LocalDate date);
+    
+    long getAverageResponseTimeForStaff(Integer staffId);
 }

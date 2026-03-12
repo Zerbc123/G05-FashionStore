@@ -15,6 +15,7 @@ import vn.edu.fpt.fashionstore.repository.RoleRepository;
 import vn.edu.fpt.fashionstore.repository.SupportRequestRepository;
 
 import java.util.*;
+import java.sql.Date;
 
 @Service
 public class AccountService {
@@ -45,7 +46,7 @@ public class AccountService {
 
     public Page<Account> getAllStaff(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accountId").descending());
-        return accountRepository.findByStatusIn(List.of("ACTIVE","LOCKED"), pageable);
+        return accountRepository.findStaffAccounts(pageable);
     }
 
     public Page<Account> searchStaff(String keyword,int page,int size){
@@ -55,11 +56,15 @@ public class AccountService {
             return getAllStaff(page,size);
         }
 
-        return accountRepository.searchNotDeleted(keyword.trim(), pageable);
+        return accountRepository.searchStaffAccounts(keyword.trim(), pageable);
     }
 
     public Role getRoleById(Integer roleId){
         return roleRepository.findById(roleId).orElse(null);
+    }
+
+    public List<Role> getAllRoles(){
+        return roleRepository.findAll();
     }
 
     public void createStaff(Account account,Integer roleId){
@@ -122,12 +127,107 @@ public class AccountService {
         accountRepository.save(account);
     }
 
+    public void updateStaff(Account account){
+        if(account == null || account.getAccountId() == null){
+            throw new RuntimeException("Account không hợp lệ");
+        }
+        
+        // Kiểm tra xem account có tồn tại không
+        Account existingAccount = getById(account.getAccountId());
+        
+        // Kiểm tra username và email có bị trùng không (trừ với chính nó)
+        if(accountRepository.existsByUsernameAndAccountIdNot(account.getUsername(), account.getAccountId())){
+            throw new RuntimeException("Username đã tồn tại");
+        }
+        
+        if(accountRepository.existsByEmailAndAccountIdNot(account.getEmail(), account.getAccountId())){
+            throw new RuntimeException("Email đã tồn tại");
+        }
+        
+        // Cập nhật thông tin
+        existingAccount.setUsername(account.getUsername());
+        existingAccount.setEmail(account.getEmail());
+        existingAccount.setFullName(account.getFullName());
+        existingAccount.setPhone(account.getPhone());
+        
+        // Cập nhật role nếu có
+        if(account.getRole() != null && account.getRole().getRoleId() != null){
+            Role role = roleRepository.findById(account.getRole().getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
+            existingAccount.setRole(role);
+        }
+        
+        // Cập nhật password nếu có và không rỗng
+        if(account.getPassword() != null && !account.getPassword().trim().isEmpty()){
+            existingAccount.setPassword(passwordEncoder.encode(account.getPassword()));
+        }
+        
+        accountRepository.save(existingAccount);
+    }
+
     public List<Account> getSupportStaff(){
         return accountRepository.findByRole_RoleName("SUPPORT");
     }
 
+    // Test method để kiểm tra việc lấy Account từ DB
+    public String testAccountConnection(){
+        try {
+            long totalAccounts = accountRepository.count();
+            Optional<Account> adminAccount = accountRepository.findByUsername("admin");
+            Optional<Account> firstAccount = accountRepository.findById(1);
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== Account Connection Test ===\n");
+            result.append("Total accounts: ").append(totalAccounts).append("\n");
+            
+            if(adminAccount.isPresent()){
+                Account admin = adminAccount.get();
+                result.append("Admin found: ").append(admin.getUsername()).append(" (").append(admin.getEmail()).append(")\n");
+            } else {
+                result.append("Admin NOT found\n");
+            }
+            
+            if(firstAccount.isPresent()){
+                Account first = firstAccount.get();
+                result.append("First account: ").append(first.getUsername()).append(" (ID: ").append(first.getAccountId()).append(")\n");
+            } else {
+                result.append("No account with ID=1 found\n");
+            }
+            
+            // Test role mapping
+            List<Role> roles = getAllRoles();
+            result.append("Total roles: ").append(roles.size()).append("\n");
+            for(Role role : roles){
+                result.append("- ").append(role.getRoleName()).append("\n");
+            }
+            
+            return result.toString();
+        } catch (Exception e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
     public boolean isStaffAssigned(Integer staffId){
         return supportRequestRepository.existsByAssignedStaffId(staffId);
+    }
+
+    // Các method cho trash functionality
+    public Page<Account> getDeletedStaff(int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("accountId").descending());
+        return accountRepository.findByStatus("INACTIVE", pageable);
+    }
+
+    public Page<Account> searchDeletedStaff(String keyword, int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("accountId").descending());
+        if(keyword == null || keyword.trim().isEmpty()){
+            return getDeletedStaff(page, size);
+        }
+        return accountRepository.searchDeleted(keyword.trim(), pageable);
+    }
+
+    public void hardDeleteAccount(Integer id){
+        Account account = getById(id);
+        accountRepository.delete(account);
     }
 
     /* =================================================
@@ -158,9 +258,7 @@ public class AccountService {
         return account;
     }
 
-    /* =================================================
-                        REGISTER
-       ================================================= */
+    //REGISTER
 
     public Account registerAccount(String email,String password,String fullName,String phone){
 
@@ -195,19 +293,22 @@ public class AccountService {
         customer.setFullName(fullName);
         customer.setEmail(email);
         customer.setPhone(phone);
-        customer.setCreatedDate(new Date());
+        customer.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
 
         customerRepository.save(customer);
 
         return saved;
     }
 
-    /* =================================================
-                        PROFILE
-       ================================================= */
+    //PROFILE
 
     @Transactional
-    public Account updateProfile(String email,String fullName,String phone){
+    public Account updateProfile(String email,
+                                 String fullName,
+                                 String phone,
+                                 String address,
+                                 String gender,
+                                 java.util.Date dateOfBirth){
 
         Optional<Account> accountOpt = accountRepository.findByEmail(email);
 
@@ -218,12 +319,28 @@ public class AccountService {
         account.setFullName(fullName);
         account.setPhone(phone);
 
+        // cập nhật customer info
+        if(account.getCustomers() != null && !account.getCustomers().isEmpty()){
+
+            Customer customer = account.getCustomers().get(0);
+
+            customer.setFullName(fullName);
+            customer.setPhone(phone);
+            customer.setAddress(address);
+            customer.setGender("male".equalsIgnoreCase(gender));
+            
+            // Convert java.util.Date to java.sql.Date if dateOfBirth is not null
+            if(dateOfBirth != null){
+                customer.setDateOfBirth(new java.sql.Date(dateOfBirth.getTime()));
+            }
+
+            customerRepository.save(customer);
+        }
+
         return accountRepository.save(account);
     }
 
-    /* =================================================
-                        CHANGE PASSWORD
-       ================================================= */
+    //CHANGE PASSWORD
 
     @Transactional
     public boolean changePassword(String email,String currentPassword,String newPassword){
@@ -247,4 +364,52 @@ public class AccountService {
         return accountRepository.findByEmail(email).orElse(null);
     }
 
+/* =================================================
+                FIND ACCOUNT
+   ================================================= */
+
+    public Optional<Account> findByEmail(String email){
+        return accountRepository.findByEmail(email);
+    }
+
+    public Account saveAccount(Account account){
+        return accountRepository.save(account);
+    }
+
+/* =================================================
+                GOOGLE OAUTH LOGIN
+   ================================================= */
+
+    public void processOAuthPostLogin(String email, String name) {
+
+        Optional<Account> accountOpt = accountRepository.findByEmail(email);
+
+        // Nếu account chưa tồn tại thì tạo mới
+        if (accountOpt.isEmpty()) {
+
+            Account account = new Account();
+
+            account.setEmail(email);
+            account.setFullName(name);
+            account.setUsername(email.split("@")[0]); // username tạm từ email
+            account.setPassword(null); // OAuth không cần password
+            account.setStatus("ACTIVE");
+
+            Role role = roleRepository.findByRoleName("Customer")
+                    .orElseGet(() -> roleRepository.findById(3).orElse(null));
+
+            account.setRole(role);
+
+            Account saved = accountRepository.save(account);
+
+            // tạo customer tương ứng
+            Customer customer = new Customer();
+            customer.setAccount(saved);
+            customer.setFullName(name);
+            customer.setEmail(email);
+            customer.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
+
+            customerRepository.save(customer);
+        }
+    }
 }

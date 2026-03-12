@@ -1,11 +1,11 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 
 @Entity
+@Table(name = "Customer")
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +16,7 @@ public class Customer {
     private String fullName;
 
     private boolean gender;
-    @Column(name = "birthday")
+    @Column(name = "birthday", columnDefinition = "DATE")
     private Date dateOfBirth;
 
     @Column (name = "created_at")
