@@ -67,6 +67,18 @@ public class AccountService {
         return roleRepository.findAll();
     }
 
+    public List<Role> getStaffRoles(){
+        List<Role> roles = roleRepository.findAll();
+
+        // loại bỏ Admin và Customer
+        roles.removeIf(role ->
+                role.getRoleName().equalsIgnoreCase("Admin") ||
+                        role.getRoleName().equalsIgnoreCase("Customer")
+        );
+
+        return roles;
+    }
+
     public void createStaff(Account account,Integer roleId){
 
         if(accountRepository.existsByUsername(account.getUsername()))
