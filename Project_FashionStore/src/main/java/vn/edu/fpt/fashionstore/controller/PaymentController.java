@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.service.MomoService;
 import vn.edu.fpt.fashionstore.util.MomoUtils;
 
@@ -56,7 +57,7 @@ public class PaymentController {
      * @return Payment result page
      */
     @GetMapping("/momo/return")
-    public String momoReturn(@RequestParam Map<String, String> params, Model model) {
+    public String momoReturn(@RequestParam Map<String, String> params, RedirectAttributes redirectAttributes) {
         try {
             // Verify signature
             boolean isValid = momoService.verifyPaymentResponse(params);
@@ -68,12 +69,14 @@ public class PaymentController {
 
             // Result code 0 means success
             if ("0".equals(resultCode) && isValid) {
-                return "redirect:/order/checkout/success?orderId=" + orderId + "&transId=" + transId;
+                return "redirect:/order/checkout/momo-success?momoOrderId=" + orderId + "&transId=" + transId;
             } else {
-                return "redirect:/order/checkout?error=payment_failed";
+                redirectAttributes.addFlashAttribute("errorMessage", "Thanh toán MOMO thất bại hoặc đã bị hủy");
+                return "redirect:/order/checkout";
             }
         } catch (Exception e) {
-            return "redirect:/fashionstore/order/checkout";
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xử lý phản hồi từ MOMO");
+            return "redirect:/order/checkout";
         }
     }
 
