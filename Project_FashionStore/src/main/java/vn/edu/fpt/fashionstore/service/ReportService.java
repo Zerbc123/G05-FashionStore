@@ -277,13 +277,16 @@ public class ReportService {
             System.out.println("DEBUG: Getting product report");
             
             // Get product summary from database
-            Object[] productSummary = productReportRepository.getProductSummary();
-            if (productSummary != null && productSummary.length >= 4) {
-                report.put("totalProducts", ((Number) productSummary[0]).longValue());
-                report.put("activeProducts", ((Number) productSummary[1]).longValue());
-                report.put("outOfStockProducts", ((Number) productSummary[2]).longValue());
-                report.put("lowStockProducts", ((Number) productSummary[3]).longValue());
-                System.out.println("DEBUG: Using database summary values");
+            List<Object[]> productSummaryList = productReportRepository.getProductSummary();
+            if (productSummaryList != null && !productSummaryList.isEmpty()) {
+                Object[] productSummary = productSummaryList.get(0);
+                if (productSummary != null && productSummary.length >= 4) {
+                    report.put("totalProducts", productSummary[0] != null ? ((Number) productSummary[0]).longValue() : 0L);
+                    report.put("activeProducts", productSummary[1] != null ? ((Number) productSummary[1]).longValue() : 0L);
+                    report.put("outOfStockProducts", productSummary[2] != null ? ((Number) productSummary[2]).longValue() : 0L);
+                    report.put("lowStockProducts", productSummary[3] != null ? ((Number) productSummary[3]).longValue() : 0L);
+                    System.out.println("DEBUG: Using database summary values");
+                }
             } else {
                 // Fallback values if query fails
                 report.put("totalProducts", 0L);
@@ -463,12 +466,15 @@ public class ReportService {
 
         try {
             // Customer summary with null safety
-            Object[] summary = customerReportRepository.getCustomerSummary(startDate);
-            if (summary != null && summary.length >= 4) {
-                report.put("totalCustomers", summary[0] != null ? ((Number) summary[0]).longValue() : 0L);
-                report.put("activeCustomers", summary[1] != null ? ((Number) summary[1]).longValue() : 0L);
-                report.put("newCustomers", summary[2] != null ? ((Number) summary[2]).longValue() : 0L);
-                report.put("inactiveCustomers", summary[3] != null ? ((Number) summary[3]).longValue() : 0L);
+            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate);
+            if (summaryList != null && !summaryList.isEmpty()) {
+                Object[] summary = summaryList.get(0);
+                if (summary != null && summary.length >= 4) {
+                    report.put("totalCustomers", summary[0] != null ? ((Number) summary[0]).longValue() : 0L);
+                    report.put("activeCustomers", summary[1] != null ? ((Number) summary[1]).longValue() : 0L);
+                    report.put("newCustomers", summary[2] != null ? ((Number) summary[2]).longValue() : 0L);
+                    report.put("inactiveCustomers", summary[3] != null ? ((Number) summary[3]).longValue() : 0L);
+                }
             } else {
                 // Fallback values
                 report.put("totalCustomers", 0L);

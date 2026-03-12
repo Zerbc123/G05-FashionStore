@@ -289,24 +289,7 @@ function updateCharts() {
     console.log('Products for chart:', topProductsData);
     console.log('Categories for chart:', categoriesData);
     
-    // Use fallback if no data
-    if (topProductsData.length === 0) {
-        console.log('Using fallback products data');
-        topProductsData = [
-            {productName: 'Summer Floral Dress', revenue: 48750, totalSold: 245},
-            {productName: 'Classic White Shirt', revenue: 35640, totalSold: 198},
-            {productName: 'Denim Jacket', revenue: 41750, totalSold: 167}
-        ];
-    }
-    
-    if (categoriesData.length === 0) {
-        console.log('Using fallback categories data');
-        categoriesData = [
-            {categoryName: 'Dresses', revenue: 35},
-            {categoryName: 'Shirts', revenue: 25},
-            {categoryName: 'Jackets', revenue: 20}
-        ];
-    }
+    // No fallback data overrides here. Empty tables should result in empty charts.
     
     createCharts();
 }

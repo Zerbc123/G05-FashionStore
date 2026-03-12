@@ -19,7 +19,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
            "LEFT JOIN Order o ON a.accountId = o.account.accountId")
-    Object[] getCustomerSummary(@Param("startDate") LocalDate startDate);
+    List<Object[]> getCustomerSummary(@Param("startDate") LocalDate startDate);
 
     // Get top customers by revenue
     @Query("SELECT c.fullName, c.email, c.phone, " +

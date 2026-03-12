@@ -13,6 +13,7 @@ import vn.edu.fpt.fashionstore.service.ReportService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
@@ -22,6 +23,7 @@ public class AdminController {
 
     @Autowired
     private ReportService reportService;
+    @Autowired
     private AccountService accountService;
 
     // Kiểm tra quyền truy cập ADMIN
@@ -194,15 +196,17 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null ? 
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
             LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(1);
-        LocalDate end = endDate != null ? 
+            LocalDate.now().minusDays(7);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
             LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
             LocalDate.now();
 
         model.addAttribute("title", "Revenue Report");
         model.addAttribute("report", reportService.getRevenueReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
         return "admin/revenue_report";
     }
 
@@ -223,9 +227,32 @@ public class AdminController {
             LocalDate.now();
 
         model.addAttribute("title", "Best Seller Report");
+        model.addAttribute("report", reportService.getBestSellerReport(start, end));
         model.addAttribute("startDate", start);
         model.addAttribute("endDate", end);
+        return "admin/best_seller_report";
+    }
+
+    // Best Seller Report Filter (POST)
+    @PostMapping("/reports/best-seller")
+    public String bestSellerReportFilter(HttpSession session, Model model,
+                                        @RequestParam(required = false) String startDate,
+                                        @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(1);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Best Seller Report");
         model.addAttribute("report", reportService.getBestSellerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
         return "admin/best_seller_report";
     }
 
@@ -258,9 +285,32 @@ public class AdminController {
             LocalDate.now();
 
         model.addAttribute("title", "Customer Report");
+        model.addAttribute("report", reportService.getCustomerReport(start, end));
         model.addAttribute("startDate", start);
         model.addAttribute("endDate", end);
+        return "admin/customer_report";
+    }
+
+    // Customer Report Filter (POST)
+    @PostMapping("/reports/customer")
+    public String customerReportFilter(HttpSession session, Model model,
+                                      @RequestParam(required = false) String startDate,
+                                      @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(6);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Customer Report");
         model.addAttribute("report", reportService.getCustomerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
         return "admin/customer_report";
     }
 
@@ -275,12 +325,4 @@ public class AdminController {
         model.addAttribute("report", reportService.getInventoryReport());
         return "admin/inventory_report";
     }
-
-    // Best Seller Report - Removed
-    // Inventory Report - Removed  
-    // Product Report - Removed
-    // Customer Report - Removed
 }
-
-    // password-change endpoints for admin have been removed per requirement
-    // (only customers may change their password now).}

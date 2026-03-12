@@ -53,5 +53,5 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
            "SUM(CASE WHEN pv.stock > 0 AND pv.stock < 10 THEN 1 ELSE 0 END) " +
            "FROM Product p " +
            "LEFT JOIN p.variants pv")
-    Object[] getProductSummary();
+    List<Object[]> getProductSummary();
 }
