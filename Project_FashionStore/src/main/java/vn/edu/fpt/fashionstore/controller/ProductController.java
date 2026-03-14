@@ -6,13 +6,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import vn.edu.fpt.fashionstore.entity.Category;
-import vn.edu.fpt.fashionstore.entity.CategorySize;
-import vn.edu.fpt.fashionstore.entity.Color;
-import vn.edu.fpt.fashionstore.entity.Product;
-import vn.edu.fpt.fashionstore.entity.ProductVariant;
+import vn.edu.fpt.fashionstore.entity.*;
+import vn.edu.fpt.fashionstore.repository.AccountRepository;
+import vn.edu.fpt.fashionstore.repository.ReviewRepository;
+import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
-import vn.edu.fpt.fashionstore.service.ImageUploadService;
+import vn.edu.fpt.fashionstore.service.ReviewService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +20,20 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/products")
 public class ProductController {
+
+    // --- THÊM MỚI 3 DÒNG NÀY ĐỂ XỬ LÝ ĐÁNH GIÁ ---
+    @Autowired
+    private ReviewService reviewService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private AccountRepository accountRepository;
+    // ----------------------------------------------
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @Autowired
     private ProductService productService;
@@ -166,6 +180,7 @@ public class ProductController {
             @PathVariable("id") Long id,
             @RequestParam(name = "colorId", required = false) Integer colorId,
             @RequestParam(name = "sizeId", required = false) Integer sizeId,
+            jakarta.servlet.http.HttpSession session,
             Model model) {
 
         Product product = productService.getProductById(id);
@@ -209,6 +224,36 @@ public class ProductController {
         model.addAttribute("uniqueSizes", uniqueSizes);
         model.addAttribute("uniqueColors", uniqueColors);
         model.addAttribute("selectedVariant", selectedVariant);
+
+        // ==========================================
+        // THÊM MỚI: XỬ LÝ DATA ĐÁNH GIÁ (REVIEW)
+        // ==========================================
+
+        // 1. Lấy danh sách đánh giá của sản phẩm này gửi ra HTML
+        List<vn.edu.fpt.fashionstore.entity.Review> reviews = reviewService.getActiveReviewsByProduct(product);
+        model.addAttribute("reviews", reviews);
+
+        // 2. Tính trung bình sao (nếu có đánh giá)
+        double averageRating = 0;
+        if (!reviews.isEmpty()) {
+            averageRating = reviews.stream().mapToInt(vn.edu.fpt.fashionstore.entity.Review::getRating).average().orElse(0.0);
+        }
+        model.addAttribute("averageRating", averageRating);
+
+        // 3. Kiểm tra quyền được đánh giá (đã mua và nhận hàng chưa)
+        // Kiểm tra quyền đánh giá mới
+        Customer currentCustomer = getCurrentCustomer(session); // Hàm này bạn tự tùy chỉnh theo code hiện tại của file
+        if (currentCustomer != null) {
+            // Gọi 2 hàm đếm ra
+            long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, id);
+            long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, id);
+
+            // Nút "Viết đánh giá" chỉ hiện lên khi số lần mua thành công LỚN HƠN số lần đã review
+            model.addAttribute("canReview", purchaseCount > reviewCount);
+        } else {
+            // Khách chưa đăng nhập thì mặc định ẩn nút
+            model.addAttribute("canReview", false);
+        }
 
         return "productdetails";
     }
@@ -301,5 +346,14 @@ public class ProductController {
                 (categoryName != null && !categoryName.isBlank()) ||
                 (size != null && !size.isBlank()) || (color != null && !color.isBlank()) || 
                 minPrice != null || maxPrice != null;
+    }
+
+    // --- THÊM MỚI HÀM NÀY ĐỂ LẤY KHÁCH HÀNG ---
+    private vn.edu.fpt.fashionstore.entity.Customer getCurrentCustomer(jakarta.servlet.http.HttpSession session) {
+        String email = (String) session.getAttribute("user");
+        if (email == null) return null;
+        java.util.Optional<vn.edu.fpt.fashionstore.entity.Account> accountOpt = accountRepository.findByEmail(email);
+        if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) return null;
+        return accountOpt.get().getCustomers().get(0);
     }
 }

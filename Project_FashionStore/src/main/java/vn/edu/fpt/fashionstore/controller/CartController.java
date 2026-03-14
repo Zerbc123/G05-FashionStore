@@ -139,7 +139,7 @@ public class CartController {
             updateCartCount(session, currentCustomer);
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
-            return "redirect:/cart/checkout";
+            return "redirect:/order/checkout";
             
         } catch (RuntimeException e) {
             e.printStackTrace();
