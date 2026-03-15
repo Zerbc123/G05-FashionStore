@@ -1,65 +1,39 @@
 package vn.edu.fpt.fashionstore.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.CartItem;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
 import vn.edu.fpt.fashionstore.entity.Voucher;
-import vn.edu.fpt.fashionstore.repository.AccountRepository;
-import vn.edu.fpt.fashionstore.repository.OrderRepository;
-import vn.edu.fpt.fashionstore.repository.VoucherRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/order")
 public class OrderController {
 
-    @Autowired
-    private CartService cartService;
+    private final CartService cartService;
+    private final OrderService orderService;
 
-    @Autowired
-    private OrderService orderService;
-    
-    @Autowired
-    private AccountRepository accountRepository;
+    public OrderController(
+            CartService cartService,
+            OrderService orderService) {
+        this.cartService = cartService;
+        this.orderService = orderService;
+    }
 
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private VoucherRepository voucherRepository;
-
-    // Lấy customer từ session
+    // Lấy customer từ session - chuyển sang service
     private Customer getCurrentCustomer(HttpSession session) {
-        String email = (String) session.getAttribute("user");
-        if (email == null) {
-            throw new RuntimeException("Bạn chưa đăng nhập!");
-        }
-        
-        Optional<Account> accountOpt = accountRepository.findByEmail(email);
-        if (accountOpt.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy tài khoản!");
-        }
-        
-        Account account = accountOpt.get();
-        if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
-            throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
-        }
-        
-        return account.getCustomers().get(0);
+        return orderService.getCurrentCustomer(session);
     }
 
     // =======================================================
@@ -69,27 +43,33 @@ public class OrderController {
     @Transactional(readOnly = true)
     public String checkoutPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
+            System.out.println("=== CHECKOUT PAGE START ===");
             Customer currentCustomer = getCurrentCustomer(session);
             if (currentCustomer == null) {
+                System.out.println("No customer found, redirecting to login");
                 return "redirect:/login";
             }
             
-            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            List<CartItem> cartItems = orderService.getCartItemsForCheckout(session, currentCustomer);
+            
+            System.out.println("Found cart items: " + (cartItems != null ? cartItems.size() : 0));
 
             // Nếu giỏ hàng trống thì không cho vào trang checkout
             if (cartItems == null || cartItems.isEmpty()) {
+                System.out.println("Cart is empty, redirecting to cart");
                 redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
                 return "redirect:/cart";
             }
 
-            double total = cartService.getCartTotal(cartItems);
+            double total = orderService.calculateCartTotal(cartItems);
+            System.out.println("Cart total: " + total);
 
             // Gửi dữ liệu ra cột bên phải
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
 
             // Lấy danh sách voucher hợp lệ từ database
-            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+            List<Voucher> validVouchers = orderService.getValidVouchers();
             model.addAttribute("validVouchers", validVouchers);
 
             // Lấy sẵn tên và sđt từ Customer điền sẵn vào form cho khách lười gõ
@@ -101,22 +81,26 @@ public class OrderController {
             model.addAttribute("phone", phoneStr);
             
             // Ưu tiên địa chỉ từ session (đã chọn từ trang chọn địa chỉ), nếu không có thì dùng từ profile
-            String deliveryAddress = (String) session.getAttribute("deliveryAddress");
-            if (deliveryAddress != null && !deliveryAddress.trim().isEmpty()) {
-                model.addAttribute("address", deliveryAddress);
-            } else {
-                model.addAttribute("address", currentCustomer.getAddress());
-            }
+            String deliveryAddress = orderService.getDeliveryAddressFromSession(session, currentCustomer);
+            model.addAttribute("address", deliveryAddress);
 
+            System.out.println("=== CHECKOUT PAGE SUCCESS ===");
             return "checkout";
         } catch (RuntimeException e) {
+            System.err.println("Error in checkoutPage: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/cart";
+        } catch (Exception e) {
+            System.err.println("Unexpected error in checkoutPage: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống! Vui lòng thử lại.");
             return "redirect:/cart";
         }
     }
 
     // =======================================================
-    // 2. XỬ LÝ KHI BẤM NÚT "ĐẶT HÀNG" (MANUAL VALIDATION)
+    // 2. XỬ LÝ KHI BẤM NÚT "ĐẶT HÀNG" (VALIDATION CHUYỂN SANG SERVICE)
     // =======================================================
     @PostMapping("/checkout/place-order")
     public String placeOrder(
@@ -139,42 +123,21 @@ public class OrderController {
             return "redirect:/login";
         }
 
-        boolean hasError = false;
-
-        // Bắt lỗi: Tên rỗng hoặc chứa số/ký tự đặc biệt
-        if (fullName.trim().isEmpty()) {
-            model.addAttribute("errorFullName", "Vui lòng nhập họ và tên của bạn.");
-            hasError = true;
-        } else if (!fullName.matches("^[\\p{L}\\s]+$")) {
-            // Regex: \p{L} là chữ cái bất kỳ (hỗ trợ tiếng Việt), \s là khoảng trắng
-            model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái, không nhập số hay ký tự đặc biệt.");
-            hasError = true;
-        }
-
-        // Bắt lỗi: Số điện thoại
-        if (phone.trim().isEmpty() || !phone.matches("^0[0-9]{9}$")) {
-            model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (Bắt buộc 10 số và bắt đầu bằng 0).");
-            hasError = true;
-        }
-
-        // Bắt lỗi: Địa chỉ giao hàng
-        if (deliveryAddress.trim().isEmpty()) {
-            model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
-            hasError = true;
-        }
-
-        // Nếu có lỗi -> Phải Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
-        if (hasError) {
+        // Validation qua service
+        try {
+            orderService.validateCheckoutData(fullName, phone, deliveryAddress);
+        } catch (RuntimeException e) {
+            // Nếu có lỗi -> Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
             try {
-                List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
-                double subtotal = cartService.getCartTotal(cartItems);
+                List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
+                double subtotal = orderService.calculateCartTotal(cartItems);
 
                 // Gửi lại data giỏ hàng
                 model.addAttribute("cartItems", cartItems);
                 model.addAttribute("total", subtotal);
                 
                 // Lấy danh sách voucher hợp lệ từ database
-                List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+                List<Voucher> validVouchers = orderService.getValidVouchers();
                 model.addAttribute("validVouchers", validVouchers);
 
                 // Giữ nguyên chữ khách đã nhập
@@ -182,24 +145,19 @@ public class OrderController {
                 model.addAttribute("phone", phone);
                 model.addAttribute("address", deliveryAddress);
                 model.addAttribute("note", note);
+                model.addAttribute("errorFullName", e.getMessage().contains("tên") ? e.getMessage() : null);
+                model.addAttribute("errorPhone", e.getMessage().contains("điện thoại") ? e.getMessage() : null);
+                model.addAttribute("errorAddress", e.getMessage().contains("địa chỉ") ? e.getMessage() : null);
 
                 return "checkout"; // Trả lại trang để khách sửa lỗi
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 return "redirect:/login";
             }
         }
         
         // TẠO ĐƠN HÀNG THỰC TẾ QUA ORDER SERVICE
         try {
-            
-            // Sử dụng địa chỉ từ session hoặc từ form
-            Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
-            
-            // Cập nhật tổng tiền đơn hàng với giá trị từ frontend
-            order.setTotalAmount(totalAmount);
-            
-            // Lưu Order vào database
-            orderRepository.save(order);
+            Order order = orderService.createOrderFromSessionDataWithTotal(session, currentCustomer, deliveryAddress, totalAmount);
             
             // Xóa địa chỉ tạm thời khỏi session sau khi đã đặt hàng
             session.removeAttribute("deliveryAddress");
@@ -260,7 +218,7 @@ public class OrderController {
     }
 
     // =======================================================
-    // 4. XỬ LÝ CẬP NHẬT ĐỊA CHỈ GIAO HÀNG
+    // 4. XỬ LÝ CẬP NHẬT ĐỊA CHỈ GIAO HÀNG (CHUYỂN LOGIC SANG SERVICE)
     // =======================================================
     @PostMapping("/checkout/update-delivery-address")
     public String updateDeliveryAddress(
@@ -275,17 +233,8 @@ public class OrderController {
                 return "redirect:/login";
             }
             
-            // Lưu địa chỉ vào session để sử dụng khi đặt hàng
-            if ("profile".equals(addressOption)) {
-                // Sử dụng địa chỉ từ profile
-                session.setAttribute("deliveryAddress", currentCustomer.getAddress());
-            } else if ("new".equals(addressOption) && finalAddress != null && !finalAddress.trim().isEmpty()) {
-                // Sử dụng địa chỉ mới cho đơn hàng này
-                session.setAttribute("deliveryAddress", finalAddress);
-            } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn địa chỉ giao hàng!");
-                return "redirect:/order/checkout/select-delivery-address";
-            }
+            // Gọi service để xử lý logic
+            orderService.updateDeliveryAddressInSession(session, currentCustomer, addressOption, finalAddress);
             
             return "redirect:/order/checkout";
         } catch (RuntimeException e) {

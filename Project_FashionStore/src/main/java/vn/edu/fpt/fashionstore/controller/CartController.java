@@ -16,6 +16,7 @@ import vn.edu.fpt.fashionstore.service.CartService;
 import jakarta.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -33,22 +34,35 @@ public class CartController {
 
     // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
-        String email = (String) session.getAttribute("user");
-        if (email == null) {
-            throw new RuntimeException("Bạn chưa đăng nhập!");
+        try {
+            String email = (String) session.getAttribute("user");
+            if (email == null) {
+                throw new RuntimeException("Bạn chưa đăng nhập!");
+            }
+            
+            System.out.println("Finding customer for email: " + email);
+            
+            Optional<Account> accountOpt = accountRepository.findByEmail(email);
+            if (accountOpt.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy tài khoản!");
+            }
+            
+            Account account = accountOpt.get();
+            System.out.println("Found account: " + account.getAccountId() + ", Role: " + account.getRole().getRoleName());
+            
+            if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
+                throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
+            }
+            
+            Customer customer = account.getCustomers().get(0);
+            System.out.println("Found customer: " + customer.getCustomerId());
+            
+            return customer;
+        } catch (Exception e) {
+            System.err.println("Error getting current customer: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi lấy thông tin khách hàng: " + e.getMessage(), e);
         }
-        
-        Optional<Account> accountOpt = accountRepository.findByEmail(email);
-        if (accountOpt.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy tài khoản!");
-        }
-        
-        Account account = accountOpt.get();
-        if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
-            throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
-        }
-        
-        return account.getCustomers().get(0);
     }
 
     @GetMapping
@@ -76,6 +90,7 @@ public class CartController {
     }
 
     @PostMapping("/add")
+    @Transactional
     public String addToCart(@RequestParam("productId") Long productId,
                             @RequestParam("sizeId") Integer sizeId,
                             @RequestParam("colorId") Integer colorId,
@@ -112,6 +127,7 @@ public class CartController {
     }
 
     @PostMapping("/buy-now")
+    @Transactional
     public String buyNow(@RequestParam("productId") Long productId,
                          @RequestParam("sizeId") Integer sizeId,
                          @RequestParam("colorId") Integer colorId,
@@ -133,14 +149,14 @@ public class CartController {
                 return "redirect:/products/detail/" + productId;
             }
             
-            // Thêm vào giỏ hàng và chuyển thẳng đến checkout
-            cartService.addToCart(currentCustomer, variantId, quantity);
+            // Tạo giỏ hàng tạm thời chỉ chứa sản phẩm được chọn
+            session.setAttribute("buyNowItems", List.of(
+                Map.of("variantId", variantId, "quantity", quantity)
+            ));
+            session.setAttribute("isBuyNow", true);
             
-            // Cập nhật số lượng giỏ hàng
-            updateCartCount(session, currentCustomer);
-
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
-            return "redirect:/cart/checkout";
+            return "redirect:/order/checkout";
             
         } catch (RuntimeException e) {
             e.printStackTrace();

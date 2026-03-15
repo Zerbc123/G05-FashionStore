@@ -11,6 +11,7 @@ import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -34,25 +35,40 @@ public class CartService {
     // Thêm sản phẩm vào giỏ hàng
     @Transactional
     public void addToCart(Customer customer, Integer variantId, int quantity) {
-        // Tìm ProductVariant từ ID
-        ProductVariant productVariant = productVariantRepository.findById(variantId)
-                .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));
+        try {
+            System.out.println("Adding to cart - Customer: " + customer.getCustomerId() + ", Variant: " + variantId + ", Quantity: " + quantity);
+            
+            // Tìm ProductVariant từ ID
+            ProductVariant productVariant = productVariantRepository.findById(variantId)
+                    .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));
 
-        // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
-        Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
+            System.out.println("Found product variant: " + productVariant.getVariantId());
 
-        if (existingCartItem.isPresent()) {
-            // Nếu đã có, cập nhật số lượng
-            CartItem cartItem = existingCartItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
-            cartRepository.save(cartItem);
-        } else {
-            // Nếu chưa có, tạo mới một CartItem
-            CartItem newCartItem = new CartItem();
-            newCartItem.setCustomer(customer);
-            newCartItem.setProductVariant(productVariant);
-            newCartItem.setQuantity(quantity);
-            cartRepository.save(newCartItem);
+            // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
+            Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
+
+            if (existingCartItem.isPresent()) {
+                // Nếu đã có, cập nhật số lượng
+                CartItem cartItem = existingCartItem.get();
+                System.out.println("Updating existing cart item - Old quantity: " + cartItem.getQuantity());
+                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+                cartRepository.save(cartItem);
+                System.out.println("Updated cart item - New quantity: " + cartItem.getQuantity());
+            } else {
+                // Nếu chưa có, tạo mới một CartItem
+                CartItem newCartItem = new CartItem();
+                newCartItem.setCustomer(customer);
+                newCartItem.setProductVariant(productVariant);
+                newCartItem.setQuantity(quantity);
+                cartRepository.save(newCartItem);
+                System.out.println("Created new cart item with ID: " + newCartItem.getCartItemId());
+            }
+            
+            System.out.println("Successfully added to cart!");
+        } catch (Exception e) {
+            System.err.println("Error adding to cart: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to add item to cart: " + e.getMessage(), e);
         }
     }
 
@@ -93,14 +109,33 @@ public class CartService {
 
     // Tìm variant dựa trên productId, sizeId và colorId
     public Integer findVariantByProductSizeColor(Long productId, Integer sizeId, Integer colorId) {
-        List<ProductVariant> allVariants = productVariantRepository.findAll();
-        return allVariants.stream()
-                .filter(v -> v.getProduct() != null && v.getProduct().getProductId().equals(productId))
-                .filter(v -> v.getCategorySize() != null && v.getCategorySize().getCategorySizeId() == sizeId)
-                .filter(v -> v.getColor() != null && v.getColor().getColorId() == colorId)
-                .map(ProductVariant::getVariantId)
-                .findFirst()
-                .orElse(null);
+        try {
+            List<ProductVariant> variants = productVariantRepository.findAll();
+            System.out.println("Searching for variant - ProductID: " + productId + ", SizeID: " + sizeId + ", ColorID: " + colorId);
+            System.out.println("Total variants found: " + variants.size());
+            
+            for (ProductVariant v : variants) {
+                System.out.println("Variant: " + v.getVariantId() + 
+                    " - Product: " + (v.getProduct() != null ? v.getProduct().getProductId() : "null") +
+                    " - Size: " + (v.getCategorySize() != null ? v.getCategorySize().getCategorySizeId() : "null") +
+                    " - Color: " + (v.getColor() != null ? v.getColor().getColorId() : "null"));
+            }
+            
+            Integer result = variants.stream()
+                    .filter(v -> v.getProduct() != null && v.getProduct().getProductId().equals(productId))
+                    .filter(v -> v.getCategorySize() != null && Objects.equals(v.getCategorySize().getCategorySizeId(), sizeId))
+                    .filter(v -> v.getColor() != null && Objects.equals(v.getColor().getColorId(), colorId))
+                    .map(ProductVariant::getVariantId)
+                    .findFirst()
+                    .orElse(null);
+            
+            System.out.println("Result: " + result);
+            return result;
+        } catch (Exception e) {
+            System.err.println("Error finding variant: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // Lấy cart item theo ID

@@ -106,12 +106,12 @@
         <h2>Login</h2>
         <p>Enter your credentials to access your account</p>
 
-        <div class="alert alert-danger" th:if="${error}">
-            <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+        <div class="alert alert-danger" id="passwordAlert" style="display: none;">
+            <i class="bi bi-exclamation-circle"></i> <span id="passwordErrorMessage"></span>
         </div>
 
         <!-- FORM LOGIN -->
-        <form th:action="@{/login}" method="post">
+        <form th:action="@{/login}" method="post" id="loginForm">
             <div class="form-group">
                 <label for="email"><i class="bi bi-envelope"></i> Email Address</label>
                 <input type="email" class="form-control" id="email" name="username"
@@ -124,11 +124,9 @@
                 <label for="password"><i class="bi bi-lock"></i> Password</label>
                 <div class="password-toggle">
 
-                    <!-- Password must be exactly 6 alphanumeric characters -->
+                    <!-- Password must be 8-12 characters with at least one uppercase, lowercase, and digit -->
                     <input type="password" class="form-control" id="password" name="password"
-                           placeholder="6 ký tự, chữ hoặc số" required
-                           pattern="^[A-Za-z0-9]{6}$" minlength="6" maxlength="6"
-                           title="Mật khẩu chỉ gồm 6 ký tự chữ và số" >
+                           placeholder="Nhập mật khẩu" required>
 
                 </div>
             </div>
@@ -157,5 +155,86 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const passwordAlert = document.getElementById('passwordAlert');
+    const passwordErrorMessage = document.getElementById('passwordErrorMessage');
+    const loginForm = document.getElementById('loginForm');
+    
+    if (passwordInput && passwordAlert && passwordErrorMessage && loginForm) {
+        passwordInput.addEventListener('input', function() {
+            // Hide alert when user starts typing
+            passwordAlert.style.display = 'none';
+        });
+        
+        passwordInput.addEventListener('blur', function() {
+            // Validate password when user leaves the field
+            validatePassword();
+        });
+        
+        passwordInput.addEventListener('invalid', function(e) {
+            // Prevent default browser validation message
+            e.preventDefault();
+            
+            // Validate and show custom message
+            validatePassword();
+        });
+        
+        // Add form submit validation
+        loginForm.addEventListener('submit', function(e) {
+            // Validate password before submitting
+            if (!validatePassword()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        function validatePassword() {
+            const password = passwordInput.value;
+            
+            if (!password) {
+                showError('Vui lòng nhập mật khẩu!');
+                return false;
+            }
+            
+            if (password.length < 8) {
+                showError('Mật khẩu phải có ít nhất 8 ký tự!');
+                return false;
+            }
+            
+            if (password.length > 12) {
+                showError('Mật khẩu không được quá 12 ký tự!');
+                return false;
+            }
+            
+            if (!/[A-Z]/.test(password)) {
+                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
+                return false;
+            }
+            
+            if (!/[a-z]/.test(password)) {
+                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
+                return false;
+            }
+            
+            if (!/\d/.test(password)) {
+                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
+                return false;
+            }
+            
+            // Password is valid
+            passwordAlert.style.display = 'none';
+            return true;
+        }
+        
+        function showError(message) {
+            passwordErrorMessage.textContent = message;
+            passwordAlert.style.display = 'block';
+        }
+    }
+});
+</script>
 </body>
 </html>

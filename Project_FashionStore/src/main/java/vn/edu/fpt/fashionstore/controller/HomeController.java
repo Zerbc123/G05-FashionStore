@@ -213,12 +213,6 @@ public class HomeController {
                               HttpSession session,
                               RedirectAttributes ra) {
 
-        // validate password format (exactly 6 alphanumeric characters)
-        if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
-            return "redirect:/login";
-        }
-
         Account account = accountService.authenticate(username, password);
 
         if (account != null) {
@@ -268,7 +262,7 @@ public class HomeController {
         }
 
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/register";
         }
 
@@ -483,11 +477,63 @@ public class HomeController {
     }
 
     @GetMapping("/reset-password")
-    public String resetPasswordPage(HttpSession session) {
+    public String resetPasswordPage(HttpSession session, Model model) {
         if (session.getAttribute("resetOtpCode") == null) {
             return "redirect:/forgot-password";
         }
+        Long lastOtpTime = (Long) session.getAttribute("lastOtpRequestTime");
+        Integer otpCount = (Integer) session.getAttribute("otpRequestCount");
+        model.addAttribute("lastOtpTime", lastOtpTime != null ? lastOtpTime : 0L);
+        model.addAttribute("otpCount", otpCount != null ? otpCount : 1);
         return "reset-password";
+    }
+
+    @PostMapping("/resend-otp")
+    public String resendForgotPasswordOtp(HttpSession session, RedirectAttributes ra) {
+        String email = (String) session.getAttribute("resetEmail");
+        if (email == null) {
+            return "redirect:/forgot-password";
+        }
+
+        // Kiểm tra chống spam OTP
+        Long lastOtpRequestTime = (Long) session.getAttribute("lastOtpRequestTime");
+        Integer otpRequestCount = (Integer) session.getAttribute("otpRequestCount");
+
+        if (lastOtpRequestTime != null && otpRequestCount != null) {
+            long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
+            long waitTimeSeconds = (otpRequestCount == 1) ? 30 : (long) otpRequestCount * 60;
+
+            if (timeSinceLastRequest < waitTimeSeconds * 1000) {
+                long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
+                ra.addFlashAttribute("error", "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
+                return "redirect:/reset-password";
+            }
+        }
+
+        try {
+            String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
+
+            session.setAttribute("resetOtpCode", otp);
+            session.setAttribute("resetOtpTimestamp", System.currentTimeMillis());
+            session.setAttribute("lastOtpRequestTime", System.currentTimeMillis());
+            if (otpRequestCount == null) {
+                session.setAttribute("otpRequestCount", 1);
+            } else {
+                session.setAttribute("otpRequestCount", otpRequestCount + 1);
+            }
+
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Mã xác nhận đặt lại mật khẩu - Fashion Store");
+            message.setText("Mã OTP đặt lại mật khẩu của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
+            mailSender.send(message);
+
+            ra.addFlashAttribute("success", "Mã OTP mới đã được gửi đến email của bạn!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi gửi email: " + e.getMessage());
+        }
+
+        return "redirect:/reset-password";
     }
 
     @PostMapping("/reset-password")
@@ -525,18 +571,26 @@ public class HomeController {
 
         // Kiểm tra định dạng mật khẩu
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/reset-password";
         }
 
         try {
             // Cập nhật mật khẩu
             Optional<Account> accountOpt = accountService.findByEmail(email);
-            if (accountOpt.isPresent()) {
-                Account account = accountOpt.get();
-                account.setPassword(passwordEncoder.encode(newPassword));
-                accountService.saveAccount(account);
+            if (!accountOpt.isPresent()) {
+                session.removeAttribute("resetOtpCode");
+                session.removeAttribute("resetOtpTimestamp");
+                session.removeAttribute("resetEmail");
+                session.removeAttribute("lastOtpRequestTime");
+                session.removeAttribute("otpRequestCount");
+                ra.addFlashAttribute("error", "Tài khoản không tồn tại. Vui lòng thử lại!");
+                return "redirect:/forgot-password";
             }
+
+            Account account = accountOpt.get();
+            account.setPassword(passwordEncoder.encode(newPassword));
+            accountService.saveAccount(account);
 
             // Xóa session
             session.removeAttribute("resetOtpCode");

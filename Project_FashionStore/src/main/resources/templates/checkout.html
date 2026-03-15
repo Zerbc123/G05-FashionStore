@@ -279,7 +279,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
                     <div class="mt-4 mb-3">
                         <label class="form-label fw-bold"><i class="bi bi-ticket-perforated me-2"></i>Mã Giảm Giá</label>
@@ -390,6 +389,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
+            // Check payment method
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('Vui lòng chọn phương thức thanh toán!');
+                return false;
+            }
+            
+            console.log('Payment method:', paymentMethod.value);
+            
+            // If Momo is selected, handle Momo payment
+            if (paymentMethod.value === 'MOMO') {
+                e.preventDefault();
+                
+                // Get form data
+                const totalAmount = document.getElementById('hiddenTotalAmount').value;
+                const orderInfo = 'Thanh toan don hang - ' + fullName;
+                
+                // Generate order ID
+                const orderId = 'ORD-' + Date.now();
+                
+                console.log('Creating Momo payment:', { orderId, totalAmount, orderInfo });
+                
+                // Create hidden form to submit POST request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/fashionstore/payment/momo/create';
+                
+                const orderIdInput = document.createElement('input');
+                orderIdInput.type = 'hidden';
+                orderIdInput.name = 'orderId';
+                orderIdInput.value = orderId;
+                form.appendChild(orderIdInput);
+                
+                const amountInput = document.createElement('input');
+                amountInput.type = 'hidden';
+                amountInput.name = 'amount';
+                amountInput.value = totalAmount;
+                form.appendChild(amountInput);
+                
+                const orderInfoInput = document.createElement('input');
+                orderInfoInput.type = 'hidden';
+                orderInfoInput.name = 'orderInfo';
+                orderInfoInput.value = orderInfo;
+                form.appendChild(orderInfoInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+                return false;
+            }
+            
             console.log('Form validation passed, submitting...');
             return true;
         });
@@ -442,71 +492,6 @@ function calculateFinalTotal() {
     document.getElementById('hiddenTotalAmount').value = safeTotal;
 }
 
-// Handle form submission for Momo payment
-document.addEventListener('DOMContentLoaded', function() {
-    const checkoutForm = document.getElementById('checkoutForm');
-    if (checkoutForm) {
-        checkoutForm.addEventListener('submit', function(e) {
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-            
-            // If Momo is selected, submit to Momo payment creation
-            if (paymentMethod === 'MOMO') {
-                e.preventDefault();
-                
-                // Get form data
-                const fullName = document.querySelector('input[name="fullName"]').value.trim();
-                const phone = document.querySelector('input[name="phone"]').value.trim();
-                const deliveryAddress = document.querySelector('input[name="deliveryAddress"]').value.trim();
-                const totalAmount = document.getElementById('hiddenTotalAmount').value;
-                
-                // Validate required fields
-                if (!fullName) {
-                    alert('Vui long nhap ho va ten!');
-                    return false;
-                }
-                if (!phone) {
-                    alert('Vui long nhap so dien thoai!');
-                    return false;
-                }
-                if (!deliveryAddress) {
-                    alert('Vui long chon dia chi giao hang!');
-                    return false;
-                }
-                
-                // Generate order ID
-                const orderId = 'ORD-' + Date.now();
-                const orderInfo = 'Thanh toan don hang - ' + fullName;
-                
-                // Create hidden form to submit POST request
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/fashionstore/payment/momo/create';
-                
-                const orderIdInput = document.createElement('input');
-                orderIdInput.type = 'hidden';
-                orderIdInput.name = 'orderId';
-                orderIdInput.value = orderId;
-                form.appendChild(orderIdInput);
-                
-                const amountInput = document.createElement('input');
-                amountInput.type = 'hidden';
-                amountInput.name = 'amount';
-                amountInput.value = totalAmount;
-                form.appendChild(amountInput);
-                
-                const orderInfoInput = document.createElement('input');
-                orderInfoInput.type = 'hidden';
-                orderInfoInput.name = 'orderInfo';
-                orderInfoInput.value = orderInfo;
-                form.appendChild(orderInfoInput);
-                
-                document.body.appendChild(form);
-                form.submit();
-                return false;
-            }
-        });
-    }
-});
 </script>
 
 </body>

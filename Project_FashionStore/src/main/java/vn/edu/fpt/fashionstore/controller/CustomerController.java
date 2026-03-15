@@ -56,7 +56,7 @@ public class CustomerController {
 
         // 2. Kiểm tra định dạng mật khẩu mới
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu mới phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error", "Mật khẩu mới phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/customer/change-password";
         }
 

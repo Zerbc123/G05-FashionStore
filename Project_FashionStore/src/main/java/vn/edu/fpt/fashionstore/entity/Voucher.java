@@ -28,20 +28,16 @@ public class Voucher {
     @Column(name = "is_active")
     private Boolean isActive;
 
-    @Column(name = "min_order_value")
-    private Double minOrderValue;
-
     // --- CONSTRUCTORS ---
     public Voucher() {
     }
 
-    public Voucher(Integer voucherId, String code, Double discountValue, Date expiredDate, Boolean isActive, Double minOrderValue) {
+    public Voucher(Integer voucherId, String code, Double discountValue, Date expiredDate, Boolean isActive) {
         this.voucherId = voucherId;
         this.code = code;
         this.discountValue = discountValue;
         this.expiredDate = expiredDate;
         this.isActive = isActive;
-        this.minOrderValue = minOrderValue;
     }
 
     // --- GETTERS AND SETTERS ---
@@ -83,13 +79,5 @@ public class Voucher {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
-    }
-
-    public Double getMinOrderValue() {
-        return minOrderValue;
-    }
-
-    public void setMinOrderValue(Double minOrderValue) {
-        this.minOrderValue = minOrderValue;
     }
 }
