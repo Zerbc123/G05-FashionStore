@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/customers")
@@ -102,7 +103,7 @@ public class AdminCustomerController {
         }
     }
 
-    // API endpoint cho AJAX search
+    // API endpoint for AJAX search
     @GetMapping("/search")
     @ResponseBody
     public Page<vn.edu.fpt.fashionstore.entity.Customer> searchCustomersAjax(
@@ -111,5 +112,26 @@ public class AdminCustomerController {
             @RequestParam(defaultValue = "10") int size) {
         
         return customerService.searchCustomers(keyword, page, size);
+    }
+
+    // API endpoint to check if customer has account
+    @GetMapping("/check-account/{id}")
+    @ResponseBody
+    public Map<String, Object> checkCustomerAccount(@PathVariable Long id, HttpSession session) {
+        if (!isAdmin(session)) {
+            return Map.of("hasAccount", false, "error", "Unauthorized");
+        }
+        
+        try {
+            Optional<vn.edu.fpt.fashionstore.entity.Customer> customerOpt = customerService.getCustomerById(id);
+            if (customerOpt.isPresent()) {
+                vn.edu.fpt.fashionstore.entity.Customer customer = customerOpt.get();
+                return Map.of("hasAccount", customer.getAccount() != null);
+            } else {
+                return Map.of("hasAccount", false, "error", "Customer not found");
+            }
+        } catch (Exception e) {
+            return Map.of("hasAccount", false, "error", e.getMessage());
+        }
     }
 }

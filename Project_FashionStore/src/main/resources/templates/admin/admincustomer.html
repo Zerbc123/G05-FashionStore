@@ -380,7 +380,7 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Orders</th>
-                        <th>Total Spent</th>
+                        
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -405,11 +405,6 @@
                         </td>
                         <td>
                             <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
-                                  th:text="'$' + ${#numbers.formatDecimal(customerDetails[customer.customerId].totalSpent, 1, 2)}">$2,450.00</span>
-                            <span th:unless="true">$0.00</span>
-                        </td>
-                        <td>
-                            <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
                                   th:class="'badge ' + ${customerDetails[customer.customerId].status.toLowerCase()}"
                                   th:text="${customerDetails[customer.customerId].status}">VIP</span>
                             <span th:unless="${customerDetails != null and customerDetails[customer.customerId] != null}" class="badge inactive">Inactive</span>
@@ -419,50 +414,15 @@
                                 <a th:href="@{/admin/customers/details/{id}(id=${customer.customerId})}" class="btn-action view" title="View">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <!-- Status Update Dropdown -->
-                                <div class="dropdown" th:if="${customer.account != null}">
-                                    <button class="btn-action status dropdown-toggle" 
-                                            type="button" 
-                                            data-bs-toggle="dropdown" 
-                                            aria-expanded="false"
-                                            title="Change Status">
-                                        <i class="bi bi-gear"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <form class="dropdown-item p-0" 
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-                                                  method="post">
-                                                <input type="hidden" name="status" value="active">
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start">
-                                                    <i class="bi bi-check-circle text-success"></i> Set Active
-                                                </button>
-                                            </form>
-                                        </li>
-                                        <li>
-                                            <form class="dropdown-item p-0" 
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-                                                  method="post">
-                                                <input type="hidden" name="status" value="inactive">
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
-                                                        onclick="return confirm('Are you sure you want to deactivate this customer?')">
-                                                    <i class="bi bi-pause-circle text-warning"></i> Set Inactive
-                                                </button>
-                                            </form>
-                                        </li>
-                                        <li>
-                                            <form class="dropdown-item p-0" 
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-                                                  method="post">
-                                                <input type="hidden" name="status" value="blocked">
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
-                                                        onclick="return confirm('Are you sure you want to block this customer?')">
-                                                    <i class="bi bi-x-circle text-danger"></i> Block
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <!-- Status Update Button -->
+                                <button class="btn-action status" 
+                                        type="button" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#statusModal"
+                                        th:attr="data-customer-id=${customer.customerId}, data-customer-name=${customer.fullName}"
+                                        title="Change Status">
+                                    <i class="bi bi-gear"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -556,5 +516,107 @@
         }, 5000);
     }
 </script>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalLabel">Change Customer Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Choose new status for customer: <strong id="customerNameDisplay"></strong></p>
+                <form id="statusUpdateForm" method="post">
+                    <input type="hidden" id="customerIdInput" name="customerId">
+                    <div class="mb-3">
+                        <label for="statusSelect" class="form-label">Select Status:</label>
+                        <select class="form-select" id="statusSelect" name="status" required>
+                            <option value="">Choose a status...</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>Update Status
+                        </button>
+                    </div>
+                </form>
+                <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Status Modal Script
+document.addEventListener('DOMContentLoaded', function() {
+    const statusModal = document.getElementById('statusModal');
+    const customerNameDisplay = document.getElementById('customerNameDisplay');
+    const customerIdInput = document.getElementById('customerIdInput');
+    const statusSelect = document.getElementById('statusSelect');
+    const statusUpdateForm = document.getElementById('statusUpdateForm');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Set customer info when modal is shown
+    statusModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const customerId = button.getAttribute('data-customer-id');
+        const customerName = button.getAttribute('data-customer-name');
+        
+        customerNameDisplay.textContent = customerName;
+        customerIdInput.value = customerId;
+        
+        // Reset dropdown and clear error messages
+        statusSelect.value = '';
+        errorMessage.style.display = 'none';
+        errorMessage.textContent = '';
+    });
+    
+    // Handle form submission
+    statusUpdateForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const customerId = customerIdInput.value;
+        const status = statusSelect.value;
+        
+        // Validate status selection
+        if (!status) {
+            errorMessage.textContent = 'Please select a status.';
+            errorMessage.style.display = 'block';
+            return;
+        }
+        
+        // Add confirmation for inactive status
+        if (status === 'inactive') {
+            if (!confirm('Are you sure you want to deactivate this customer?')) {
+                return;
+            }
+        }
+        
+        // Check if customer has account (this would be better handled server-side)
+        fetch(`/fashionstore/admin/customers/check-account/${customerId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.hasAccount) {
+                    errorMessage.textContent = 'This customer has no account to change status.';
+                    errorMessage.style.display = 'block';
+                } else {
+                    // Submit the form
+                    statusUpdateForm.action = `/fashionstore/admin/customers/update-status/${customerId}`;
+                    statusUpdateForm.submit();
+                }
+            })
+            .catch(error => {
+                // If fetch fails, just submit the form (server will handle validation)
+                statusUpdateForm.action = `/fashionstore/admin/customers/update-status/${customerId}`;
+                statusUpdateForm.submit();
+            });
+    });
+});
+</script>
+
 </body>
 </html>
