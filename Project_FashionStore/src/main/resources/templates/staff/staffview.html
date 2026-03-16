@@ -12,7 +12,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Poppins', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             min-height: 100vh;
         }
         
@@ -79,6 +79,8 @@
         .feature-card.orders:hover { border-color: #f093fb; }
         .feature-card.support:hover { border-color: #4facfe; }
         .feature-card.inventory:hover { border-color: #43e97b; }
+        .feature-card.products:hover { border-color: #ff6b9d; }
+        .feature-card.categories:hover { border-color: #feca57; }
         
         .feature-icon {
             width: 80px;
@@ -95,6 +97,8 @@
         .icon-orders { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         .icon-support { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         .icon-inventory { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .icon-products { background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%); }
+        .icon-categories { background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%); }
         
         .feature-card h3 {
             font-family: 'Playfair Display', serif;
@@ -121,6 +125,8 @@
         .btn-orders { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         .btn-support { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         .btn-inventory { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .btn-products { background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%); }
+        .btn-categories { background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%); }
         .btn-feature:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -233,6 +239,34 @@
                     <p>Kiểm tra tồn kho và nhập xuất hàng</p>
                     <a th:href="@{/staff/inventory}" class="btn-feature btn-inventory">
                         <i class="bi bi-arrow-right"></i> Vào Kho
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Products Card -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card products">
+                    <div class="feature-icon icon-products">
+                        <i class="bi bi-box"></i>
+                    </div>
+                    <h3>Sản Phẩm</h3>
+                    <p>Quản lý thông tin và tồn kho sản phẩm</p>
+                    <a th:href="@{/staff/products}" class="btn-feature btn-products">
+                        <i class="bi bi-arrow-right"></i> Quản Lý SP
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Categories Card -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card categories">
+                    <div class="feature-icon icon-categories">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <h3>Danh Mục</h3>
+                    <p>Tổ chức và quản lý danh mục sản phẩm</p>
+                    <a th:href="@{/staff/categories}" class="btn-feature btn-categories">
+                        <i class="bi bi-arrow-right"></i> Quản Lý DM
                     </a>
                 </div>
             </div>
