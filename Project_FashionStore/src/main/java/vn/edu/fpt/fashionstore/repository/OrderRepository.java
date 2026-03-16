@@ -82,12 +82,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // ==========================================
 
     // Lấy chi tiết 1 đơn hàng kèm theo danh sách sản phẩm (Dùng cho giao diện Admin & Xuất PDF)
-    @Query("""
-            SELECT o FROM Order o
-            LEFT JOIN FETCH o.orderItems oi
-            LEFT JOIN FETCH oi.productVariant pv
-            LEFT JOIN FETCH pv.product
-            WHERE o.orderId = :id
-            """)
+    @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems oi " +
+            "LEFT JOIN FETCH oi.productVariant pv " +
+            "LEFT JOIN FETCH pv.product " +
+            "WHERE o.orderId = :id")
     Order findOrderWithItems(@Param("id") Long id);
 }
