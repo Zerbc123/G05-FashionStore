@@ -7,17 +7,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
@@ -70,19 +69,19 @@ public class AdminController {
         
         // Tính tổng doanh thu
         double totalRevenue = orders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         
         // Đếm đơn hàng theo trạng thái
         long pendingOrders = orders.stream()
-            .filter(order -> "PENDING".equals(order.getStatus()))
+            .filter(order -> OrderStatus.PENDING.equals(order.getStatus()))
             .count();
         long processingOrders = orders.stream()
-            .filter(order -> "SHIPPING".equals(order.getStatus()))
+            .filter(order -> OrderStatus.SHIPPING.equals(order.getStatus()))
             .count();
         long completedOrders = orders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .count();
         
         // Lấy 5 đơn hàng gần nhất
@@ -93,7 +92,7 @@ public class AdminController {
         
         // Tính doanh thu theo tháng (Revenue Overview)
         Map<Integer, Double> revenueByMonth = orders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
                 order -> {
                     // Convert Date to LocalDate to get month value
@@ -113,7 +112,7 @@ public class AdminController {
         
         // Tính doanh thu theo danh mục với số lượng (Sales by Category)
         Map<String, Long> salesByCategory = orders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .flatMap(order -> order.getOrderItems() != null ? order.getOrderItems().stream() : java.util.stream.Stream.empty())
             .collect(java.util.stream.Collectors.groupingBy(
                 item -> {
@@ -249,24 +248,24 @@ public class AdminController {
         return "admin/admin_profile";
     }
 
-    // Quản lý nhân viên
-    @GetMapping("/staff")
-    public String staff(HttpSession session, Model model) {
+    // Chỉnh sửa khách hàng
+    @GetMapping("/customers/edit/{id}")
+    public String editCustomer(@PathVariable String id, HttpSession session, Model model) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Staff Management");
-        return "admin/view_staff";
+        model.addAttribute("title", "Edit Customer");
+        model.addAttribute("customerId", id);
+        return "editprofile";
     }
 
     // Thêm nhân viên mới
-    @GetMapping("/staff/add")
+    @GetMapping("/staff/add_old")
     public String addStaff(HttpSession session, Model model) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Add New Staff");
-        return "admin/add_new_staff";
+        return "redirect:/admin/staff/create";
     }
 
     // Xem chi tiết nhân viên
@@ -275,9 +274,7 @@ public class AdminController {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("title", "Staff Details");
-        model.addAttribute("staffId", id);
-        return "admin/view_staff_details";
+        return "redirect:/admin/staff/details/" + id;
     }
 
     // Hủy/Xóa nhân viên
@@ -299,7 +296,5 @@ public class AdminController {
         model.addAttribute("title", "Reports");
         return "admin/reports";
     }
-}
 
-    // password-change endpoints for admin have been removed per requirement
-    // (only customers may change their password now).}
+}

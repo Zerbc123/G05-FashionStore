@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Voucher</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+</head>
+<body class="bg-light" style="padding-top: 100px;">
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-ticket-perforated me-2"></i>Quản Lý Mã Giảm Giá</h2>
+        <a th:href="@{/admin/vouchers/add}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Thêm Mã Mới</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success fw-bold" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger fw-bold" th:text="${errorMessage}"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Mã Code</th>
+                    <th>Mức Giảm</th>
+                    <th>Ngày Hết Hạn</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-center">Hành Động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${vouchers}">
+                    <td th:text="${v.voucherId}">1</td>
+                    <td><span class="badge bg-secondary fs-6" th:text="${v.code}">CODE</span></td>
+                    <td class="text-danger fw-bold" th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</td>
+                    <td th:text="${#dates.format(v.expiredDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td>
+                        <span th:if="${v.isActive}" class="badge bg-success">Đang hoạt động</span>
+                        <span th:unless="${v.isActive}" class="badge bg-danger">Đã khóa</span>
+                    </td>
+                    <td class="text-center">
+                        <a th:href="@{'/admin/vouchers/edit/' + ${v.voucherId}}" class="btn btn-sm btn-outline-info me-1" title="Sửa">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a th:href="@{'/admin/vouchers/delete/' + ${v.voucherId}}" class="btn btn-sm btn-outline-danger" title="Xóa">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(vouchers)}">
+                    <td colspan="6" class="text-center text-muted py-4">Chưa có mã giảm giá nào trong hệ thống.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

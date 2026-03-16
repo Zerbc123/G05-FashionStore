@@ -18,7 +18,7 @@ public class Customer {
 
     private boolean gender;
 
-    @Column(name = "birthday")
+    @Column(name = "birthday", columnDefinition = "DATE")
     private Date dateOfBirth;
 
     @Column(name = "created_at")

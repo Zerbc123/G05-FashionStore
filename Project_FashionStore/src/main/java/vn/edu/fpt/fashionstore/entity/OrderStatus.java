@@ -7,13 +7,13 @@ public enum OrderStatus {
     COMPLETED("Đã hoàn thành"),
     CANCELLED("Đã hủy"),
     REFUNDED("Đã hoàn tiền");
-    
+
     private final String displayName;
-    
+
     OrderStatus(String displayName) {
         this.displayName = displayName;
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }

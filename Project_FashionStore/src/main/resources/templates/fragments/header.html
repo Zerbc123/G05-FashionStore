@@ -156,7 +156,7 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
-            padding: 1rem 2rem;
+            padding: 0.8rem 1.5rem; /* Thu nhỏ padding trên/dưới một chút */
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
             display: flex;
@@ -164,31 +164,38 @@
             justify-content: space-between;
         }
         .admin-header-simple .brand {
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Thu nhỏ font logo một chút */
             font-weight: 700;
             color: white;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            white-space: nowrap; /* Đảm bảo logo không rớt dòng */
         }
         .admin-header-simple .nav-menu {
             display: flex;
             list-style: none;
             margin: 0;
             padding: 0;
-            gap: 5px;
+            gap: 2px; /* Ép khoảng cách giữa các nút sát lại */
+            overflow-x: auto; /* Nếu màn hình bé quá sẽ cho phép trượt ngang thay vì che mất chữ */
+            scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
+        }
+        .admin-header-simple .nav-menu::-webkit-scrollbar {
+            display: none; /* Ẩn thanh cuộn Chrome/Edge */
         }
         .admin-header-simple .nav-menu a {
             color: white;
             text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 6px 10px; /* Thu gọn khoảng trống bên trong mỗi nút */
+            border-radius: 15px;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.95rem;
+            gap: 4px; /* Giảm khoảng cách giữa Icon và Chữ */
+            font-size: 0.85rem; /* Giảm font size xuống để vừa vặn hơn */
+            white-space: nowrap; /* Bắt buộc chữ nằm trên 1 hàng */
         }
         .admin-header-simple .nav-menu a:hover {
             background: rgba(255,255,255,0.2);
@@ -205,9 +212,15 @@
             <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
             <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> Products</a></li>
             <li><a th:href="@{/admin/categories}"><i class="bi bi-box"></i> Categories</a></li>
+            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
             <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> Orders</a></li>
+            <li><a th:href="@{/admin/returns}"><i class="bi bi-arrow-return-left"></i> Returns</a></li>
+            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
+            <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
+            <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
             <li><a th:href="@{/admin/customers}"><i class="bi bi-people"></i> Customers</a></li>
             <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
+            <li><a th:href="@{/admin/support}"><i class="bi bi-headset"></i> Support</a></li>
             <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
             <li><a th:href="@{/admin/profile}"><i class="bi bi-globe"></i> Profile</a></li>
             <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>

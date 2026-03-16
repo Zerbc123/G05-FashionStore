@@ -35,7 +35,12 @@ public class StaffController {
 
     private boolean isStaff(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
-        return "Staff".equals(role) || "Admin".equals(role);
+
+        return "Admin".equalsIgnoreCase(role)
+                || role.contains("Nhân viên bán hàng (Sale)")
+                || role.contains("Quản lý kho (Stock)")
+                || role.contains("Hỗ trợ khách hàng (Support)")
+                || role.contains("Quản lý cửa hàng (Manager)");
     }
 
     // ======== STAFF VIEW ========
@@ -54,12 +59,17 @@ public class StaffController {
         return "staff/staffdashboard";
     }
 
-    @GetMapping("/support")
-    public String support(HttpSession session, Model model) {
-        if (!isStaff(session)) return "redirect:/login";
-        model.addAttribute("title", "Customer Support");
-        return "staff/staffsupport";
+    // Quản lý đơn hàng (Confirm Orders)
+    @GetMapping("/orders")
+    public String orders(HttpSession session, Model model) {
+        if (!isStaff(session)) {
+            return "redirect:/login";
+        }
+        model.addAttribute("title", "Order Management");
+        return "staff/conformorder";
     }
+
+
 
     @GetMapping("/inventory")
     public String inventory(HttpSession session, Model model) {

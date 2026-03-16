@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,10 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
-import vn.edu.fpt.fashionstore.entity.CartItem;
-import vn.edu.fpt.fashionstore.entity.Customer;
-import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.*;
+import vn.edu.fpt.fashionstore.repository.BannerRepository;
 import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
@@ -44,6 +44,9 @@ public class HomeController {
     private final ProductRepository productRepository;
 
     @Autowired
+    private BannerRepository bannerRepository;
+
+    @Autowired
     private org.springframework.mail.javamail.JavaMailSender mailSender;
 
     @Autowired
@@ -61,8 +64,23 @@ public class HomeController {
         this.productRepository = productRepository;
     }
 
-    @GetMapping("/home")
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/home";
+    }@GetMapping("/home")
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
+
+        // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
+        List<vn.edu.fpt.fashionstore.entity.Banner> banners = bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc();
+        model.addAttribute("banners", banners);
+
+        // 2. TẠO LOGIC LẤY 4 SẢN PHẨM BÁN CHẠY NHẤT
+        // PageRequest.of(0, 4) nghĩa là lấy trang đầu tiên (index 0), và chỉ lấy tối đa 4 phần tử
+        Pageable topFour = PageRequest.of(0, 4);
+        List<ProductRepository.ProductHomeInfo> bestSellingProducts = productRepository.findTopSellingProducts(topFour);
+
+        // Đẩy danh sách này sang HTML
+        model.addAttribute("bestSellingProducts", bestSellingProducts);
 
         List<ProductRepository.ProductHomeInfo> products = productRepository.getAllProductHome();
         model.addAttribute("products", products);
@@ -230,8 +248,16 @@ public class HomeController {
 
             updateCartCountForCustomer(session, account);
 
-            if ("Admin".equalsIgnoreCase(roleName)) return "redirect:/admin";
-            if ("Staff".equalsIgnoreCase(roleName)) return "redirect:/staff";
+            if ("Admin".equalsIgnoreCase(roleName)) {
+                return "redirect:/admin";
+            }
+
+            if ("Nhân viên bán hàng (Sale)".equalsIgnoreCase(roleName) ||
+                "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
+                "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
+                "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
+                return "redirect:/staff";
+            }
 
             return "redirect:/home";
         }

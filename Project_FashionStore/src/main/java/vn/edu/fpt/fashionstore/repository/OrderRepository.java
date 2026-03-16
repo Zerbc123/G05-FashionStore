@@ -14,6 +14,21 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
+    // ==========================================
+    // HÀM KIỂM TRA QUYỀN ĐÁNH GIÁ (DÀNH CHO REVIEW)
+    // ==========================================
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END " +
+            "FROM Order o JOIN o.orderItems oi JOIN oi.productVariant pv " +
+            "WHERE o.customer = :customer AND pv.product.productId = :productId AND o.status = :status")
+    boolean hasCustomerBoughtProduct(
+            @Param("customer") Customer customer,
+            @Param("productId") Long productId,
+            @Param("status") OrderStatus status);
+
+    // ==========================================
+    // CÁC HÀM CỦA BẠN (ĐƯỢC GIỮ NGUYÊN 100%)
+    // ==========================================
+
     // Lấy danh sách đơn hàng của khách hàng
     List<Order> findByCustomerOrderByOrderDateDesc(Customer customer);
 
@@ -22,6 +37,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Lấy tất cả đơn hàng theo trạng thái (cho admin/staff)
     List<Order> findByStatusOrderByOrderDateDesc(OrderStatus status);
+
+    // Lấy tất cả đơn hàng (cho admin/staff)
+    List<Order> findAll();
 
     // Đếm số đơn hàng theo trạng thái
     long countByStatus(OrderStatus status);
@@ -55,4 +73,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Lấy danh sách đơn hàng của khách hàng theo customerId
     List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);
+
+    // Tìm đơn hàng theo nhiều trạng thái
+    List<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses);
+
+    // ==========================================
+    // HÀM BỔ SUNG TỪ CODE CỦA BẠN CÙNG NHÓM
+    // ==========================================
+
+    // Lấy chi tiết 1 đơn hàng kèm theo danh sách sản phẩm (Dùng cho giao diện Admin & Xuất PDF)
+    @Query("""
+            SELECT o FROM Order o
+            LEFT JOIN FETCH o.orderItems oi
+            LEFT JOIN FETCH oi.productVariant pv
+            LEFT JOIN FETCH pv.product
+            WHERE o.orderId = :id
+            """)
+    Order findOrderWithItems(@Param("id") Long id);
 }
