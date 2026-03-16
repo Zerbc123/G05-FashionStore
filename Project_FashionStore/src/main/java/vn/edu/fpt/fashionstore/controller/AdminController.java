@@ -259,34 +259,6 @@ public class AdminController {
         return "editprofile";
     }
 
-    // Thêm nhân viên mới
-    @GetMapping("/staff/add_old")
-    public String addStaff(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        return "redirect:/admin/staff/create";
-    }
-
-    // Xem chi tiết nhân viên
-    @GetMapping("/staffdetails/{id}")
-    public String staffDetails(@PathVariable String id, HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        return "redirect:/admin/staff/details/" + id;
-    }
-
-    // Hủy/Xóa nhân viên
-    @GetMapping("/cancel_staff")
-    public String cancelStaff(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        model.addAttribute("title", "Cancel Staff");
-        return "admin/cancel_staff";
-    }
-
     // Báo cáo
     @GetMapping("/reports")
     public String reports(HttpSession session, Model model) {

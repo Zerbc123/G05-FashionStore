@@ -92,7 +92,7 @@ public class AdminOrderController {
 
             // Chuyển String nhận từ HTML form sang Enum
             try {
-                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
                 order.setStatus(newStatus);
                 orderRepository.save(order);
             } catch (IllegalArgumentException e) {

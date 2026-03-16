@@ -231,16 +231,23 @@ public class HomeController {
                               HttpSession session,
                               RedirectAttributes ra) {
 
+        System.out.println("DEBUG: Login attempt for username: " + username);
+        System.out.println("DEBUG: Password length: " + (password != null ? password.length() : "null"));
+
         // validate password format (exactly 6 alphanumeric characters)
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
+            System.out.println("DEBUG: Password validation failed");
             ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
             return "redirect:/login";
         }
 
+        System.out.println("DEBUG: Password validation passed, calling authenticate");
         Account account = accountService.authenticate(username, password);
+        System.out.println("DEBUG: Authenticate result: " + (account != null ? "SUCCESS" : "FAILED"));
 
         if (account != null) {
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
+            System.out.println("DEBUG: Role name: " + roleName);
 
             session.setAttribute("user", account.getEmail());
             session.setAttribute("userRole", roleName);
@@ -249,6 +256,7 @@ public class HomeController {
             updateCartCountForCustomer(session, account);
 
             if ("Admin".equalsIgnoreCase(roleName)) {
+                System.out.println("DEBUG: Redirecting to /admin");
                 return "redirect:/admin";
             }
 
@@ -256,9 +264,11 @@ public class HomeController {
                 "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
                 "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
                 "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
+                System.out.println("DEBUG: Redirecting to /staff");
                 return "redirect:/staff";
             }
 
+            System.out.println("DEBUG: Redirecting to /home (default for customer)");
             return "redirect:/home";
         }
 
@@ -587,14 +597,22 @@ public class HomeController {
 
     private void updateCartCountForCustomer(HttpSession session, Account account) {
         try {
+            System.out.println("DEBUG: Updating cart count for account: " + account.getEmail());
+            System.out.println("DEBUG: Customers list: " + (account.getCustomers() != null ? account.getCustomers().size() : "null"));
+            
             if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
                 Customer customer = account.getCustomers().get(0);
+                System.out.println("DEBUG: Found customer: " + customer.getCustomerId());
                 List<CartItem> cartItems = cartService.getCartItems(customer);
+                System.out.println("DEBUG: Cart items count: " + cartItems.size());
                 session.setAttribute("cartCount", cartItems.size());
             } else {
+                System.out.println("DEBUG: No customers found, setting cart count to 0");
                 session.setAttribute("cartCount", 0);
             }
         } catch (Exception e) {
+            System.out.println("DEBUG: Error in updateCartCountForCustomer: " + e.getMessage());
+            e.printStackTrace();
             session.setAttribute("cartCount", 0);
         }
     }

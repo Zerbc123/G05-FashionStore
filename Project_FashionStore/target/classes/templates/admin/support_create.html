@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FashionStore Admin - Tạo yêu cầu hỗ trợ</title>
+
+
+
+    <!-- Bootstrap CSS -->
+
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    
+
+    <!-- Google Fonts -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+
+
+    <!-- Tailwind CSS -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+
+    <!-- FontAwesome -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+    <script>
+
+        tailwind.config = {
+
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        primary: {
+
+                            DEFAULT: '#F06292',
+
+                            light: '#F48FB1',
+
+                        },
+
+                        secondary: {
+
+                            bg: '#FFF5F7',
+
+                        },
+
+                        text: {
+
+                            main: '#2F2F2F',
+
+                            muted: '#7A7A7A',
+
+                        },
+
+                        divider: '#EAEAEA',
+
+                        success: '#C8E6C9',
+
+                        danger: '#F8D7DA',
+
+                        warning: '#FFF3CD'
+
+                    },
+
+                    fontFamily: {
+
+                        heading: ['"Playfair Display"', 'serif'],
+
+                        body: ['"Poppins"', 'sans-serif'],
+
+                    },
+
+                    boxShadow: {
+
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+
+                    },
+
+                    backgroundImage: {
+
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    </script>
+
+
+
+    <style>
+
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+
+
+        .form-container {
+
+            background: white;
+
+            border-radius: 16px;
+
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+
+            overflow: hidden;
+
+        }
+
+
+
+        .form-group {
+
+            margin-bottom: 1.5rem;
+
+        }
+
+
+
+        .form-label {
+
+            display: block;
+
+            font-size: 0.875rem;
+
+            font-weight: 500;
+
+            color: #2F2F2F;
+
+            margin-bottom: 0.5rem;
+
+        }
+
+
+
+        .form-control {
+
+            width: 100%;
+
+            padding: 0.75rem 1rem;
+
+            border: 2px solid #EAEAEA;
+
+            border-radius: 0.75rem;
+
+            font-size: 0.875rem;
+
+            transition: all 0.3s;
+
+        }
+
+
+
+        .form-control:focus {
+
+            outline: none;
+
+            border-color: #F06292;
+
+            box-shadow: 0 0 0 3px rgba(240, 98, 146, 0.1);
+
+        }
+
+
+
+        .form-control-lg {
+
+            padding: 1rem;
+
+            font-size: 1rem;
+
+        }
+
+
+
+        .btn-primary {
+
+            background: linear-gradient(90deg, #F06292 0%, #F48FB1 100%);
+
+            color: white;
+
+            padding: 0.75rem 2rem;
+
+            border: none;
+
+            border-radius: 0.75rem;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: all 0.3s;
+
+            text-decoration: none;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 0.5rem;
+
+        }
+
+
+
+        .btn-primary:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 8px 25px rgba(240, 98, 146, 0.3);
+
+        }
+
+
+
+        .btn-secondary {
+
+            background: white;
+
+            color: #2F2F2F;
+
+            padding: 0.75rem 2rem;
+
+            border: 2px solid #EAEAEA;
+
+            border-radius: 0.75rem;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: all 0.3s;
+
+            text-decoration: none;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 0.5rem;
+
+        }
+
+
+
+        .btn-secondary:hover {
+
+            border-color: #F06292;
+
+            color: #F06292;
+
+        }
+
+    </style>
+
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+
+
+<!-- Admin Header -->
+
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+
+
+<div style="margin-top: 80px;">
+
+
+
+<main class="flex-grow p-8 max-w-[1320px] mx-auto w-full">
+
+
+
+    <!-- Success Message Display -->
+
+    <div th:if="${successMessage}" class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2">
+
+        <i class="fa-solid fa-check-circle"></i>
+
+        <span th:text="${successMessage}">Success message</span>
+
+    </div>
+
+
+
+    <!-- Error Message Display -->
+
+    <div th:if="${errorMessage}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+
+        <i class="fa-solid fa-exclamation-triangle"></i>
+
+        <span th:text="${errorMessage}">Error message</span>
+
+    </div>
+
+
+
+    <!-- Page Header Section -->
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+
+        <div>
+
+            <h1 class="text-3xl font-heading font-bold text-text-main">Tạo yêu cầu hỗ trợ mới</h1>
+
+            <div class="w-12 h-1 bg-primary mt-2"></div>
+
+        </div>
+
+
+
+        <div class="flex items-center gap-3">
+
+            <a th:href="@{/admin/support}" class="btn-secondary">
+
+                <i class="fa-solid fa-arrow-left"></i> Quay lại
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Create Form -->
+
+    <div class="form-container p-8">
+
+        <form th:action="@{/admin/support/create}" th:object="${supportRequest}" method="post">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- Left Column -->
+
+                <div class="space-y-6">
+
+                    <!-- Customer Name -->
+
+                    <div class="form-group">
+
+                        <label for="customerName" class="form-label">Tên khách hàng <span class="text-red-500">*</span></label>
+
+                        <input type="text" 
+
+                               id="customerName" 
+
+                               th:field="*{customerName}" 
+
+                               class="form-control" 
+
+                               placeholder="Nhập tên khách hàng"
+
+                               required>
+
+                        <div th:if="${#fields.hasErrors('customerName')}" class="text-red-500 text-xs mt-1">
+
+                            <span th:errors="*{customerName}">Error</span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Customer Email -->
+
+                    <div class="form-group">
+
+                        <label for="customerEmail" class="form-label">Email khách hàng <span class="text-red-500">*</span></label>
+
+                        <input type="email" 
+
+                               id="customerEmail" 
+
+                               th:field="*{customerEmail}" 
+
+                               class="form-control" 
+
+                               placeholder="Nhập email khách hàng"
+
+                               required>
+
+                        <div th:if="${#fields.hasErrors('customerEmail')}" class="text-red-500 text-xs mt-1">
+
+                            <span th:errors="*{customerEmail}">Error</span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Status -->
+
+                    <div class="form-group">
+
+                        <label for="status" class="form-label">Trạng thái</label>
+
+                        <select id="status" th:field="*{status}" class="form-control">
+
+                            <option th:each="status : ${statuses}" 
+
+                                    th:value="${status}" 
+
+                                    th:text="${status}" 
+
+                                    th:selected="${status == T(vn.edu.fpt.fashionstore.entity.SupportStatus).OPEN}">OPEN</option>
+
+                        </select>
+
+                        <div th:if="${#fields.hasErrors('status')}" class="text-red-500 text-xs mt-1">
+
+                            <span th:errors="*{status}">Error</span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Right Column -->
+
+                <div class="space-y-6">
+
+                    <!-- Title -->
+
+                    <div class="form-group">
+
+                        <label for="title" class="form-label">Tiêu đề yêu cầu <span class="text-red-500">*</span></label>
+
+                        <input type="text" 
+
+                               id="title" 
+
+                               th:field="*{title}" 
+
+                               class="form-control" 
+
+                               placeholder="Nhập tiêu đề yêu cầu"
+
+                               required>
+
+                        <div th:if="${#fields.hasErrors('title')}" class="text-red-500 text-xs mt-1">
+
+                            <span th:errors="*{title}">Error</span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Description -->
+
+                    <div class="form-group">
+
+                        <label for="description" class="form-label">Mô tả chi tiết <span class="text-red-500">*</span></label>
+
+                        <textarea id="description" 
+
+                                  th:field="*{description}" 
+
+                                  class="form-control form-control-lg" 
+
+                                  rows="8" 
+
+                                  placeholder="Nhập mô tả chi tiết về yêu cầu hỗ trợ..."
+
+                                  required></textarea>
+
+                        <div th:if="${#fields.hasErrors('description')}" class="text-red-500 text-xs mt-1">
+
+                            <span th:errors="*{description}">Error</span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Form Actions -->
+
+            <div class="border-t border-divider pt-6 mt-8">
+
+                <div class="flex items-center gap-4">
+
+                    <button type="submit" class="btn-primary">
+
+                        <i class="fa-solid fa-save"></i>
+
+                        Tạo yêu cầu hỗ trợ
+
+                    </button>
+
+
+
+                    <a th:href="@{/admin/support}" class="btn-secondary">
+
+                        <i class="fa-solid fa-times"></i>
+
+                        Hủy
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+
+</main>
+
+
+
+<footer class="py-6 border-t border-divider bg-white text-center mt-auto">
+
+    <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest">FashionStore Admin Console &copy; 2024</p>
+
+</footer>
+
+
+
+</div>
+
+</body>
+
+</html>

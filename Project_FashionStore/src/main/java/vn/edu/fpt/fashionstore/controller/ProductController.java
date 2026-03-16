@@ -216,7 +216,8 @@ public class ProductController {
         Customer currentCustomer = getCurrentCustomer(session); // Hàm này bạn tự tùy chỉnh theo code hiện tại của file
         if (currentCustomer != null) {
             // Gọi 2 hàm đếm ra
-            long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, id);
+            // TODO: Fix countSuccessfulPurchases method
+            long purchaseCount = 0; // orderService.countSuccessfulPurchases(currentCustomer, id);
             long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, id);
 
             // Nút "Viết đánh giá" chỉ hiện lên khi số lần mua thành công LỚN HƠN số lần đã review
