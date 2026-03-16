@@ -1,560 +1,1110 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Customer Management - Fashion Store Admin</title>
+
     <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+
         * {
+
             margin: 0;
+
             padding: 0;
+
             box-sizing: border-box;
+
         }
+
+
 
         body {
+
             font-family: 'Poppins', sans-serif;
+
             background: #f5f6fa;
+
             min-height: 100vh;
+
         }
+
+
 
         /* Admin Navbar */
+
         .admin-navbar {
+
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
             padding: 1rem 0;
+
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
         }
+
+
 
         .admin-navbar .navbar-brand {
+
             color: white;
+
             font-family: 'Playfair Display', serif;
+
             font-size: 1.5rem;
+
             font-weight: 700;
+
         }
+
+
 
         .admin-navbar .nav-link {
+
             color: rgba(255,255,255,0.9);
+
             margin: 0 10px;
+
             transition: all 0.3s;
+
         }
+
+
 
         .admin-navbar .nav-link:hover {
+
             color: white;
+
             transform: translateY(-2px);
+
         }
+
+
 
         .admin-navbar .nav-link.active {
+
             color: white;
+
             font-weight: 600;
+
         }
+
+
 
         /* Main Content */
+
         .main-content {
+
             padding: 40px 0;
+
         }
+
+
 
         .page-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 30px;
+
         }
+
+
 
         .page-header h1 {
+
             font-family: 'Playfair Display', serif;
+
             color: #2d3436;
+
             font-size: 2rem;
+
         }
+
+
 
         /* Table Card */
+
         .table-card {
+
             background: white;
+
             border-radius: 15px;
+
             box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+
             padding: 30px;
+
         }
+
+
 
         .table-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 20px;
+
             flex-wrap: wrap;
+
             gap: 15px;
+
         }
+
+
 
         .table-header h2 {
+
             font-family: 'Playfair Display', serif;
+
             color: #2d3436;
+
             margin: 0;
+
         }
+
+
 
         .search-box {
+
             display: flex;
+
             gap: 10px;
+
             flex: 1;
+
             max-width: 400px;
+
         }
+
+
 
         .search-box input {
+
             flex: 1;
+
             padding: 10px 15px;
+
             border: 2px solid #e0e0e0;
+
             border-radius: 10px;
+
             transition: all 0.3s;
+
         }
+
+
 
         .search-box input:focus {
+
             outline: none;
+
             border-color: #667eea;
+
         }
+
+
 
         .btn-primary {
+
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
             border: none;
+
             padding: 10px 20px;
+
             border-radius: 10px;
+
             color: white;
+
             font-weight: 600;
+
             transition: all 0.3s;
+
         }
+
+
 
         .btn-primary:hover {
+
             transform: translateY(-2px);
+
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+
         }
+
+
 
         /* Custom Table */
+
         .custom-table {
+
             width: 100%;
+
             border-collapse: separate;
+
             border-spacing: 0 10px;
+
         }
+
+
 
         .custom-table thead th {
+
             background: #f8f9fa;
+
             padding: 15px;
+
             text-align: left;
+
             font-weight: 600;
+
             color: #2d3436;
+
             border: none;
+
         }
+
+
 
         .custom-table tbody tr {
+
             background: white;
+
             transition: all 0.3s;
+
         }
+
+
 
         .custom-table tbody tr:hover {
+
             transform: scale(1.01);
+
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
         }
+
+
 
         .custom-table tbody td {
+
             padding: 15px;
+
             border-top: 1px solid #f0f0f0;
+
             border-bottom: 1px solid #f0f0f0;
+
         }
+
+
 
         .custom-table tbody td:first-child {
+
             border-left: 1px solid #f0f0f0;
+
             border-radius: 10px 0 0 10px;
+
         }
+
+
 
         .custom-table tbody td:last-child {
+
             border-right: 1px solid #f0f0f0;
+
             border-radius: 0 10px 10px 0;
+
         }
+
+
 
         .customer-info {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
         }
+
+
 
         .customer-avatar {
+
             width: 45px;
+
             height: 45px;
+
             border-radius: 50%;
+
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             color: white;
+
             font-weight: 600;
+
             font-size: 1.1rem;
+
         }
+
+
 
         .customer-details h6 {
+
             margin: 0;
+
             font-weight: 600;
+
             color: #2d3436;
+
         }
+
+
 
         .customer-details p {
+
             margin: 0;
+
             font-size: 0.85rem;
+
             color: #636e72;
+
         }
+
+
 
         .badge {
+
             padding: 6px 12px;
+
             border-radius: 20px;
+
             font-size: 0.8rem;
+
             font-weight: 600;
+
         }
+
+
 
         .badge.active { background: #d4edda; color: #155724; }
+
         .badge.inactive { background: #f8d7da; color: #721c24; }
+
         .badge.vip { background: #fff3cd; color: #856404; }
+
         .badge.blocked { background: #f8d7da; color: #721c24; }
 
+
+
         .dropdown-menu {
+
             border-radius: 10px;
+
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
             border: none;
+
         }
+
+
 
         .dropdown-item {
+
             border-radius: 5px;
+
             margin: 2px 5px;
+
         }
+
+
 
         .dropdown-item:hover {
+
             background-color: #f8f9fa;
+
         }
+
+
 
         .action-buttons {
+
             display: flex;
+
             gap: 8px;
+
         }
+
+
 
         .btn-action {
+
             width: 35px;
+
             height: 35px;
+
             border-radius: 8px;
+
             border: none;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             cursor: pointer;
+
             transition: all 0.3s;
+
         }
+
+
 
         .btn-action.view { background: #e3f2fd; color: #1976d2; }
+
         .btn-action.status { background: #fff3e0; color: #f57c00; }
 
+
+
         .btn-action:hover {
+
             transform: scale(1.1);
+
         }
+
+
 
         /* Pagination */
+
         .pagination-wrapper {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-top: 20px;
+
         }
+
+
 
         .pagination {
+
             display: flex;
+
             gap: 5px;
+
         }
+
+
 
         .pagination button {
+
             padding: 8px 12px;
+
             border: 2px solid #e0e0e0;
+
             background: white;
+
             border-radius: 8px;
+
             cursor: pointer;
+
             transition: all 0.3s;
+
         }
+
+
 
         .pagination button:hover,
+
         .pagination button.active {
+
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
             color: white;
+
             border-color: transparent;
+
         }
+
+
 
         @media (max-width: 768px) {
+
             .stats-grid {
+
                 grid-template-columns: 1fr;
+
             }
+
+
 
             .table-header {
+
                 flex-direction: column;
+
                 align-items: stretch;
+
             }
+
+
 
             .search-box {
+
                 max-width: 100%;
+
             }
+
+
 
             .custom-table {
+
                 font-size: 0.9rem;
+
             }
+
         }
+
     </style>
+
 </head>
+
 <body>
+
 <!-- Admin Header -->
+
 <div th:replace="~{fragments/header :: adminheader}"></div>
 
+
+
 <!-- Main Content với margin-top -->
+
 <div style="margin-top: 80px;">
+
 <nav class="navbar navbar-expand-lg admin-navbar" style="display: none;">
+
     <div class="container">
+
         <a class="navbar-brand" href="${pageContext.request.contextPath}/admin/products">
+
             <i class="bi bi-shop"></i> Fashion Store Admin
+
         </a>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+
             <span class="navbar-toggler-icon"></span>
+
         </button>
+
         <div class="collapse navbar-collapse" id="adminNav">
+
             <ul class="navbar-nav ms-auto">
+
                 <li class="nav-item">
+
                     <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard">
+
                         <i class="bi bi-speedometer2"></i> Dashboard
+
                     </a>
+
                 </li>
+
                 <li class="nav-item">
+
                     <a class="nav-link" href="${pageContext.request.contextPath}/admin/products">
+
                         <i class="bi bi-box-seam"></i> Products
+
                     </a>
+
                 </li>
+
                 <li class="nav-item">
+
                     <a class="nav-link" href="${pageContext.request.contextPath}/admin/orders">
+
                         <i class="bi bi-cart-check"></i> Orders
+
                     </a>
+
                 </li>
+
                 <li class="nav-item">
+
                     <a class="nav-link active" href="${pageContext.request.contextPath}/admin/customers">
+
                         <i class="bi bi-people"></i> Customers
+
                     </a>
+
                 </li>
+
                 <li class="nav-item">
+
                     <a class="nav-link" href="${pageContext.request.contextPath}/page">
+
                         <i class="bi bi-house"></i> View Site
+
                     </a>
+
                 </li>
+
                 <li class="nav-item">
+
                     <a class="nav-link" href="${pageContext.request.contextPath}/logout">
+
                         <i class="bi bi-box-arrow-right"></i> Logout
+
                     </a>
+
                 </li>
+
             </ul>
+
         </div>
+
     </div>
+
 </nav>
 
+
+
 <!-- Main Content -->
+
 <div class="main-content">
+
     <div class="container">
+
         <!-- Page Header -->
+
         <div class="page-header">
+
             <h1><i class="bi bi-people"></i> Customer Management</h1>
+
         </div>
+
+
 
         <!-- Customers Table -->
+
         <div class="table-card">
+
             <div class="table-header">
+
                 <h2>All Customers</h2>
+
                 <div class="search-box">
+
                     <input type="text" placeholder="Search customers..." id="searchInput" th:value="${search}">
+
                     <button class="btn btn-primary" onclick="searchCustomers()">
+
                         <i class="bi bi-search"></i>
+
                     </button>
+
                 </div>
+
             </div>
+
+
 
             <div class="table-responsive">
+
                 <table class="custom-table">
+
                     <thead>
+
                     <tr>
+
                         <th>Customer</th>
+
                         <th>Email</th>
+
                         <th>Phone</th>
+
                         <th>Orders</th>
-                        <th>Total Spent</th>
+
+                        
+
                         <th>Status</th>
+
                         <th>Actions</th>
+
                     </tr>
+
                     </thead>
+
                     <tbody>
+
                     <tr th:each="customer : ${customers.content}">
+
                         <td>
+
                             <div class="customer-info">
+
                                 <div class="customer-avatar" th:text="${#strings.substring(customer.fullName, 0, 2).toUpperCase()}">JD</div>
+
                                 <div class="customer-details">
+
                                     <h6 th:text="${customer.fullName}">John Doe</h6>
+
                                     <p th:text="'Member since ' + ${#dates.format(customer.createdDate, 'MMM yyyy')}">Member since Jan 2024</p>
+
                                 </div>
+
                             </div>
+
                         </td>
+
                         <td th:text="${customer.email}">john.doe@email.com</td>
+
                         <td th:text="${customer.phone}">+84 123 456 789</td>
+
                         <td>
+
                             <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
+
                                   th:text="${customerDetails[customer.customerId].totalOrders}">24</span>
+
                             <span th:unless="true">0</span>
+
                         </td>
+
                         <td>
+
                             <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
-                                  th:text="'$' + ${#numbers.formatDecimal(customerDetails[customer.customerId].totalSpent, 1, 2)}">$2,450.00</span>
-                            <span th:unless="true">$0.00</span>
-                        </td>
-                        <td>
-                            <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
+
                                   th:class="'badge ' + ${customerDetails[customer.customerId].status.toLowerCase()}"
+
                                   th:text="${customerDetails[customer.customerId].status}">VIP</span>
+
                             <span th:unless="${customerDetails != null and customerDetails[customer.customerId] != null}" class="badge inactive">Inactive</span>
+
                         </td>
+
                         <td>
+
                             <div class="action-buttons">
+
                                 <a th:href="@{/admin/customers/details/{id}(id=${customer.customerId})}" class="btn-action view" title="View">
+
                                     <i class="bi bi-eye"></i>
+
                                 </a>
+
                                 <!-- Status Update Dropdown -->
+
                                 <div class="dropdown" th:if="${customer.account != null}">
+
                                     <button class="btn-action status dropdown-toggle" 
+
                                             type="button" 
+
                                             data-bs-toggle="dropdown" 
+
                                             aria-expanded="false"
+
                                             title="Change Status">
+
                                         <i class="bi bi-gear"></i>
+
                                     </button>
+
                                     <ul class="dropdown-menu">
+
                                         <li>
+
                                             <form class="dropdown-item p-0" 
+
                                                   th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
+
                                                   method="post">
+
                                                 <input type="hidden" name="status" value="active">
+
                                                 <button type="submit" class="btn btn-link text-decoration-none w-100 text-start">
+
                                                     <i class="bi bi-check-circle text-success"></i> Set Active
+
                                                 </button>
+
                                             </form>
+
                                         </li>
+
                                         <li>
+
                                             <form class="dropdown-item p-0" 
+
                                                   th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
+
                                                   method="post">
+
                                                 <input type="hidden" name="status" value="inactive">
+
                                                 <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
+
                                                         onclick="return confirm('Are you sure you want to deactivate this customer?')">
+
                                                     <i class="bi bi-pause-circle text-warning"></i> Set Inactive
+
                                                 </button>
+
                                             </form>
+
                                         </li>
+
                                         <li>
+
                                             <form class="dropdown-item p-0" 
+
                                                   th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
+
                                                   method="post">
+
                                                 <input type="hidden" name="status" value="blocked">
+
                                                 <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
+
                                                         onclick="return confirm('Are you sure you want to block this customer?')">
+
                                                     <i class="bi bi-x-circle text-danger"></i> Block
+
                                                 </button>
+
                                             </form>
+
                                         </li>
+
                                     </ul>
+
                                 </div>
+
                             </div>
+
                         </td>
+
                     </tr>
+
                     <!-- Show message when no customers found -->
+
                     <tr th:if="${customers.empty}">
+
                         <td colspan="7" class="text-center">No customers found</td>
+
                     </tr>
+
                     </tbody>
+
                 </table>
+
             </div>
+
+
 
             <!-- Pagination -->
+
             <div class="pagination-wrapper">
+
                 <p class="text-muted" 
+
                    th:text="'Showing ' + ${customers.size} + ' of ' + ${customers.totalElements} + ' customers'">
+
                     Showing 1-5 of 1,245 customers
+
                 </p>
+
                 <div class="pagination">
+
                     <a th:if="${currentPage > 0}" 
+
                        th:href="@{/admin/customers(page=${currentPage - 1}, search=${search})}" 
+
                        class="btn btn-outline-primary">
+
                         <i class="bi bi-chevron-left"></i>
+
                     </a>
+
                     
+
                     <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+
                         <a th:if="${i != currentPage}" 
+
                            th:href="@{/admin/customers(page=${i}, search=${search})}" 
+
                            class="btn btn-outline-primary" 
+
                            th:text="${i + 1}">1</a>
+
                         <button th:unless="${i != currentPage}" 
+
                                 class="btn btn-primary active" 
+
                                 th:text="${i + 1}">1</button>
+
                     </span>
+
                     
+
                     <a th:if="${currentPage < totalPages - 1}" 
+
                        th:href="@{/admin/customers(page=${currentPage + 1}, search=${search})}" 
+
                        class="btn btn-outline-primary">
+
                         <i class="bi bi-chevron-right"></i>
+
                     </a>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
+
     // Search functionality
+
     function searchCustomers() {
+
         const searchValue = document.getElementById('searchInput').value;
+
         const currentUrl = new URL(window.location);
+
         currentUrl.searchParams.set('search', searchValue);
+
         currentUrl.searchParams.set('page', '0'); // Reset to first page when searching
+
         window.location.href = currentUrl.toString();
+
     }
+
+
 
     // Real-time search on Enter key
+
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
+
         if (e.key === 'Enter') {
+
             searchCustomers();
+
         }
+
     });
 
+
+
     // Show success/error messages
+
     const urlParams = new URLSearchParams(window.location.search);
+
     if (urlParams.get('success')) {
+
         showNotification(urlParams.get('success'), 'success');
-    }
-    if (urlParams.get('error')) {
-        showNotification(urlParams.get('error'), 'error');
+
     }
 
-    function showNotification(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-        alertDiv.style.position = 'fixed';
-        alertDiv.style.top = '20px';
-        alertDiv.style.right = '20px';
-        alertDiv.style.zIndex = '9999';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(alertDiv);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.parentNode.removeChild(alertDiv);
-            }
-        }, 5000);
+    if (urlParams.get('error')) {
+
+        showNotification(urlParams.get('error'), 'error');
+
     }
+
+
+
+    function showNotification(message, type) {
+
+        const alertDiv = document.createElement('div');
+
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+
+        alertDiv.style.position = 'fixed';
+
+        alertDiv.style.top = '20px';
+
+        alertDiv.style.right = '20px';
+
+        alertDiv.style.zIndex = '9999';
+
+        alertDiv.innerHTML = `
+
+            ${message}
+
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+        `;
+
+        document.body.appendChild(alertDiv);
+
+        
+
+        // Auto remove after 5 seconds
+
+        setTimeout(() => {
+
+            if (alertDiv.parentNode) {
+
+                alertDiv.parentNode.removeChild(alertDiv);
+
+            }
+
+        }, 5000);
+
+    }
+
 </script>
+
 </body>
+
 </html>
+

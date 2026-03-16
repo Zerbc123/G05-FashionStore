@@ -241,6 +241,10 @@
                         <div class="stat-value" th:text="${customerDetails.totalOrders}">24</div>
                         <div class="stat-label">Total Orders</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(customerDetails.totalSpent, 1, 2)}">$2,450</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
                 </div>
             </div>
 
@@ -358,7 +362,7 @@
                                     <small class="text-muted" th:text="${#dates.format(order.orderDate, 'dd MMM yyyy HH:mm')}">Jan 1, 2024 10:30 AM</small>
                                 </div>
                                 <div class="text-end">
-                                    <div class="fw-bold" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">250.000đ</div>
+                                    <div class="fw-bold" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$250.00</div>
                                     <span th:class="'badge ' + ${order.status.toLowerCase()}" th:text="${order.status}">COMPLETED</span>
                                 </div>
                             </div>
