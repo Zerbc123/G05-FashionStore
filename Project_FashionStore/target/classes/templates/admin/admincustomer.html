@@ -456,6 +456,68 @@
 
         }
 
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border: none;
+        }
+        
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        
+        .status-options .form-check {
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .status-options .form-check:hover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+        }
+        
+        .status-options .form-check-input:checked + .form-check-label {
+            color: #667eea;
+        }
+        
+        /* Status Option List Styles */
+        .status-option {
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .status-option:hover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .status-option.selected {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .status-option.selected i {
+            color: #667eea !important;
+        }
+
 
 
         .action-buttons {
@@ -830,93 +892,14 @@
 
                                 </a>
 
-                                <!-- Status Update Dropdown -->
-
-                                <div class="dropdown" th:if="${customer.account != null}">
-
-                                    <button class="btn-action status dropdown-toggle" 
-
-                                            type="button" 
-
-                                            data-bs-toggle="dropdown" 
-
-                                            aria-expanded="false"
-
-                                            title="Change Status">
-
-                                        <i class="bi bi-gear"></i>
-
-                                    </button>
-
-                                    <ul class="dropdown-menu">
-
-                                        <li>
-
-                                            <form class="dropdown-item p-0" 
-
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-
-                                                  method="post">
-
-                                                <input type="hidden" name="status" value="active">
-
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start">
-
-                                                    <i class="bi bi-check-circle text-success"></i> Set Active
-
-                                                </button>
-
-                                            </form>
-
-                                        </li>
-
-                                        <li>
-
-                                            <form class="dropdown-item p-0" 
-
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-
-                                                  method="post">
-
-                                                <input type="hidden" name="status" value="inactive">
-
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
-
-                                                        onclick="return confirm('Are you sure you want to deactivate this customer?')">
-
-                                                    <i class="bi bi-pause-circle text-warning"></i> Set Inactive
-
-                                                </button>
-
-                                            </form>
-
-                                        </li>
-
-                                        <li>
-
-                                            <form class="dropdown-item p-0" 
-
-                                                  th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" 
-
-                                                  method="post">
-
-                                                <input type="hidden" name="status" value="blocked">
-
-                                                <button type="submit" class="btn btn-link text-decoration-none w-100 text-start"
-
-                                                        onclick="return confirm('Are you sure you want to block this customer?')">
-
-                                                    <i class="bi bi-x-circle text-danger"></i> Block
-
-                                                </button>
-
-                                            </form>
-
-                                        </li>
-
-                                    </ul>
-
-                                </div>
+                                <!-- Status Update Button -->
+                                <button class="btn-action status" 
+                                        type="button" 
+                                        data-bs-toggle="modal" 
+                                        th:data-bs-target="'#statusModal' + ${customer.customerId}"
+                                        title="Change Status">
+                                    <i class="bi bi-gear"></i>
+                                </button>
 
                             </div>
 
@@ -1006,14 +989,67 @@
 
 </div>
 
-
+<!-- Status Update Modal -->
+<div class="modal fade" th:each="customer : ${customers.content}" th:id="'statusModal' + ${customer.customerId}" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalLabel">
+                    <i class="bi bi-gear me-2"></i>Update Customer Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="customer-info mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="customer-avatar me-3" th:text="${#strings.substring(customer.fullName, 0, 2).toUpperCase()}">JD</div>
+                        <div>
+                            <h6 class="mb-1" th:text="${customer.fullName}">John Doe</h6>
+                            <p class="text-muted mb-0" th:text="${customer.email}">john.doe@email.com</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Select the new status for this customer. This action will update their account status immediately.
+                </div>
+                
+                <form th:action="@{/admin/customers/update-status/{id}(id=${customer.customerId})}" method="post">
+                    <div class="status-options">
+                        <div class="status-option" th:classappend="${customerDetails != null and customerDetails[customer.customerId] != null and customerDetails[customer.customerId].status == 'active'} ? 'selected' : ''" data-status="active">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Active</strong>
+                            <small class="text-muted d-block">Customer can login and use all features</small>
+                        </div>
+                        
+                        <div class="status-option" th:classappend="${customerDetails != null and customerDetails[customer.customerId] != null and customerDetails[customer.customerId].status == 'inactive'} ? 'selected' : ''" data-status="inactive">
+                            <i class="bi bi-pause-circle text-warning me-2"></i>
+                            <strong>Inactive</strong>
+                            <small class="text-muted d-block">Customer cannot login but account is preserved</small>
+                        </div>
+                        <input type="hidden" name="status" id="selectedStatus" th:value="${customerDetails != null and customerDetails[customer.customerId] != null ? customerDetails[customer.customerId].status : ''}" />
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="confirmStatusBtn">
+                            <i class="bi bi-check-lg me-1"></i>Update Status
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 
     // Search functionality
-
     function searchCustomers() {
 
         const searchValue = document.getElementById('searchInput').value;
@@ -1102,9 +1138,60 @@
 
     }
 
+    // Status update confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle status option clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.status-option')) {
+                const option = e.target.closest('.status-option');
+                const modal = option.closest('.modal');
+                const allOptions = modal.querySelectorAll('.status-option');
+                
+                // Remove selected class from all options
+                allOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                option.classList.add('selected');
+                
+                // Update hidden input value
+                const status = option.getAttribute('data-status');
+                const hiddenInput = modal.querySelector('#selectedStatus');
+                hiddenInput.value = status;
+            }
+        });
+        
+        // Add confirmation for status update forms
+        const statusForms = document.querySelectorAll('form[action*="update-status"]');
+        statusForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const selectedStatus = form.querySelector('#selectedStatus').value;
+                if (!selectedStatus) {
+                    e.preventDefault();
+                    showNotification('Please select a status before updating.', 'error');
+                    return;
+                }
+                
+                const customerName = form.closest('.modal-body').querySelector('h6').textContent;
+                
+                let confirmMessage = '';
+                switch(selectedStatus) {
+                    case 'inactive':
+                        confirmMessage = `Are you sure you want to deactivate ${customerName}? They will not be able to login but their account will be preserved.`;
+                        break;
+                    case 'active':
+                        confirmMessage = `Are you sure you want to activate ${customerName}? They will regain full access to the system.`;
+                        break;
+                }
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+
 </script>
 
 </body>
 
 </html>
-

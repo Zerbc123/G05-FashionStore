@@ -95,11 +95,10 @@ public class AdminController {
             .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
                 order -> {
-                    // Convert Date to LocalDate to get month value
-                    java.time.LocalDate localDate = order.getOrderDate().toInstant()
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDate();
-                    return localDate.getMonthValue();
+                    // Convert Date to LocalDate safely using Calendar
+                    java.util.Calendar calendar = java.util.Calendar.getInstance();
+                    calendar.setTime(order.getOrderDate());
+                    return calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
                 },
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
