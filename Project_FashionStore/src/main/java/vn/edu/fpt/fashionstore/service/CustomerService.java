@@ -196,21 +196,12 @@ public class CustomerService {
             if ("inactive".equalsIgnoreCase(accountStatus) || "blocked".equalsIgnoreCase(accountStatus)) {
                 status = "Inactive";
             } else if ("active".equalsIgnoreCase(accountStatus)) {
-                // Nếu account đang active, kiểm tra xem có nên là VIP không
-                if (totalSpent > 1000.0 || totalOrders > 10) {
-                    status = "VIP";
-                } else {
-                    status = "Active";
-                }
+                status = "Active";
             }
         } else {
             // Nếu không có account, tính dựa trên hoạt động
             if (totalOrders > 0) {
-                if (totalSpent > 1000.0 || totalOrders > 10) {
-                    status = "VIP";
-                } else {
-                    status = "Active";
-                }
+                status = "Active";
             } else {
                 status = "Inactive";
             }
