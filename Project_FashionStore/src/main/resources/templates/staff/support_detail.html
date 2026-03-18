@@ -135,23 +135,7 @@
                     </form>
                 </div>
 
-                <div class="detail-card">
-                    <h3>Lịch sử thay đổi</h3>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <small class="text-muted">11/03/2026 14:30</small>
-                            <p class="mb-0">Yêu cầu được tạo bởi khách hàng</p>
-                        </div>
-                        <div class="timeline-item" th:if="${supportRequest.assignedStaffName != null}">
-                            <small class="text-muted" th:text="${#temporals.format(supportRequest.createdAt, 'dd/MM/yyyy HH:mm')}">11/03/2026 15:00</small>
-                            <p class="mb-0" th:text="'Phân công cho: ' + ${supportRequest.assignedStaffName}">Phân công cho: Nhân viên A</p>
-                        </div>
-                        <div class="timeline-item" th:if="${supportRequest.updatedAt != null}">
-                            <small class="text-muted" th:text="${#temporals.format(supportRequest.updatedAt, 'dd/MM/yyyy HH:mm')}">11/03/2026 16:45</small>
-                            <p class="mb-0">Trạng thái được cập nhật</p>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>

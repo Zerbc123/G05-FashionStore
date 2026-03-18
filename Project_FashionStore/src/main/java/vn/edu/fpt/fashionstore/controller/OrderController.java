@@ -482,9 +482,10 @@ public class OrderController {
 
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
-            boolean isStaff = "Staff".equals(userRole);
+            boolean isManager = "Quản lý cửa hàng (Manager)".equals(userRole);
+
             model.addAttribute("isAdmin", isAdmin);
-            model.addAttribute("isStaff", isStaff);
+            model.addAttribute("isManager", isManager);
 
             // --- KIỂM TRA YÊU CẦU TRẢ HÀNG ---
             boolean hasReturnRequest = returnRequestService.hasReturnRequest(order);
@@ -547,11 +548,10 @@ public class OrderController {
             RedirectAttributes redirectAttributes) {
         try {
             String userRole = (String) session.getAttribute("userRole");
-            boolean isAdmin = "Admin".equals(userRole);
-            boolean isStaff = "Staff".equals(userRole);
 
-            if (!isAdmin && !isStaff) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền cập nhật trạng thái đơn hàng.");
+            // Chỉ Admin và Staff Quản lý đơn mới được thao tác
+            if (!"Admin".equals(userRole) && !"Quản lý cửa hàng (Manager)".equals(userRole)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thao tác chức năng này!");
                 return "redirect:/order/details/" + orderId;
             }
 
@@ -594,6 +594,9 @@ public class OrderController {
             @PathVariable("oid") String orderId,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
+
+
+
         try {
             Customer currentCustomer = getCurrentCustomer(session);
 
