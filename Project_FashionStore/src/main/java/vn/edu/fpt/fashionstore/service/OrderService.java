@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.repository.OrderItemRepository;
+import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 import vn.edu.fpt.fashionstore.service.CartService;
 
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ public class OrderService {
     
     @Autowired
     private CartService cartService;
+    
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Transactional
     public long countSuccessfulPurchases(Customer customer, Long productId) {
@@ -73,10 +77,24 @@ public class OrderService {
             }
             order = orderRepository.save(order);
             
-            // Lưu OrderItem vào database
+            // Lưu OrderItem vào database và giảm stock
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartItem cartItem : cartItems) {
-                OrderItem orderItem = new OrderItem(order, cartItem.getProductVariant(), cartItem.getQuantity());
+                ProductVariant variant = cartItem.getProductVariant();
+                
+                // Kiểm tra stock trước khi giảm
+                if (variant.getStock() < cartItem.getQuantity()) {
+                    throw new RuntimeException("Sản phẩm " + variant.getProduct().getProductName() + 
+                                            " (Size: " + variant.getCategorySize().getSizeName() + 
+                                            ", Màu: " + variant.getColor().getColorName() + 
+                                            ") chỉ còn " + variant.getStock() + " sản phẩm. Bạn đã chọn " + cartItem.getQuantity() + " sản phẩm.");
+                }
+                
+                // Giảm stock
+                variant.setStock(variant.getStock() - cartItem.getQuantity());
+                productVariantRepository.save(variant);
+                
+                OrderItem orderItem = new OrderItem(order, variant, cartItem.getQuantity());
                 orderItem = orderItemRepository.save(orderItem);
                 orderItems.add(orderItem);
             }
@@ -178,6 +196,17 @@ public class OrderService {
         
         order.cancel(cancelledBy, reason);
         order = orderRepository.save(order);
+        
+        // Hoàn lại stock cho các sản phẩm trong đơn hàng bị hủy
+        for (OrderItem orderItem : order.getOrderItems()) {
+            ProductVariant variant = orderItem.getProductVariant();
+            variant.setStock(variant.getStock() + orderItem.getQuantity());
+            productVariantRepository.save(variant);
+            
+            System.out.println("[ORDER SERVICE] Restored " + orderItem.getQuantity() + 
+                             " units to product variant ID: " + variant.getVariantId() + 
+                             " (New stock: " + variant.getStock() + ")");
+        }
         
         System.out.println("[ORDER SERVICE] Order " + order.getOrderCode() + " cancelled by: " + cancelledBy + ", reason: " + reason);
         return order;

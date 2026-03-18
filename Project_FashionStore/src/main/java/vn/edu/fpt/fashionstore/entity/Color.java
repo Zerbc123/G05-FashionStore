@@ -7,6 +7,7 @@ import java.util.List;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "Color")
 public class Color {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

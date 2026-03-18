@@ -122,7 +122,7 @@
 
     <!-- Page Title -->
     <div class="mb-8">
-        <button onclick="window.location.href='staff_list.html'" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
+        <button th:onclick="|window.location.href='@{/admin/staff}'|" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
             <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
         </button>
         <h1 class="text-3xl font-heading font-bold text-text-main">Thêm nhân viên mới</h1>
@@ -132,57 +132,117 @@
 
     <!-- Add Staff Form Card -->
     <div class="form-card">
-        <form id="add-staff-form" onsubmit="handleCreateStaff(event)">
+        <form id="add-staff-form" th:action="@{/admin/staff/create}" method="post" th:object="${account}">
+            <!-- Global Error Display -->
+            <div th:if="${error}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-exclamation-circle"></i>
+                    <span th:text="${error}">Error message</span>
+                </div>
+            </div>
+            
+            <!-- Validation Errors Display -->
+            <div th:if="${#fields.hasAnyErrors()}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200">
+                <h4 class="text-red-700 font-semibold mb-3 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-exclamation-triangle"></i>
+                    Vui lòng sửa các lỗi sau:
+                </h4>
+                <ul class="text-red-600 text-sm space-y-1">
+                    <li th:each="err : ${#fields.detailedErrors()}" class="flex items-start gap-2">
+                        <i class="fa-solid fa-chevron-right text-xs mt-1"></i>
+                        <span th:text="${err.message}">Error message</span>
+                    </li>
+                </ul>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
                 <!-- Full Name -->
                 <div class="input-group">
                     <label for="fullname">Full Name</label>
-                    <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" required>
+                    <input type="text" id="fullname" class="form-input" 
+                           th:classappend="${#fields.hasErrors('fullName')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                           placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
+                    <div th:if="${#fields.hasErrors('fullName')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{fullName}">Error</span>
+                    </div>
+                </div>
+
+                <!-- Username -->
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-input" 
+                           th:classappend="${#fields.hasErrors('username')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                           placeholder="Nhập tên đăng nhập" th:field="*{username}" autocomplete="new-password" required>
+                    <div th:if="${#fields.hasErrors('username')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{username}">Error</span>
+                    </div>
                 </div>
 
                 <!-- Role Dropdown -->
                 <div class="input-group">
                     <label for="role">Role</label>
-                    <select id="role" class="form-input" required>
+                    <select id="role" name="roleId" class="form-input" 
+                            th:classappend="${#fields.hasErrors('role')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                            required>
                         <option value="" disabled selected>Chọn vai trò</option>
-                        <option value="Sales">Nhân viên bán hàng (Sales)</option>
-                        <option value="Stock">Quản lý kho (Stock)</option>
-                        <option value="Support">Hỗ trợ khách hàng (Support)</option>
-                        <option value="Manager">Quản lý cửa hàng (Manager)</option>
+                        <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}">ROLE</option>
                     </select>
+                    <div th:if="${#fields.hasErrors('role')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{role}">Error</span>
+                    </div>
                 </div>
 
                 <!-- Email -->
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" class="form-input" placeholder="example@fashionstore.com" required>
+                    <input type="email" id="email" class="form-input" 
+                           th:classappend="${#fields.hasErrors('email')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                           placeholder="example@fashionstore.com" th:field="*{email}" required>
+                    <div th:if="${#fields.hasErrors('email')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{email}">Error</span>
+                    </div>
                 </div>
 
                 <!-- Phone Number -->
                 <div class="input-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" class="form-input" placeholder="09xx xxx xxx" required>
+                    <input type="tel" id="phone" class="form-input" 
+                           th:classappend="${#fields.hasErrors('phone')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                           placeholder="09xx xxx xxx" th:field="*{phone}" required>
+                    <div th:if="${#fields.hasErrors('phone')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{phone}">Error</span>
+                    </div>
                 </div>
 
                 <!-- Password -->
                 <div class="input-group md:col-span-2">
                     <label for="password">Initial Password</label>
                     <div class="relative">
-                        <input type="password" id="password" class="form-input pr-12" placeholder="6 ký tự chữ hoặc số" required
-                               pattern="^[A-Za-z0-9]{6}$" minlength="6" maxlength="6" title="Mật khẩu chỉ gồm 6 ký tự chữ và số">
-                        <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition">
-                            <i class="fa-solid fa-eye text-sm"></i>
+                        <input type="password" id="password" class="form-input pr-12" 
+                               th:classappend="${#fields.hasErrors('password')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
+                               placeholder="Thiết lập mật khẩu ban đầu" th:field="*{password}" required>
+                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition">
+                            <i id="passwordToggle" class="fa-solid fa-eye"></i>
                         </button>
                     </div>
-                    <p class="mt-2 text-[11px] text-text-muted italic">Mật khẩu bắt buộc đúng 6 ký tự chữ và số, không có ký tự đặc biệt.</p>
+                    <div th:if="${#fields.hasErrors('password')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-times-circle"></i>
+                        <span th:errors="*{password}">Error</span>
+                    </div>
+                    <p class="mt-2 text-[11px] text-text-muted italic">Mật khẩu nên bao gồm chữ cái, số và ký tự đặc biệt.</p>
                 </div>
 
             </div>
 
             <!-- Form Actions -->
             <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-8 border-t border-divider">
-                <button type="button" onclick="window.location.href='staff_list.html'" class="w-full sm:w-auto px-10 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
+                <button type="button" th:onclick="|window.location.href='@{/admin/staff}'|" class="w-full sm:w-auto px-10 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
                     Cancel
                 </button>
                 <button type="submit" class="w-full sm:w-auto px-12 py-3 bg-admin-gradient text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm">
@@ -199,19 +259,181 @@
 </footer>
 
 <script>
-    function handleCreateStaff(event) {
-        event.preventDefault();
-
-        const fullname = document.getElementById('fullname').value;
-        const role = document.getElementById('role').value;
-        const email = document.getElementById('email').value;
-
-        // Simulate account creation
-        alert(`Thành công! Tài khoản nhân viên cho ${fullname} (${role}) đã được tạo.\nMột email xác nhận đã được gửi đến ${email}.`);
-
-        // Navigate back to list
-        window.location.href = 'staff_list.html';
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    if (usernameField.value === 'admin') {
+        usernameField.value = '';
     }
+    
+    // Real-time phone validation
+    const phoneField = document.getElementById('phone');
+    
+    phoneField.addEventListener('input', function() {
+        validatePhoneRealtime();
+    });
+    
+    phoneField.addEventListener('blur', function() {
+        validatePhoneRealtime();
+    });
+    
+    function validatePhoneRealtime() {
+        const phone = phoneField.value.trim();
+        const phoneRegex = /^(0)[0-9]{9,10}$/;
+        
+        // Remove previous error if exists
+        const existingError = document.getElementById('phone-error-realtime');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        if (phone === '') {
+            // Empty - remove error styling
+            phoneField.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            return;
+        }
+        
+        if (!phoneRegex.test(phone)) {
+            // Show error
+            phoneField.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'phone-error-realtime';
+            errorDiv.className = 'mt-2 text-red-600 text-xs flex items-center gap-1';
+            errorDiv.innerHTML = `
+                <i class="fa-solid fa-times-circle"></i>
+                <span>Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số</span>
+            `;
+            
+            phoneField.parentNode.appendChild(errorDiv);
+        } else {
+            // Valid - remove error styling
+            phoneField.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+        }
+    }
+    
+    // Real-time username validation
+    usernameField.addEventListener('input', function() {
+        validateUsernameRealtime();
+    });
+    
+    usernameField.addEventListener('blur', function() {
+        validateUsernameRealtime();
+    });
+    
+    function validateUsernameRealtime() {
+        const username = usernameField.value.trim();
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        
+        // Remove previous error if exists
+        const existingError = document.getElementById('username-error-realtime');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        if (username === '') {
+            // Empty - remove error styling
+            usernameField.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            return;
+        }
+        
+        if (!usernameRegex.test(username)) {
+            // Show error
+            usernameField.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'username-error-realtime';
+            errorDiv.className = 'mt-2 text-red-600 text-xs flex items-center gap-1';
+            errorDiv.innerHTML = `
+                <i class="fa-solid fa-times-circle"></i>
+                <span>Username chỉ được chứa chữ cái không dấu, số và dấu gạch dưới</span>
+            `;
+            
+            usernameField.parentNode.appendChild(errorDiv);
+        } else {
+            // Valid - remove error styling
+            usernameField.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+        }
+    }
+    
+    // Real-time full name validation
+    const fullNameField = document.getElementById('fullname');
+    
+    fullNameField.addEventListener('input', function() {
+        validateFullNameRealtime();
+    });
+    
+    fullNameField.addEventListener('blur', function() {
+        validateFullNameRealtime();
+    });
+
+    function validateFullNameRealtime() {
+        const fullName = fullNameField.value.trim();
+
+        // Cho phép chữ Unicode + khoảng trắng, độ dài 2–50
+        const nameRegex = /^[\p{L}\s]{2,50}$/u;
+
+        // Bắt ký tự lặp 3 lần liên tiếp (aaa)
+        const repeatedCharRegex = /(.)\1{2,}/u;
+
+        // Remove previous error
+        const existingError = document.getElementById('fullname-error-realtime');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        if (fullName === '') {
+            fullNameField.classList.remove('border-red-500');
+            return;
+        }
+
+        // 1️⃣ Kiểm tra ký tự hợp lệ + độ dài
+        if (!nameRegex.test(fullName)) {
+            showFullNameError("Họ và tên chỉ được chứa chữ cái và phải từ 2–50 ký tự");
+            return;
+        }
+
+        // 2️⃣ Kiểm tra ký tự lặp
+        if (repeatedCharRegex.test(fullName)) {
+            showFullNameError("Họ và tên không được chứa ký tự lặp quá 2 lần liên tiếp");
+            return;
+        }
+
+        // Hợp lệ
+        fullNameField.classList.remove('border-red-500');
+    }
+
+// Hàm hiển thị lỗi
+    function showFullNameError(message) {
+        fullNameField.classList.add('border-red-500');
+
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'fullname-error-realtime';
+        errorDiv.className = 'mt-2 text-red-600 text-xs flex items-center gap-1';
+        errorDiv.innerHTML = `
+        <i class="fa-solid fa-times-circle"></i>
+        <span>${message}</span>
+    `;
+
+        fullNameField.parentNode.appendChild(errorDiv);
+    }
+});
+</script>
+
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('passwordToggle');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        passwordToggle.classList.remove('fa-eye');
+        passwordToggle.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        passwordToggle.classList.remove('fa-eye-slash');
+        passwordToggle.classList.add('fa-eye');
+    }
+}
 </script>
 
 </body>

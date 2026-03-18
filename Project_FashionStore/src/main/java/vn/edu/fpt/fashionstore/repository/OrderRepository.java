@@ -4,14 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -59,6 +58,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                      @Param("customer") Customer customer,
                      @Param("startDate") LocalDate startDate,
                      @Param("endDate") LocalDate endDate);
+    // Tìm đơn hàng của khách hàng theo khoảng thời gian
+    @Query("SELECT o FROM Order o WHERE o.customer = :customer AND o.orderDate BETWEEN :startDate AND :endDate ORDER BY o.orderDate DESC")
+    List<Order> findByCustomerAndOrderDateBetween(
+            @Param("customer") Customer customer,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate);
 
        // Kiểm tra khách hàng có sở hữu đơn hàng không
        boolean existsByOrderIdAndCustomer(Long orderId, Customer customer);
@@ -68,6 +73,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
        // Tìm đơn hàng theo nhiều trạng thái
        List<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses);
+    // Tìm đơn hàng theo ID kèm thông tin chi tiết
+    @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems " +
+            "LEFT JOIN FETCH o.customer " +
+            "WHERE o.orderId = :orderId")
+    Order findByOrderIdWithDetails(@Param("orderId") Long orderId);
+
+    // Lấy danh sách đơn hàng của khách hàng theo customerId
+    List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);
+
+    // Tìm đơn hàng theo nhiều trạng thái
+    List<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses);
 
        // === Revenue Report Methods (merged from OrdersRepository) ===
 
@@ -121,4 +138,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                      WHERE o.orderId = :id
                      """)
        Order findOrderWithItems(@Param("id") Long id);
+    // Lấy chi tiết 1 đơn hàng kèm theo danh sách sản phẩm (Dùng cho giao diện Admin & Xuất PDF)
+    @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems oi " +
+            "LEFT JOIN FETCH oi.productVariant pv " +
+            "LEFT JOIN FETCH pv.product " +
+            "WHERE o.orderId = :id")
+    Order findOrderWithItems(@Param("id") Long id);
 }

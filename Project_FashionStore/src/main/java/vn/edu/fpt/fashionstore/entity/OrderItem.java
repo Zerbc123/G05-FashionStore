@@ -87,7 +87,6 @@ public class OrderItem {
         this.unitPrice = unitPrice;
     }
     
-    
     public Double getTotalPrice() {
         return totalPrice;
     }

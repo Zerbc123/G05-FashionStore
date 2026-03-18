@@ -5,21 +5,24 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
+@Table(name = "customer")
 public class Customer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column (name = "customer_id")
-    private int customerId;
+    @Column(name = "customer_id")
+    private Long customerId;
 
     @Column(name = "full_name")
     private String fullName;
 
     private boolean gender;
-    @Column(name = "birthday")
-    private LocalDate dateOfBirth;
 
-    @Column (name = "created_at")
-    private LocalDate createdDate;
+    @Column(name = "birthday", columnDefinition = "DATE")
+    private Date dateOfBirth;
+
+    @Column(name = "created_at")
+    private Date createdDate;
 
     private String email;
     // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
@@ -27,7 +30,7 @@ public class Customer {
     private String address;
 
     @ManyToOne
-    @JoinColumn (name = "account_id")
+    @JoinColumn(name = "account_id")
     private Account account;
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -36,7 +39,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
+    public Customer(Long customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
@@ -47,11 +50,11 @@ public class Customer {
         this.address = address;
     }
 
-    public int getCustomerId() {
+    public Long getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(Long customerId) {
         this.customerId = customerId;
     }
 

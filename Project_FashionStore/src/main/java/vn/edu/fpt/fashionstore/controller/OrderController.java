@@ -1,55 +1,49 @@
 package vn.edu.fpt.fashionstore.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
-import vn.edu.fpt.fashionstore.entity.CartItem;
-import vn.edu.fpt.fashionstore.entity.Customer;
-import vn.edu.fpt.fashionstore.entity.Order;
-import vn.edu.fpt.fashionstore.entity.OrderItem;
-import vn.edu.fpt.fashionstore.entity.Voucher;
-import vn.edu.fpt.fashionstore.repository.AccountRepository;
-import vn.edu.fpt.fashionstore.repository.OrderRepository;
-import vn.edu.fpt.fashionstore.repository.VoucherRepository;
-import vn.edu.fpt.fashionstore.service.CartService;
-import vn.edu.fpt.fashionstore.service.OrderService;
-import vn.edu.fpt.fashionstore.service.ReturnRequestService;
-import vn.edu.fpt.fashionstore.service.VoucherService;
 
 import jakarta.servlet.http.HttpSession;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+
+import vn.edu.fpt.fashionstore.entity.*;
+import vn.edu.fpt.fashionstore.repository.*;
+import vn.edu.fpt.fashionstore.service.*;
+
+import java.io.IOException;
+import java.util.*;
 
 @Controller
 @RequestMapping("/order")
+@RequiredArgsConstructor
 public class OrderController {
 
-    @Autowired
-    private ReturnRequestService returnRequestService;
-
-    @Autowired
-    private CartService cartService;
-
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private VoucherRepository voucherRepository;
-
-    @Autowired
-    private VoucherService voucherService;
+    private final OrderRepository orderRepository;
+    private final ReturnRequestService returnRequestService;
+    private final CartService cartService;
+    private final OrderService orderService;
+    private final AccountRepository accountRepository;
+    private final VoucherRepository voucherRepository;
+    private final VoucherService voucherService;
+    private final MomoService momoService;
 
     // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
@@ -104,7 +98,7 @@ public class OrderController {
                 } else {
                     discountAmount = appliedVoucher.getDiscountValue();
                     finalTotal = total - discountAmount;
-                    if (finalTotal < 0) finalTotal = 0; // Chống âm tiền
+                    if (finalTotal < 0) finalTotal = 0;
                     model.addAttribute("appliedVoucher", appliedVoucher);
                 }
             }
@@ -218,17 +212,36 @@ public class OrderController {
         }
 
         if (hasError) {
-            return checkoutPage(model, session, redirectAttributes); // Quay lại trang và báo lỗi
+            return checkoutPage(model, session, redirectAttributes);
         }
 
         try {
+            if ("MOMO".equals(paymentMethod)) {
+                session.setAttribute("momo_deliveryAddress", deliveryAddress);
+                session.setAttribute("momo_totalAmount", totalAmount);
+
+                String orderIdStr = "ORD-" + System.currentTimeMillis();
+                String orderInfo = "Thanh toan don hang " + fullName;
+                String requestId = vn.edu.fpt.fashionstore.util.MomoUtils.generateRequestId();
+
+                Map<String, Object> response = momoService.createPaymentRequest(orderIdStr, totalAmount, orderInfo, requestId);
+
+                if (response != null && response.containsKey("payUrl")) {
+                    String payUrl = (String) response.get("payUrl");
+                    return "redirect:" + payUrl;
+                } else {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Không thể tạo yêu cầu thanh toán MOMO");
+                    return "redirect:/order/checkout";
+                }
+            }
+
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
             order.setTotalAmount(totalAmount);
             orderRepository.save(order);
 
             session.removeAttribute("deliveryAddress");
             session.removeAttribute("orderId");
-            session.removeAttribute("appliedVoucher"); // XÓA VOUCHER SAU KHI ĐẶT HÀNG
+            session.removeAttribute("appliedVoucher");
 
             redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng của bạn: #" + order.getOrderId());
 
@@ -246,6 +259,49 @@ public class OrderController {
             model.addAttribute("orderItems", orderItems);
 
             return "order-confirmation";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
+            return "redirect:/order/checkout";
+        }
+    }
+
+    // =======================================================
+    // XỬ LÝ KHI MOMO TRẢ VỀ THÀNH CÔNG
+    // =======================================================
+    @GetMapping("/checkout/momo-success")
+    public String momoSuccess(@RequestParam(value = "momoOrderId", required = false) String momoOrderId,
+                              @RequestParam(value = "transId", required = false) String transId,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        Customer currentCustomer;
+        try {
+            currentCustomer = getCurrentCustomer(session);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+
+        String deliveryAddress = (String) session.getAttribute("momo_deliveryAddress");
+        Double totalAmount = (Double) session.getAttribute("momo_totalAmount");
+
+        if (deliveryAddress == null || totalAmount == null) {
+            return "redirect:/order/confirmation";
+        }
+
+        try {
+            Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
+            order.setTotalAmount(totalAmount);
+            order.setStatus(OrderStatus.CONFIRMED);
+            orderRepository.save(order);
+
+            session.removeAttribute("momo_deliveryAddress");
+            session.removeAttribute("momo_totalAmount");
+            session.removeAttribute("deliveryAddress");
+            session.removeAttribute("appliedVoucher");
+
+            redirectAttributes.addFlashAttribute("successMessage", "Thanh toán MOMO thành công! Mã đơn hàng: #" + order.getOrderId());
+            
+            return "redirect:/order/confirmation?orderId=" + order.getOrderId();
+
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
             return "redirect:/order/checkout";
@@ -307,6 +363,9 @@ public class OrderController {
         }
     }
 
+    // =======================================================
+    // 5. TRANG XÁC NHẬN ĐƠN HÀNG
+    // =======================================================
     @GetMapping("/confirmation")
     public String orderConfirmationPage(
             @RequestParam(value = "orderId", required = false) Long orderId,
@@ -352,7 +411,7 @@ public class OrderController {
     }
 
     // =======================================================
-    // 4. TRANG CHI TIẾT ĐƠN HÀNG
+    // 6. TRANG CHI TIẾT ĐƠN HÀNG
     // =======================================================
     @GetMapping("/details/{oid}")
     @Transactional(readOnly = true)
@@ -412,7 +471,6 @@ public class OrderController {
             model.addAttribute("isAdmin", isAdmin);
             model.addAttribute("isStaff", isStaff);
 
-            // --- KIỂM TRA YÊU CẦU TRẢ HÀNG ---
             boolean hasReturnRequest = returnRequestService.hasReturnRequest(order);
             model.addAttribute("hasReturnRequest", hasReturnRequest);
             if (hasReturnRequest) {
@@ -429,6 +487,7 @@ public class OrderController {
             return "redirect:/cart";
         }
     }
+
     // =======================================================
     // 7. XỬ LÝ KHÁCH HÀNG YÊU CẦU TRẢ HÀNG
     // =======================================================
@@ -444,13 +503,11 @@ public class OrderController {
             Long orderIdLong = Long.parseLong(orderId);
             Order order = orderService.getOrderById(orderIdLong);
 
-            // Chỉ đơn hàng COMPLETED (Đã giao) mới được trả hàng
-            if (order.getStatus() != vn.edu.fpt.fashionstore.entity.OrderStatus.COMPLETED) {
+            if (order.getStatus() != OrderStatus.COMPLETED) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có thể trả hàng khi đơn hàng đã giao thành công!");
                 return "redirect:/order/details/" + orderId;
             }
 
-            // Gọi Service để tạo yêu cầu
             returnRequestService.createReturnRequest(order, currentCustomer, reason, description);
 
             redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu Trả hàng/Hoàn tiền đã được gửi. Shop sẽ phản hồi sớm nhất!");
@@ -463,57 +520,7 @@ public class OrderController {
     }
 
     // =======================================================
-    // 5. CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG (CHO ADMIN/STAFF)
-    // =======================================================
-    @PostMapping("/details/{orderId}/update-status")
-    public String updateOrderStatus(
-            @PathVariable String orderId,
-            @RequestParam String newStatus,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-        try {
-            String userRole = (String) session.getAttribute("userRole");
-            boolean isAdmin = "Admin".equals(userRole);
-            boolean isStaff = "Staff".equals(userRole);
-
-            if (!isAdmin && !isStaff) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền cập nhật trạng thái đơn hàng.");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            Long orderIdLong;
-            try {
-                orderIdLong = Long.parseLong(orderId);
-            } catch (NumberFormatException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", "ID đơn hàng không hợp lệ!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            vn.edu.fpt.fashionstore.entity.OrderStatus statusEnum;
-            try {
-                statusEnum = vn.edu.fpt.fashionstore.entity.OrderStatus.valueOf(newStatus);
-            } catch (IllegalArgumentException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Trạng thái không hợp lệ!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CONFIRMED) {
-                orderService.confirmOrder(orderIdLong, userRole);
-            } else if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CANCELLED) {
-                orderService.cancelOrder(orderIdLong, userRole, "Đã hủy bởi " + userRole);
-            }
-
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đơn hàng thành công!");
-            return "redirect:/order/details/" + orderId;
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật trạng thái.");
-            return "redirect:/order/details/" + orderId;
-        }
-    }
-
-    // =======================================================
-    // 6. HỦY ĐƠN HÀNG (CHO KHÁCH HÀNG)
+    // 9. HỦY ĐƠN HÀNG (CHO KHÁCH HÀNG)
     // =======================================================
     @PostMapping("/details/{oid}/cancel")
     public String cancelOrder(
@@ -550,7 +557,9 @@ public class OrderController {
         }
     }
 
-
+    // =======================================================
+    // 10. BUY NOW CHECKOUT
+    // =======================================================
     @PostMapping("/checkout")
     public String buyNowCheckout(
             @RequestParam("productId") Long productId,
@@ -573,5 +582,90 @@ public class OrderController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/login";
         }
+    }
+
+    // =======================================================
+    // 11. PDF EXPORT
+    // =======================================================
+    @GetMapping("/details/{id}/pdf")
+    public void exportOrderToPDF(@PathVariable Long id,
+                                 HttpServletResponse response) throws IOException {
+
+        Order order = orderService.getOrderById(id);
+
+        if (order == null) {
+            response.getWriter().write("Không tìm thấy đơn hàng");
+            return;
+        }
+
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=don_hang_" + id + ".pdf");
+
+        PdfWriter writer = new PdfWriter(response.getOutputStream());
+        PdfDocument pdf = new PdfDocument(writer);
+
+        PdfFont font = PdfFontFactory.createFont(
+                getClass().getResource("/fonts/arial.ttf").toExternalForm(),
+                PdfEncodings.IDENTITY_H,
+                pdf);
+
+        Document document = new Document(pdf);
+        document.setFont(font);
+        document.add(new Paragraph("Fashion store")
+                .setBold()
+                .setFontSize(25));
+
+        document.add(new Paragraph("HÓA ĐƠN BÁN HÀNG")
+                .setBold()
+                .setFontSize(20));
+
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Mã đơn hàng: " + order.getOrderId()));
+        document.add(new Paragraph("Tên người đặt: "
+                + order.getCustomer().getFullName()));
+        document.add(new Paragraph("Số điện thoại: "
+                + order.getCustomer().getPhone()));
+        document.add(new Paragraph("Địa chỉ giao hàng: "
+                + order.getShippingAddress()));
+        document.add(new Paragraph("Ngày đặt: "
+                + order.getOrderDate()));
+        document.add(new Paragraph(" "));
+
+        Table table = new Table(4);
+        table.addHeaderCell("Sản phẩm");
+        table.addHeaderCell("Đơn giá");
+        table.addHeaderCell("Số lượng");
+        table.addHeaderCell("Thành tiền");
+
+        double tongTien = 0;
+
+        for (OrderItem item : order.getOrderItems()) {
+            double gia = item.getTotalPrice() != null ? item.getTotalPrice() : 0;
+            int soLuong = item.getQuantity() != null ? item.getQuantity() : 0;
+            double thanhTien = gia * soLuong;
+
+            tongTien += thanhTien;
+
+            table.addCell(item.getProductVariant()
+                    .getProduct()
+                    .getProductName());
+
+            table.addCell(String.format("%,.0f VNĐ", gia));
+            table.addCell(String.valueOf(soLuong));
+            table.addCell(String.format("%,.0f VNĐ", thanhTien));
+        }
+
+        document.add(table);
+
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("TỔNG TIỀN: "
+                + String.format("%,.0f VNĐ", tongTien))
+                .setBold());
+
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Cảm ơn quý khách đã mua hàng!"));
+
+        document.close();
     }
 }

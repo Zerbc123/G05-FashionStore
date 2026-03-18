@@ -49,26 +49,28 @@
 
         .admin-navbar .nav-link.active {
             color: white;
-            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
         }
 
         .main-content {
-            padding: 40px 0;
+            padding: 2rem 0;
         }
 
         .page-header {
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
         }
 
         .page-header h1 {
             font-family: 'Playfair Display', serif;
             color: #2d3436;
-            font-size: 2rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .welcome-text {
             color: #636e72;
-            margin-top: 5px;
+            font-size: 1.1rem;
         }
 
         /* Stats Cards */
@@ -336,6 +338,10 @@
                 <i class="bi bi-graph-up"></i>
                 <div>View Reports</div>
             </a>
+            <a th:href="@{/admin/support}" class="action-btn">
+                <i class="bi bi-headset"></i>
+                <div>Quản Lý Hỗ Trợ</div>
+            </a>
         </div>
 
         <div class="row">
@@ -388,13 +394,15 @@
 <script th:inline="javascript">
     // Revenue Chart
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const monthlyRevenue = /*[[${monthlyRevenue}]]*/ [0,0,0,0,0,0,0,0,0,0,0,0];
+    
     new Chart(revenueCtx, {
         type: 'line',
         data: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             datasets: [{
-                label: 'Revenue (VND)',
-                data: [[${charts.revenueData}]],
+                label: 'Revenue (đ)',
+                data: monthlyRevenue,
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4,
@@ -426,15 +434,15 @@
 
     // Category Chart
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    const categoryLabels = [[${charts.categoryLabels}]];
-    const categoryValues = [[${charts.categoryValues}]];
+    const categoryNames = /*[[${categoryNames}]]*/ ['Category 1', 'Category 2', 'Category 3', 'Category 4'];
+    const categorySales = /*[[${categorySales}]]*/ [35, 40, 15, 10];
     
     new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
-            labels: categoryLabels.length > 0 ? categoryLabels : ['No Data'],
+            labels: categoryNames,
             datasets: [{
-                data: categoryValues.length > 0 ? categoryValues : [1],
+                data: categorySales,
                 backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b']
             }]
         },
@@ -450,23 +458,18 @@
 
     // Order Status Chart
     const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-    const statusCounts = [[${charts.statusCounts}]];
+    const pendingOrders = /*[[${pendingOrders}]]*/ 0;
+    const processingOrders = /*[[${processingOrders}]]*/ 0;
+    const completedOrders = /*[[${completedOrders}]]*/ 0;
     
     new Chart(orderStatusCtx, {
         type: 'bar',
         data: {
-            labels: ['Pending', 'Confirmed', 'Shipping', 'Completed', 'Cancelled', 'Refunded'],
+            labels: ['Pending', 'Shipping', 'Completed'],
             datasets: [{
                 label: 'Orders',
-                data: [
-                    statusCounts['PENDING'] || 0, 
-                    statusCounts['CONFIRMED'] || 0, 
-                    statusCounts['SHIPPING'] || 0, 
-                    statusCounts['COMPLETED'] || 0, 
-                    statusCounts['CANCELLED'] || 0,
-                    statusCounts['REFUNDED'] || 0
-                ],
-                backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545', '#6c757d']
+                data: [pendingOrders, processingOrders, completedOrders],
+                backgroundColor: ['#ffc107', '#17a2b8', '#28a745']
             }]
         },
         options: {

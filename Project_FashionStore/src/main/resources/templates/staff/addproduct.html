@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Fashion Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5f6fa;
+            min-height: 100vh;
+        }
+
+        .staff-navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .staff-navbar .navbar-brand {
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .staff-navbar .nav-link {
+            color: rgba(255,255,255,0.9);
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+
+        .staff-navbar .nav-link:hover {
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .staff-navbar .nav-link.active {
+            color: white;
+            font-weight: 600;
+        }
+
+        .main-content {
+            padding: 40px 0;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .variant-row {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .variant-row:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .edit-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .edit-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #2d3436;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating label {
+            color: #6c757d;
+        }
+
+        .btn-add-variant {
+            border: 2px dashed #6c757d;
+            background: transparent;
+            color: #6c757d;
+            transition: all 0.3s;
+            border-radius: 10px;
+            padding: 15px;
+            font-weight: 500;
+        }
+
+        .btn-add-variant:hover {
+            background: #6c757d;
+            color: white;
+            border-color: #6c757d;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Staff Header -->
+<div th:replace="~{fragments/header :: staffheader}"></div>
+
+<div style="margin-top: 80px;">
+<nav class="navbar navbar-expand-lg staff-navbar" style="display: none;">
+    <div class="container">
+        <a class="navbar-brand" href="${pageContext.request.contextPath}/staff/products">
+            <i class="bi bi-shop"></i> Fashion Store Staff
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#staffNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="staffNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/staff/dashboard">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="${pageContext.request.contextPath}/staff/products">
+                        <i class="bi bi-box-seam"></i> Products
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/staff/categories">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/page">
+                        <i class="bi bi-house"></i> View Site
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/logout">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/staff/products">Products</a></li>
+                    <li class="breadcrumb-item active">Add New Product</li>
+                </ol>
+            </nav>
+            <h1><i class="bi bi-plus-circle"></i> Add New Product</h1>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>Product added successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <form th:action="@{/products/staff/add}" method="post" id="productForm" enctype="multipart/form-data">
+            <!-- Product Information Section -->
+            <div class="section-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Product Information
+                </h3>
+            </div>
+            
+            <div class="edit-card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" 
+                                   name="productName" id="productName" placeholder="Product Name" required>
+                            <label for="productName">Product Name *</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" name="categoryId" id="categoryId" required>
+                                <option value="">Select Category</option>
+                                <option th:each="category : ${categories}" 
+                                        th:value="${category.categoryId}" 
+                                        th:text="${category.categoryName}"></option>
+                            </select>
+                            <label for="categoryId">Category *</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <textarea class="form-control" 
+                                      name="description" id="description" placeholder="Description" style="height: 120px"></textarea>
+                            <label for="description">Description</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Variants Section -->
+            <div class="section-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-palette me-2"></i>Product Variants
+                </h3>
+            </div>
+
+            <div class="edit-card">
+                <div id="variantsContainer">
+                    <!-- Variants will be added here dynamically -->
+                </div>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-add-variant btn-lg" onclick="addVariant()">
+                        <i class="fas fa-plus me-2"></i>Add Variant
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save me-2"></i>Save Product
+                </button>
+                <a href="/staff/products" class="btn btn-secondary btn-lg px-5">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden template for variant rows -->
+<div id="variantTemplate" style="display: none;">
+    <div class="variant-row" data-variant-index="0">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">
+                <i class="fas fa-tag me-2"></i>Variant <span class="variant-number">1</span>
+            </h6>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeVariant(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <div class="form-floating mb-3">
+                    <select class="form-select" name="colorIds" required>
+                        <option value="">Select Color</option>
+                        <option th:each="color : ${colors}" 
+                                th:value="${color.colorId}" 
+                                th:text="${color.colorName}"></option>
+                    </select>
+                    <label>Color *</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating mb-3">
+                    <select class="form-select" name="sizeIds" required>
+                        <option value="">Select Size</option>
+                        <option th:each="size : ${sizes}" 
+                                th:value="${size.categorySizeId}" 
+                                th:text="${size.sizeName}"></option>
+                    </select>
+                    <label>Size *</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" name="prices" 
+                           placeholder="Price" min="0" step="0.01" required>
+                    <label>Price *</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" name="stocks" 
+                           placeholder="Stock" min="0" required>
+                    <label>Stock *</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating mb-3">
+                    <input type="file" class="form-control" name="variantImages" 
+                           accept="image/*" required>
+                    <label>Image *</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let variantCount = 0;
+
+    function addVariant() {
+        const container = document.getElementById('variantsContainer');
+        const template = document.getElementById('variantTemplate');
+        const clone = template.cloneNode(true);
+        clone.style.display = 'block';
+        clone.id = '';
+        
+        // Update variant index in all form fields
+        const variantIndex = variantCount;
+        clone.setAttribute('data-variant-index', variantIndex);
+        
+        // Update form field names and IDs (except file inputs)
+        const inputs = clone.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name && input.type !== 'file') {
+                if (name.includes('variants[0]')) {
+                    input.setAttribute('name', name.replace('variants[0]', `variants[${variantIndex}]`));
+                }
+            }
+            // File inputs keep the same name for array binding
+        });
+        
+        // Update variant number display
+        const variantNumber = clone.querySelector('.variant-number');
+        variantNumber.textContent = variantCount + 1;
+        
+        container.appendChild(clone);
+        variantCount++;
+    }
+
+    function removeVariant(button) {
+        const variantRow = button.closest('.variant-row');
+        variantRow.remove();
+        updateVariantNumbers();
+    }
+
+    function updateVariantNumbers() {
+        const variants = document.querySelectorAll('.variant-row');
+        variants.forEach((variant, index) => {
+            const variantNumber = variant.querySelector('.variant-number');
+            if (variantNumber) {
+                variantNumber.textContent = index + 1;
+            }
+            variant.setAttribute('data-variant-index', index);
+            
+            // Update form field names
+            const inputs = variant.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    const newName = name.replace(/variants\[\d+\]/, `variants[${index}]`);
+                    input.setAttribute('name', newName);
+                }
+            });
+        });
+        variantCount = variants.length;
+    }
+
+    // Add one variant by default
+    document.addEventListener('DOMContentLoaded', function() {
+        addVariant();
+    });
+
+    // Form validation
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+        // Clear previous validation errors
+        clearValidationErrors();
+        
+        const variants = document.querySelectorAll('#variantsContainer .variant-row');
+        if (variants.length === 0) {
+            e.preventDefault();
+            showAlert('Please add at least one product variant.', 'danger');
+            return false;
+        }
+        
+        let hasError = false;
+        let firstErrorField = null;
+        
+        // Validate product name
+        const productName = document.getElementById('productName');
+        if (productName.value.trim() === '') {
+            e.preventDefault();
+            showFieldError(productName, 'Product name is required');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        } else if (productName.value.trim().length < 3) {
+            e.preventDefault();
+            showFieldError(productName, 'Product name must be at least 3 characters long');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        } else if (/\d/.test(productName.value.trim())) {
+            e.preventDefault();
+            showFieldError(productName, 'Product name cannot contain numbers');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = productName;
+        }
+        
+        // Validate category
+        const categoryId = document.getElementById('categoryId');
+        if (categoryId.value === '') {
+            e.preventDefault();
+            showFieldError(categoryId, 'Please select a category');
+            hasError = true;
+            if (!firstErrorField) firstErrorField = categoryId;
+        }
+        
+        // Validate each variant
+        for (let i = 0; i < variants.length; i++) {
+            const variant = variants[i];
+            const variantIndex = i + 1;
+            
+            const colorSelect = variant.querySelector('select[name="colorIds"]');
+            const sizeSelect = variant.querySelector('select[name="sizeIds"]');
+            const priceInput = variant.querySelector('input[name="prices"]');
+            const stockInput = variant.querySelector('input[name="stocks"]');
+            const imageInput = variant.querySelector('input[name="variantImages"]');
+            
+            if (colorSelect.value === '') {
+                e.preventDefault();
+                showFieldError(colorSelect, 'Color is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = colorSelect;
+            }
+            
+            if (sizeSelect.value === '') {
+                e.preventDefault();
+                showFieldError(sizeSelect, 'Size is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = sizeSelect;
+            }
+            
+            if (priceInput.value === '' || parseFloat(priceInput.value) < 0) {
+                e.preventDefault();
+                showFieldError(priceInput, 'Price must be greater than or equal to 0');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = priceInput;
+            }
+            
+            if (stockInput.value === '' || parseInt(stockInput.value) < 0) {
+                e.preventDefault();
+                showFieldError(stockInput, 'Stock must be greater than or equal to 0');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = stockInput;
+            }
+            
+            if (imageInput.files.length === 0) {
+                e.preventDefault();
+                showFieldError(imageInput, 'Image is required');
+                hasError = true;
+                if (!firstErrorField) firstErrorField = imageInput;
+            } else {
+                // Validate image file type
+                const file = imageInput.files[0];
+                if (!file.type.startsWith('image/')) {
+                    e.preventDefault();
+                    showFieldError(imageInput, 'Only image files are allowed');
+                    hasError = true;
+                    if (!firstErrorField) firstErrorField = imageInput;
+                } else if (file.size > 5 * 1024 * 1024) {
+                    e.preventDefault();
+                    showFieldError(imageInput, 'Image size must be less than 5MB');
+                    hasError = true;
+                    if (!firstErrorField) firstErrorField = imageInput;
+                }
+            }
+        }
+        
+        // If there are errors, focus on first error field and show summary
+        if (hasError) {
+            e.preventDefault();
+            showAlert('Please fix errors below before submitting.', 'danger');
+            if (firstErrorField) {
+                firstErrorField.focus();
+            }
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding Product...';
+        submitBtn.disabled = true;
+        
+        // Reset button if form submission fails (handled by server)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+    
+    // Function to show field-level error
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        
+        // Remove any existing error message for this field
+        const existingFeedback = field.parentNode.querySelector('.invalid-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+        
+        // Add new error message
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.textContent = message;
+        field.parentNode.appendChild(feedback);
+    }
+    
+    // Function to clear all validation errors
+    function clearValidationErrors() {
+        // Remove all invalid classes
+        const invalidFields = document.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => field.classList.remove('is-invalid'));
+        
+        // Remove all error messages
+        const errorMessages = document.querySelectorAll('.invalid-feedback');
+        errorMessages.forEach(msg => msg.remove());
+    }
+    
+    // Function to show alerts
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the form
+        const form = document.getElementById('productForm');
+        form.insertBefore(alertDiv, form.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Real-time validation for product name
+    document.getElementById('productName').addEventListener('input', function() {
+        const value = this.value.trim();
+        
+        // Check for numbers
+        if (/\d/.test(value)) {
+            showFieldError(this, 'Product name cannot contain numbers');
+        } else if (value.length > 0 && value.length < 3) {
+            showFieldError(this, 'Product name must be at least 3 characters long');
+        } else {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) feedback.remove();
+        }
+    });
+    
+    // Prevent number input in product name
+    document.getElementById('productName').addEventListener('keypress', function(e) {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 86 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode === 88 && (e.ctrlKey === true || e.metaKey === true))) {
+            return;
+        }
+        
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            // Allow letters and special characters, but not numbers
+            if (e.keyCode >= 48 && e.keyCode <= 57) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Real-time validation for price and stock inputs
+    document.addEventListener('input', function(e) {
+        if (e.target.name === 'prices') {
+            const value = parseFloat(e.target.value);
+            if (isNaN(value) || value < 0) {
+                showFieldError(e.target, 'Price must be greater than or equal to 0');
+            } else {
+                e.target.classList.remove('is-invalid');
+                const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        }
+        
+        if (e.target.name === 'stocks') {
+            const value = parseInt(e.target.value);
+            if (isNaN(value) || value < 0) {
+                showFieldError(e.target, 'Stock must be greater than or equal to 0');
+            } else {
+                e.target.classList.remove('is-invalid');
+                const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        }
+    });
+    
+    // Clear field error when user starts typing in other fields
+    document.addEventListener('focus', function(e) {
+        if (e.target.classList.contains('is-invalid')) {
+            // Clear error when user focuses on the field
+            setTimeout(() => {
+                if (e.target.value.trim() !== '') {
+                    e.target.classList.remove('is-invalid');
+                    const feedback = e.target.parentNode.querySelector('.invalid-feedback');
+                    if (feedback) feedback.remove();
+                }
+            }, 100);
+        }
+    }, true);
+</script>
+</body>
+</html>

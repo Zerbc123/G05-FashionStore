@@ -2,6 +2,9 @@ package vn.edu.fpt.fashionstore.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "ProductVariant", schema = "dbo")
@@ -14,23 +17,32 @@ public class ProductVariant {
     private int variantId;
 
     // ===== FK tới Product =====
+    @NotNull(message = "Product is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
     // ===== FK tới Color =====
+    @NotNull(message = "Color is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id")
     private Color color;
 
-    // ===== FK tới Category_Size =====
+    // ===== FK tới CategorySize =====
+    @NotNull(message = "Size is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_size_id")
     private CategorySize categorySize;
 
+
+
+    @NotNull(message = "Price is required")
+    @Min(value = 0, message = "Price must be greater than or equal to 0")
     @Column(name = "price")
     private Double price;
 
+    @NotNull(message = "Stock is required")
+    @Min(value = 0, message = "Stock must be greater than or equal to 0")
     @Column(name = "stock")
     private Integer stock;
 
@@ -72,6 +84,8 @@ public class ProductVariant {
         this.categorySize = categorySize;
     }
 
+
+
     public Double getPrice() {
         return price;
     }
@@ -96,13 +110,13 @@ public class ProductVariant {
         this.imageUrl = imageUrl;
     }
 
-    public ProductVariant(int variantId, Color color, Double price, Integer stock, String imageUrl, Product product, CategorySize categorySize) {
+    public ProductVariant(int variantId, Color color, CategorySize categorySize, Double price, Integer stock, String imageUrl, Product product) {
         this.variantId = variantId;
         this.color = color;
+        this.categorySize = categorySize;
         this.price = price;
         this.stock = stock;
         this.imageUrl = imageUrl;
         this.product = product;
-        this.categorySize = categorySize;
     }
 }

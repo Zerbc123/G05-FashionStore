@@ -38,13 +38,24 @@ public class CartService {
         ProductVariant productVariant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));
 
+        // Kiểm tra stock trước khi thêm vào giỏ
+        if (productVariant.getStock() < quantity) {
+            throw new RuntimeException("Sản phẩm chỉ còn " + productVariant.getStock() + " sản phẩm. Bạn không thể thêm " + quantity + " sản phẩm vào giỏ hàng.");
+        }
+
         // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
         Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
 
         if (existingCartItem.isPresent()) {
-            // Nếu đã có, cập nhật số lượng
+            // Nếu đã có, kiểm tra tổng số lượng sau khi cập nhật
             CartItem cartItem = existingCartItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+            int newQuantity = cartItem.getQuantity() + quantity;
+            
+            if (productVariant.getStock() < newQuantity) {
+                throw new RuntimeException("Sản phẩm chỉ còn " + productVariant.getStock() + " sản phẩm. Bạn đã có " + cartItem.getQuantity() + " trong giỏ hàng, không thể thêm " + quantity + " sản phẩm nữa.");
+            }
+            
+            cartItem.setQuantity(newQuantity);
             cartRepository.save(cartItem);
         } else {
             // Nếu chưa có, tạo mới một CartItem
@@ -66,6 +77,12 @@ public class CartService {
             // Nếu số lượng là 0 hoặc âm, xóa sản phẩm
             cartRepository.delete(cartItem);
         } else {
+            // Kiểm tra stock trước khi cập nhật số lượng
+            ProductVariant variant = cartItem.getProductVariant();
+            if (variant.getStock() < quantity) {
+                throw new RuntimeException("Sản phẩm chỉ còn " + variant.getStock() + " sản phẩm. Bạn không thể cập nhật lên " + quantity + " sản phẩm.");
+            }
+            
             cartItem.setQuantity(quantity);
             cartRepository.save(cartItem);
         }

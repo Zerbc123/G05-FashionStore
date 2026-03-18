@@ -8,24 +8,38 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.fpt.fashionstore.entity.Category;
-import vn.edu.fpt.fashionstore.entity.Product;
-import vn.edu.fpt.fashionstore.entity.ProductVariant;
-import vn.edu.fpt.fashionstore.repository.ProductRepository;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Subquery;
-
+import vn.edu.fpt.fashionstore.entity.*;
+import vn.edu.fpt.fashionstore.repository.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import jakarta.persistence.criteria.Predicate;
+import jakarta.validation.constraints.NotNull;
 
 @Service
 public class ProductService {
-
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
+    
+    @Autowired
+    private CategoriesRepository categoryRepository;
+    
+    @Autowired
+    private ColorRepository colorRepository;
+    
+    @Autowired
+    private CategorySizeRepository categorySizeRepository;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -66,9 +80,8 @@ public class ProductService {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(
-                criteriaBuilder.lower(root.get("productName")),
-                "%" + keyword.toLowerCase() + "%"
-            );
+                    criteriaBuilder.lower(root.get("productName")),
+                    "%" + keyword.toLowerCase() + "%");
         };
         return productRepository.findAll(spec, pageable);
     }
@@ -88,7 +101,8 @@ public class ProductService {
     }
 
     // Lọc sản phẩm theo nhiều tiêu chí
-    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice, Pageable pageable) {
+    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice,
+            Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
 
@@ -279,9 +293,151 @@ public class ProductService {
         return productRepository.findAllCategories();
     }
 
+    public Product createProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    public Product updateProduct(Long productId, Product productDetails) {
+        Product existingProduct = productRepository.findByProductId(productId);
+        if (existingProduct != null) {
+            existingProduct.setProductName(productDetails.getProductName());
+            existingProduct.setDescription(productDetails.getDescription());
+            existingProduct.setCategory(productDetails.getCategory());
+            return productRepository.save(existingProduct);
+        }
+        return null;
+    }
+
+    public Product getProductWithVariantsById(Long productId) {
+        Product product = productRepository.findByProductId(productId);
+        if (product != null && product.getVariants() == null) {
+            product.setVariants(productVariantRepository.findByProduct_ProductId(productId));
+        }
+        return product;
+    }
+
     // Hiện sản phẩm bán chạy
     public List<ProductRepository.ProductHomeInfo> getHomeProducts() {
         // Gọi thẳng hàm tối ưu trong Repository, không cần xử lý thủ công nữa
         return productRepository.getAllProductHome();
+    }
+    
+    // Delete product with validation
+    @Transactional
+    public boolean deleteProduct(Long productId) {
+        Product product = productRepository.findByProductId(productId);
+        if (product == null) {
+            return false;
+        }
+        
+        // // Check if product has any order items
+        // boolean hasOrderItems = orderItemRepository.existsByProductVariantProductProductId(productId);
+        // if (hasOrderItems) {
+        //     throw new RuntimeException("Không thể xóa sản phẩm này vì có đơn hàng liên quan");
+        // }
+        
+        // // Check if all variants are out of stock
+        // long inStockVariantsCount = productVariantRepository.countInStockVariantsByProductId(productId);
+        // if (inStockVariantsCount > 0) {
+        //     throw new RuntimeException("Không thể xóa sản phẩm này vì vẫn còn biến thể trong kho");
+        // }
+        
+        // Delete all variants first (due to foreign key constraint)
+        productVariantRepository.deleteByProduct_ProductId(productId);
+        
+        // Delete the product
+        productRepository.delete(product);
+        
+        return true;
+    }
+    
+    // Validation methods for product creation
+    public String validateProductData(String productName, String description, Integer categoryId) {
+        if (productName == null || productName.trim().isEmpty()) {
+            return "Product name is required";
+        }
+        
+        if (productName.trim().length() < 3) {
+            return "Product name must be at least 3 characters long";
+        }
+        
+        if (productName.trim().length() > 255) {
+            return "Product name must not exceed 255 characters";
+        }
+        
+        // Check if product name contains numbers
+        if (productName.matches(".*\\d.*")) {
+            return "Product name cannot contain numbers";
+        }
+        
+        if (description != null && description.length() > 5000) {
+            return "Description must not exceed 5000 characters";
+        }
+        
+        if (categoryId == null) {
+            return "Category is required";
+        }
+        
+        // Check if category exists
+        if (!categoryRepository.existsById(categoryId)) {
+            return "Selected category not found";
+        }
+        
+        return null; // No validation errors
+    }
+    
+    public String validateVariantData(Integer colorId, Integer sizeId, Double price, Integer stock) {
+        if (colorId == null) {
+            return "Color is required";
+        }
+        
+        if (!colorRepository.existsById(colorId)) {
+            return "Selected color not found";
+        }
+        
+        if (sizeId == null) {
+            return "Size is required";
+        }
+        
+        if (!categorySizeRepository.existsById(sizeId)) {
+            return "Selected size not found";
+        }
+        
+        if (price == null) {
+            return "Price is required";
+        }
+        
+        if (price < 0) {
+            return "Price must be greater than or equal to 0";
+        }
+        
+        if (stock == null) {
+            return "Stock is required";
+        }
+        
+        if (stock < 0) {
+            return "Stock must be greater than or equal to 0";
+        }
+        
+        return null; // No validation errors
+    }
+    
+    public String validateImageFile(org.springframework.web.multipart.MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return "Image file is required";
+        }
+        
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return "Only image files are allowed";
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return "Image size must be less than 5MB";
+        }
+        
+        return null; // No validation errors
     }
 }

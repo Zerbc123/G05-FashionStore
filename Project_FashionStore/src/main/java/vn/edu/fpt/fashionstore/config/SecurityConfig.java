@@ -5,9 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 import vn.edu.fpt.fashionstore.service.CustomOAuth2UserService;
 
 @Configuration
@@ -43,12 +43,12 @@ public class SecurityConfig {
                         // Vì app dùng custom session-based auth, không dùng Spring Security authentication
                         .requestMatchers("/admin/**", "/staff/**").permitAll()
 
-                        // 5. Các route khác: Cho phép truy cập, controllers sẽ tự kiểm tra session
-                        // Vì app dùng custom session-based auth, không dùng Spring Security authentication
+                        // 6. Các route khác: Cho phép truy cập, controllers sẽ tự kiểm tra session
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable()); // Vẫn dùng Custom Login của bạn
 
+        // OAuth2 Login (Google)
         if (customOAuth2UserService != null) {
             http.oauth2Login(oauth2 -> oauth2
                     .loginPage("/login")
@@ -60,6 +60,7 @@ public class SecurityConfig {
             );
         }
 
+        // Logout configuration
         http.logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")

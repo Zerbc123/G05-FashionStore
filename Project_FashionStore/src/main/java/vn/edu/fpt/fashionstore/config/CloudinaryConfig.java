@@ -17,10 +17,16 @@ public class CloudinaryConfig {
     @Value("${cloudinary.api_secret}")
     private String apiSecret;
 
+    @Value("${cloudinary.secure}")
+    private boolean secure;
+
     @Bean
     public Cloudinary cloudinary() {
-        return new Cloudinary(
-            "cloudinary://" + apiKey + ":" + apiSecret + "@" + cloudName
-        );
+        return new Cloudinary(java.util.Map.of(
+            "cloud_name", cloudName,
+            "api_key", apiKey,
+            "api_secret", apiSecret,
+            "secure", secure
+        ));
     }
 }

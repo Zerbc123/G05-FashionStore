@@ -69,6 +69,13 @@
             font-size: 3rem; 
             color: #6c757d; 
             border-bottom: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
         }
         .product-name-link { 
             color: #2d3436; 
@@ -429,16 +436,13 @@
                 <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
                     <div th:each="product : ${products}" class="product-card">
                         <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
-                            <div class="product-image-container">
-                                <img th:if="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
-                                     th:src="${product.variants[0].imageUrl}" 
-                                     th:alt="${product.productName}"
-                                     class="product-image"
-                                     style="width: 100%; height: 300px; object-fit: cover; border-bottom: 1px solid #e9ecef;">
-                                <div th:unless="${product.variants != null and !#lists.isEmpty(product.variants) and product.variants[0].imageUrl != null and !product.variants[0].imageUrl.isEmpty()}" 
-                                     class="product-image-placeholder">
-                                    <i class="bi bi-image"></i>
-                                </div>
+                            <div class="product-image-placeholder">
+                                <img th:if="${product.variants != null and !product.variants.empty}" 
+                                         th:src="${product.variants[0].imageUrl}" 
+                                         class="product-img"
+                                         th:alt="${product.productName}"
+                                         onerror="this.src='https://via.placeholder.com/60x60/cccccc/000000?text=Error'"
+                                         loading="lazy">
                             </div>
                         </a>
                         <div class="product-actions">
