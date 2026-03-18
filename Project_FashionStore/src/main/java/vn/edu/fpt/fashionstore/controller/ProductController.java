@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/products")
 public class ProductController {
 
-    // --- THÊM MỚI 3 DÒNG NÀY ĐỂ XỬ LÝ ĐÁNH GIÁ ---
     @Autowired
     private ReviewService reviewService;
 
@@ -42,7 +41,6 @@ public class ProductController {
 
     @Autowired
     private AccountRepository accountRepository;
-    // ----------------------------------------------
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -92,9 +90,6 @@ public class ProductController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String priceRange,
-            @RequestParam(defaultValue = "productName") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int pageSize,
             @RequestParam(defaultValue = "productId") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(defaultValue = "0") int page,
@@ -382,20 +377,13 @@ public class ProductController {
     // 3. HÀM PHỤ TRỢ (CHECK FILTER)
     // ========================================================================
     private boolean hasFilter(String keyword, Long categoryId, String categoryName, String size, String color, Double minPrice, Double maxPrice) {
-        return (keyword != null && !keyword.isBlank()) || categoryId != null ||
+        return (keyword != null && !keyword.isBlank()) || 
+                categoryId != null ||
                 (categoryName != null && !categoryName.isBlank()) ||
-                (size != null && !size.isBlank()) || (color != null && !color.isBlank()) || 
-                minPrice != null || maxPrice != null;
-    // 3. HELPER METHODS
-    // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String size,
-            Double minPrice, Double maxPrice) {
-
-        return (keyword != null && !keyword.isBlank())
-                || categoryId != null
-                || (size != null && !size.isBlank())
-                || minPrice != null
-                || maxPrice != null;
+                (size != null && !size.isBlank()) || 
+                (color != null && !color.isBlank()) || 
+                minPrice != null || 
+                maxPrice != null;
     }
 
     // ========================================================================

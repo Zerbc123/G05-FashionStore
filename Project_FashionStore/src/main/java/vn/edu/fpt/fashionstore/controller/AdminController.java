@@ -103,12 +103,7 @@ public class AdminController {
         Map<Integer, Double> revenueByMonth = orders.stream()
             .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
-                order -> {
-                    // Convert Date to LocalDate safely using Calendar
-                    java.util.Calendar calendar = java.util.Calendar.getInstance();
-                    calendar.setTime(order.getOrderDate());
-                    return calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
-                },
+                order -> order.getOrderDate().getMonthValue(),
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
         

@@ -19,10 +19,10 @@ public class Customer {
     private boolean gender;
 
     @Column(name = "birthday", columnDefinition = "DATE")
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Column(name = "created_at")
-    private Date createdDate;
+    private LocalDate createdDate;
 
     private String email;
     // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
@@ -39,7 +39,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(Long customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
+    public Customer(Long customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
