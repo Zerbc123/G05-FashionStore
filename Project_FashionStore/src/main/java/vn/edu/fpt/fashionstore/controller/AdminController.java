@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.service.ReportService;
+import vn.edu.fpt.fashionstore.service.AccountService;
+import vn.edu.fpt.fashionstore.entity.Account;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
-import vn.edu.fpt.fashionstore.entity.Account;
-import vn.edu.fpt.fashionstore.service.AccountService;
 
 @Controller
 @RequestMapping("/admin")
@@ -49,6 +50,12 @@ public class AdminController {
             return "redirect:/login";
         }
         model.addAttribute("title", "Admin Dashboard");
+        
+        // Add dynamic data for dashboard
+        model.addAttribute("stats", reportService.getDashboardStats());
+        model.addAttribute("recentOrders", reportService.getRecentOrders(5));
+        model.addAttribute("charts", reportService.getDashboardCharts());
+        
         return "admin/admindashboard";
     }
 

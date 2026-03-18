@@ -8,7 +8,7 @@ import vn.edu.fpt.fashionstore.entity.ReturnRequest;
 import vn.edu.fpt.fashionstore.entity.ReturnStatus;
 import vn.edu.fpt.fashionstore.repository.ReturnRequestRepository;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -39,7 +39,7 @@ public class ReturnRequestService {
         request.setReason(reason);
         request.setDescription(description);
         request.setStatus(ReturnStatus.PENDING); // Vừa tạo là trạng thái Chờ xử lý
-        request.setRequestDate(new Date());
+        request.setRequestDate(LocalDate.now());
 
         return returnRequestRepository.save(request);
     }

@@ -165,7 +165,7 @@
                             <td class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</td>
                             <td><span class="category-badge" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span></td>
                             <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
-                            <td th:text="${item.revenue != null ? #numbers.formatCurrency(item.revenue) : '$0.00'}">$0.00</td>
+                            <td th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
                                     <i class="bi bi-check"></i> In Stock
@@ -206,7 +206,7 @@
                             <td><span class="category-badge" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span></td>
                             <td th:text="${item.stock != null ? item.stock : 0}">0</td>
                             <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
-                            <td th:text="${item.revenue != null ? #numbers.formatCurrency(item.revenue) : '$0.00'}">$0.00</td>
+                            <td th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
                                     <i class="bi bi-check"></i> In Stock

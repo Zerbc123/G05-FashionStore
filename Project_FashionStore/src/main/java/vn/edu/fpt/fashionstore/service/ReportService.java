@@ -3,10 +3,17 @@ package vn.edu.fpt.fashionstore.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.repository.*;
+import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ReportService {
@@ -21,10 +28,14 @@ public class ReportService {
     private ReportRepository reportRepository;
 
     @Autowired
-    private ProductReportRepository productReportRepository;
+    private CustomerReportRepository customerReportRepository;
 
     @Autowired
-    private CustomerReportRepository customerReportRepository;
+    private ProductReportRepository productReportRepository;
+
+    private static final List<OrderStatus> ACTIVE_STATUSES = Arrays.asList(
+        OrderStatus.COMPLETED, OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPING
+    );
 
     // Revenue Report Methods
     public Map<String, Object> getRevenueReport(LocalDate startDate, LocalDate endDate) {
@@ -34,7 +45,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting revenue report from " + startDate + " to " + endDate);
             
             // Get daily revenue from database
-            List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate);
+            List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Daily revenue data size: " + (dailyRevenueData != null ? dailyRevenueData.size() : 0));
             
             List<Map<String, Object>> dailyRevenue = new ArrayList<>();
@@ -56,7 +67,7 @@ public class ReportService {
             }
             
             // Get monthly revenue from database
-            List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate);
+            List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Monthly revenue data size: " + (monthlyRevenueData != null ? monthlyRevenueData.size() : 0));
             
             List<Map<String, Object>> monthlyRevenue = new ArrayList<>();
@@ -64,15 +75,18 @@ public class ReportService {
             if (monthlyRevenueData != null) {
                 for (Object[] row : monthlyRevenueData) {
                     Map<String, Object> item = new HashMap<>();
-                    item.put("date", row[0] != null ? row[0].toString() : ""); // Month string
-                    item.put("revenue", row[1] != null ? ((Number) row[1]).doubleValue() : 0.0);
+                    // row[0] is YEAR, row[1] is MONTH, row[2] is REVENUE
+                    String year = row[0] != null ? row[0].toString() : "";
+                    String month = row[1] != null ? String.format("%02d", ((Number) row[1]).intValue()) : "";
+                    item.put("date", month + "-" + year); // Format as MM-YYYY
+                    item.put("revenue", row[2] != null ? ((Number) row[2]).doubleValue() : 0.0);
                     monthlyRevenue.add(item);
                 }
             }
             
             // Calculate totals
-            Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate);
-            Long totalOrders = orderRepository.getTotalOrders(startDate, endDate);
+            Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate, ACTIVE_STATUSES);
+            Long totalOrders = orderRepository.getTotalOrders(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Total revenue: " + totalRevenue + ", Total orders: " + totalOrders);
             
             Double averageOrderValue = totalOrders != null && totalOrders > 0 ? 
@@ -113,7 +127,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting best seller report from " + startDate + " to " + endDate);
             
             // Get best selling products
-            List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate);
+            List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> products = new ArrayList<>();
             
             if (bestSellingProducts != null) {
@@ -135,7 +149,7 @@ public class ReportService {
             }
             
             // Get best selling categories
-            List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate);
+            List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> categories = new ArrayList<>();
             
             if (bestSellingCategories != null) {
@@ -179,7 +193,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting inventory report");
             
             // Get complete inventory
-            List<Object[]> inventoryData = reportRepository.getInventoryReport();
+            List<Object[]> inventoryData = reportRepository.getInventoryReport(ACTIVE_STATUSES);
             System.out.println("DEBUG: Inventory data size: " + (inventoryData != null ? inventoryData.size() : 0));
             
             List<Map<String, Object>> inventory = new ArrayList<>();
@@ -209,7 +223,7 @@ public class ReportService {
             }
             
             // Get low stock products
-            List<Object[]> lowStockData = reportRepository.getLowStockProducts(10);
+            List<Object[]> lowStockData = reportRepository.getLowStockProducts(10, ACTIVE_STATUSES);
             System.out.println("DEBUG: Low stock data size: " + (lowStockData != null ? lowStockData.size() : 0));
             
             List<Map<String, Object>> lowStockProducts = new ArrayList<>();
@@ -226,7 +240,7 @@ public class ReportService {
             }
             
             // Get inventory by category
-            List<Object[]> categoryData = reportRepository.getInventoryByCategory();
+            List<Object[]> categoryData = reportRepository.getInventoryByCategory(ACTIVE_STATUSES);
             System.out.println("DEBUG: Category data size: " + (categoryData != null ? categoryData.size() : 0));
             
             List<Map<String, Object>> categories = new ArrayList<>();
@@ -333,7 +347,7 @@ public class ReportService {
             }
 
             // Top selling products
-            List<Object[]> topSellingData = productReportRepository.getTopSellingProducts();
+            List<Object[]> topSellingData = productReportRepository.getTopSellingProducts(ACTIVE_STATUSES);
             List<Map<String, Object>> topSellingProducts = new ArrayList<>();
             if (topSellingData != null && !topSellingData.isEmpty()) {
                 for (Object[] row : topSellingData) {
@@ -384,7 +398,7 @@ public class ReportService {
             }
 
             // All products with sales
-            List<Object[]> allProductsData = productReportRepository.getAllProductsWithSales();
+            List<Object[]> allProductsData = productReportRepository.getAllProductsWithSales(ACTIVE_STATUSES);
             List<Map<String, Object>> allProducts = new ArrayList<>();
             if (allProductsData != null && !allProductsData.isEmpty()) {
                 for (Object[] row : allProductsData) {
@@ -466,7 +480,7 @@ public class ReportService {
 
         try {
             // Customer summary with null safety
-            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate);
+            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate, ACTIVE_STATUSES);
             if (summaryList != null && !summaryList.isEmpty()) {
                 Object[] summary = summaryList.get(0);
                 if (summary != null && summary.length >= 4) {
@@ -484,7 +498,7 @@ public class ReportService {
             }
 
             // Top customers
-            List<Object[]> topCustomersData = customerReportRepository.getTopCustomers();
+            List<Object[]> topCustomersData = customerReportRepository.getTopCustomers(ACTIVE_STATUSES);
             List<Map<String, Object>> topCustomers = new ArrayList<>();
             if (topCustomersData != null) {
                 for (Object[] row : topCustomersData) {
@@ -506,7 +520,7 @@ public class ReportService {
             }
 
             // Registration summary
-            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDate);
+            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDate, ACTIVE_STATUSES);
             List<Map<String, Object>> registrationSummary = new ArrayList<>();
             if (registrationData != null) {
                 for (Object[] row : registrationData) {
@@ -522,7 +536,7 @@ public class ReportService {
             }
 
             // All customers
-            List<Object[]> allCustomersData = customerReportRepository.getAllCustomersWithOrders();
+            List<Object[]> allCustomersData = customerReportRepository.getAllCustomersWithOrders(ACTIVE_STATUSES);
             List<Map<String, Object>> allCustomers = new ArrayList<>();
             if (allCustomersData != null) {
                 for (Object[] row : allCustomersData) {
@@ -562,5 +576,100 @@ public class ReportService {
         }
 
         return report;
+    }
+
+    public Map<String, Object> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        LocalDate start = LocalDate.now().minusYears(10); // Historical catch-all
+        LocalDate end = LocalDate.now();
+        
+        Double totalRevenue = orderRepository.getTotalRevenue(start, end, ACTIVE_STATUSES);
+        Long totalOrders = orderRepository.getTotalOrders(start, end, ACTIVE_STATUSES);
+        long totalCustomers = customerReportRepository.count();
+        long totalProducts = productReportRepository.count();
+        
+        stats.put("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+        stats.put("totalOrders", totalOrders != null ? totalOrders : 0L);
+        stats.put("totalCustomers", totalCustomers);
+        stats.put("totalProducts", totalProducts);
+        
+        return stats;
+    }
+
+    public List<Map<String, Object>> getRecentOrders(int limit) {
+        List<Map<String, Object>> recentOrders = new ArrayList<>();
+        try {
+            List<Order> orders = orderRepository.findAll();
+            orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()));
+            
+            int count = 0;
+            for (Order order : orders) {
+                if (count >= limit) break;
+                Map<String, Object> map = new HashMap<>();
+                map.put("orderId", "ORD-" + order.getOrderId());
+                map.put("customerName", order.getAccount() != null ? order.getAccount().getUsername() : "Guest");
+                map.put("totalAmount", order.getTotalAmount());
+                map.put("status", order.getStatus() != null ? order.getStatus().name() : "PENDING");
+                recentOrders.add(map);
+                count++;
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching recent orders: " + e.getMessage());
+        }
+        return recentOrders;
+    }
+
+    public Map<String, Object> getDashboardCharts() {
+        Map<String, Object> charts = new HashMap<>();
+        
+        // Monthly Revenue for last 3 years to catch sample data
+        LocalDate startOfRange = LocalDate.now().minusYears(3).withDayOfYear(1);
+        LocalDate endOfRange = LocalDate.now();
+        
+        List<Object[]> monthlyData = orderRepository.getMonthlyRevenue(startOfRange, endOfRange, ACTIVE_STATUSES);
+        List<Double> revenueData = new ArrayList<>(Collections.nCopies(12, 0.0));
+        
+        if (monthlyData != null) {
+            for (Object[] row : monthlyData) {
+                try {
+                    int month = ((Number) row[1]).intValue();
+                    revenueData.set(month - 1, ((Number) row[2]).doubleValue());
+                } catch (Exception e) {
+                    System.err.println("Error processing monthly row: " + Arrays.toString(row));
+                }
+            }
+        }
+        charts.put("revenueData", revenueData);
+        
+        // Sales by Category (Top 6)
+        List<Object[]> categoryData = orderItemRepository.getBestSellingCategories(LocalDate.now().minusYears(10), LocalDate.now(), ACTIVE_STATUSES);
+        List<String> categoryLabels = new ArrayList<>();
+        List<Long> categoryValues = new ArrayList<>();
+        
+        if (categoryData != null) {
+            int count = 0;
+            for (Object[] row : categoryData) {
+                if (count >= 6) break;
+                // Use COALESCE 'Other' from query if possible, but also handle null here safely
+                String label = (row[0] != null) ? row[0].toString() : "Other";
+                categoryLabels.add(label);
+                // Use REVENUE (row[2]) instead of QUANTITY (row[1]) for "Sales" chart
+                // row[2] is SUM(oi.totalPrice)
+                categoryValues.add(((Number) row[2]).longValue());
+                count++;
+            }
+        }
+        charts.put("categoryLabels", categoryLabels);
+        charts.put("categoryValues", categoryValues);
+        
+        // Order Status Counts
+        Map<String, Long> statusCounts = new HashMap<>();
+        for (OrderStatus status : OrderStatus.values()) {
+            statusCounts.put(status.name(), orderRepository.countByStatus(status));
+        }
+        charts.put("statusCounts", statusCounts);
+        
+        return charts;
     }
 }

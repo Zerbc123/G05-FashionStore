@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.ReviewRepository;
-import vn.edu.fpt.fashionstore.service.AccountService;
-import vn.edu.fpt.fashionstore.service.OrderService;
-import vn.edu.fpt.fashionstore.service.ProductService;
-import vn.edu.fpt.fashionstore.service.ReviewService;
+import vn.edu.fpt.fashionstore.service.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

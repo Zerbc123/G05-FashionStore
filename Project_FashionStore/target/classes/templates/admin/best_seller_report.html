@@ -125,9 +125,9 @@
 
             <div class="summary-card revenue">
                 <div class="card-body text-center">
-                    <div class="icon"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="icon"><i class="bi bi-cash-stack"></i></div>
                     <div class="title">Total Revenue</div>
-                    <div class="value">$0.00</div>
+                    <div class="value">0 VND</div>
                     <div class="mt-2">
                         <small><i class="bi bi-arrow-up"></i> From best sellers</small>
                     </div>
@@ -192,7 +192,7 @@
                             <td class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</td>
                             <td><span class="category-badge" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span></td>
                             <td th:text="${item.totalSold != null ? item.totalSold : 0}">0</td>
-                            <td class="revenue-amount" th:text="${item.revenue != null ? #numbers.formatCurrency(item.revenue) : '$0.00'}">$0.00</td>
+                             <td class="revenue-amount" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="badge bg-success" th:if="${item.totalSold != null and item.totalSold > 50}">
                                     <i class="bi bi-arrow-up"></i> Hot
@@ -328,7 +328,7 @@ function createCharts() {
                         padding: 12,
                         callbacks: {
                             label: function(context) {
-                                return 'Revenue: $' + context.parsed.x.toLocaleString();
+                                return 'Revenue: ' + context.parsed.x.toLocaleString() + ' VND';
                             }
                         }
                     }
@@ -339,7 +339,10 @@ function createCharts() {
                         grid: { color: 'rgba(0,0,0,0.05)' },
                         ticks: {
                             callback: function(value) {
-                                return '$' + (value / 1000) + 'k';
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                                return (value / 1000).toFixed(0) + 'k';
                             }
                         }
                     },

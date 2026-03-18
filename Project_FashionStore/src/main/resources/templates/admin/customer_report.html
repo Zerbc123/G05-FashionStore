@@ -190,7 +190,7 @@
                                 <div class="customer-email" th:text="${item.email != null ? item.email : 'N/A'}">email@example.com</div>
                             </td>
                             <td th:text="${item.totalOrders != null ? item.totalOrders : 0}">0</td>
-                            <td th:text="${item.totalSpent != null ? #numbers.formatCurrency(item.totalSpent) : '$0.00'}">$0.00</td>
+                            <td th:text="${item.totalSpent != null ? #numbers.formatDecimal(item.totalSpent, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="status-badge active" th:if="${item.status == 'Active'}">
                                     <i class="bi bi-check"></i> Active
@@ -232,7 +232,7 @@
                             </td>
                             <td th:text="${item.phone != null ? item.phone : 'N/A'}">N/A</td>
                             <td th:text="${item.totalOrders != null ? item.totalOrders : 0}">0</td>
-                            <td th:text="${item.totalSpent != null ? #numbers.formatCurrency(item.totalSpent) : '$0.00'}">$0.00</td>
+                            <td th:text="${item.totalSpent != null ? #numbers.formatDecimal(item.totalSpent, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="status-badge active" th:if="${item.status == 'Active'}">
                                     <i class="bi bi-check"></i> Active
