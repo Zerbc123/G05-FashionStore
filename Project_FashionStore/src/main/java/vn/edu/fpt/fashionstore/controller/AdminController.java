@@ -1,8 +1,6 @@
 package vn.edu.fpt.fashionstore.controller;
 
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +19,7 @@ import vn.edu.fpt.fashionstore.service.ProductVariantService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
@@ -28,22 +27,31 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
-@RequiredArgsConstructor
 public class AdminController {
 
     private final ProductService productService;
     private final ProductVariantService productVariantService;
     private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
-    @Autowired
-    private ReportService reportService;
-    @Autowired
-    private AccountService accountService;
+    private final ReportService reportService;
+    private final AccountService accountService;
+
+    public AdminController(ProductService productService, 
+                          ProductVariantService productVariantService,
+                          CloudinaryService cloudinaryService,
+                          OrderRepository orderRepository,
+                          ReportService reportService,
+                          AccountService accountService) {
+        this.productService = productService;
+        this.productVariantService = productVariantService;
+        this.cloudinaryService = cloudinaryService;
+        this.orderRepository = orderRepository;
+        this.reportService = reportService;
+        this.accountService = accountService;
+    }
 
     // Kiểm tra quyền truy cập ADMIN
     private boolean isAdmin(HttpSession session) {
@@ -105,12 +113,14 @@ public class AdminController {
             .collect(java.util.stream.Collectors.toList());
         
         // Tính doanh thu theo tháng (Revenue Overview)
-        Map<Integer, Double> revenueByMonth = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
-            .collect(java.util.stream.Collectors.groupingBy(
-                order -> order.getOrderDate().getMonthValue(),
-                java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
-            ));
+        Map<Integer, Double> revenueByMonth = new HashMap<>();
+        for (vn.edu.fpt.fashionstore.entity.Order order : orders) {
+            if (OrderStatus.COMPLETED.equals(order.getStatus()) && order.getOrderDate() != null && order.getTotalAmount() != null) {
+                int month = order.getOrderDate().getMonthValue();
+                double amount = order.getTotalAmount();
+                revenueByMonth.put(month, revenueByMonth.getOrDefault(month, 0.0) + amount);
+            }
+        }
         
         // Tạo dữ liệu cho 12 tháng
         double[] monthlyRevenue = new double[12];
@@ -411,18 +421,34 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(1);
-        LocalDate end = endDate != null ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
+        try {
+            LocalDate start = startDate != null ? 
+                LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now().minusMonths(1);
+            LocalDate end = endDate != null ? 
+                LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now();
 
-        model.addAttribute("title", "Best Seller Report");
-        model.addAttribute("report", reportService.getBestSellerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/best_seller_report";
+            model.addAttribute("title", "Best Seller Report");
+            model.addAttribute("report", reportService.getBestSellerReport(start, end));
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            return "admin/best_seller_report";
+        } catch (Exception e) {
+            // Create empty report data if there's an error
+            Map<String, Object> emptyReport = new HashMap<>();
+            emptyReport.put("products", new ArrayList<>());
+            emptyReport.put("categories", new ArrayList<>());
+            emptyReport.put("startDate", LocalDate.now().minusMonths(1));
+            emptyReport.put("endDate", LocalDate.now());
+            
+            model.addAttribute("title", "Best Seller Report");
+            model.addAttribute("report", emptyReport);
+            model.addAttribute("startDate", LocalDate.now().minusMonths(1));
+            model.addAttribute("endDate", LocalDate.now());
+            model.addAttribute("error", "Error loading best seller report: " + e.getMessage());
+            return "admin/best_seller_report";
+        }
     }
 
     // Best Seller Report Filter (POST)
@@ -469,18 +495,37 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(6);
-        LocalDate end = endDate != null ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
+        try {
+            LocalDate start = startDate != null ? 
+                LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now().minusMonths(6);
+            LocalDate end = endDate != null ? 
+                LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now();
 
-        model.addAttribute("title", "Customer Report");
-        model.addAttribute("report", reportService.getCustomerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/customer_report";
+            model.addAttribute("title", "Customer Report");
+            model.addAttribute("report", reportService.getCustomerReport(start, end));
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            return "admin/customer_report";
+        } catch (Exception e) {
+            // Create empty report data if there's an error
+            Map<String, Object> emptyReport = new HashMap<>();
+            emptyReport.put("totalCustomers", 0L);
+            emptyReport.put("activeCustomers", 0L);
+            emptyReport.put("newCustomers", 0L);
+            emptyReport.put("inactiveCustomers", 0L);
+            emptyReport.put("topCustomers", new ArrayList<>());
+            emptyReport.put("registrationSummary", new ArrayList<>());
+            emptyReport.put("allCustomers", new ArrayList<>());
+            
+            model.addAttribute("title", "Customer Report");
+            model.addAttribute("report", emptyReport);
+            model.addAttribute("startDate", LocalDate.now().minusMonths(6));
+            model.addAttribute("endDate", LocalDate.now());
+            model.addAttribute("error", "Error loading customer report: " + e.getMessage());
+            return "admin/customer_report";
+        }
     }
 
     // Customer Report Filter (POST)
@@ -492,18 +537,37 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null && !startDate.isEmpty() ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(6);
-        LocalDate end = endDate != null && !endDate.isEmpty() ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
+        try {
+            LocalDate start = startDate != null && !startDate.isEmpty() ? 
+                LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now().minusMonths(6);
+            LocalDate end = endDate != null && !endDate.isEmpty() ? 
+                LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+                LocalDate.now();
 
-        model.addAttribute("title", "Customer Report");
-        model.addAttribute("report", reportService.getCustomerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/customer_report";
+            model.addAttribute("title", "Customer Report");
+            model.addAttribute("report", reportService.getCustomerReport(start, end));
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            return "admin/customer_report";
+        } catch (Exception e) {
+            // Create empty report data if there's an error
+            Map<String, Object> emptyReport = new HashMap<>();
+            emptyReport.put("totalCustomers", 0L);
+            emptyReport.put("activeCustomers", 0L);
+            emptyReport.put("newCustomers", 0L);
+            emptyReport.put("inactiveCustomers", 0L);
+            emptyReport.put("topCustomers", new ArrayList<>());
+            emptyReport.put("registrationSummary", new ArrayList<>());
+            emptyReport.put("allCustomers", new ArrayList<>());
+            
+            model.addAttribute("title", "Customer Report");
+            model.addAttribute("report", emptyReport);
+            model.addAttribute("startDate", LocalDate.now().minusMonths(6));
+            model.addAttribute("endDate", LocalDate.now());
+            model.addAttribute("error", "Error loading customer report: " + e.getMessage());
+            return "admin/customer_report";
+        }
     }
 
     // Inventory Report

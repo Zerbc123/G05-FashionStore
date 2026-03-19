@@ -1,5 +1,7 @@
 package vn.edu.fpt.fashionstore.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -207,7 +209,7 @@ public class ProductService {
                 query.distinct(true);
                 return cb.equal(root.get("category").get("categoryId"), categoryId);
             };
-            var catResult = productRepository.findAll(catSpec, pageable);
+            Page<Product> catResult = productRepository.findAll(catSpec, pageable);
             System.out.println("Category only result: " + catResult.getTotalElements() + " products");
         }
         
@@ -222,7 +224,7 @@ public class ProductService {
                 Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
                 return cb.equal(variants.get("color").get("colorName"), color);
             };
-            var colorResult = productRepository.findAll(colorSpec, pageable);
+            Page<Product> colorResult = productRepository.findAll(colorSpec, pageable);
             System.out.println("Color only result: " + colorResult.getTotalElements() + " products");
         }
         
@@ -237,7 +239,7 @@ public class ProductService {
                 Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
                 return cb.equal(variants.get("categorySize").get("sizeName"), size);
             };
-            var sizeResult = productRepository.findAll(sizeSpec, pageable);
+            Page<Product> sizeResult = productRepository.findAll(sizeSpec, pageable);
             System.out.println("Size only result: " + sizeResult.getTotalElements() + " products");
         }
         
@@ -268,7 +270,7 @@ public class ProductService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         
-        var combinedResult = productRepository.findAll(combinedSpec, pageable);
+        Page<Product> combinedResult = productRepository.findAll(combinedSpec, pageable);
         System.out.println("Combined result: " + combinedResult.getTotalElements() + " products");
         System.out.println("=== END DEBUG ===");
         

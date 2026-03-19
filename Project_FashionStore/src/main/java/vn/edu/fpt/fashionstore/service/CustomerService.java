@@ -13,6 +13,7 @@ import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
 import java.util.*;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 @Service
@@ -180,11 +181,11 @@ public class CustomerService {
         // Order statistics
         long totalOrders = customerOrders.size();
         long completedOrders = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getStatus() != null && order.getStatus().name().equals("COMPLETED"))
             .count();
         
         double totalSpent = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getStatus() != null && order.getStatus().name().equals("COMPLETED"))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         

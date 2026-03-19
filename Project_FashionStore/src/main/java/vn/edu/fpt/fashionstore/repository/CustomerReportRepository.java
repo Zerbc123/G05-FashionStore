@@ -15,7 +15,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
     // Get customer summary
     @Query("SELECT COUNT(DISTINCT c), " +
            "SUM(CASE WHEN o IS NOT NULL THEN 1 ELSE 0 END), " +
-           "SUM(CASE WHEN c.createdDate >= :startDate THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN CAST(c.createdDate AS DATE) >= CAST(:startDate AS DATE) THEN 1 ELSE 0 END), " +
            "SUM(CASE WHEN o IS NULL THEN 1 ELSE 0 END) " +
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
@@ -57,7 +57,7 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
            "FROM Customer c " +
            "LEFT JOIN c.account a " +
            "LEFT JOIN Order o ON a.accountId = o.account.accountId AND o.status IN :statuses " +
-           "WHERE c.createdDate >= :startDate " +
+           "WHERE CAST(c.createdDate AS DATE) >= CAST(:startDate AS DATE) " +
            "GROUP BY YEAR(c.createdDate), MONTH(c.createdDate) " +
            "ORDER BY YEAR(c.createdDate), MONTH(c.createdDate)")
     List<Object[]> getRegistrationSummary(@Param("startDate") LocalDate startDate, @Param("statuses") List<OrderStatus> statuses);
