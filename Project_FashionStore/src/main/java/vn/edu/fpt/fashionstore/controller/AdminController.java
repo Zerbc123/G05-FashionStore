@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import vn.edu.fpt.fashionstore.service.ReportService;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
@@ -26,6 +26,11 @@ import java.util.List;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -35,6 +40,8 @@ public class AdminController {
     private final ProductVariantService productVariantService;
     private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
+    @Autowired
+    private ReportService reportService;
     @Autowired
     private AccountService accountService;
 
@@ -101,12 +108,7 @@ public class AdminController {
         Map<Integer, Double> revenueByMonth = orders.stream()
             .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
-                order -> {
-                    // Convert Date to LocalDate safely using Calendar
-                    java.util.Calendar calendar = java.util.Calendar.getInstance();
-                    calendar.setTime(order.getOrderDate());
-                    return calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
-                },
+                order -> order.getOrderDate().getMonthValue(),
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
         
@@ -151,6 +153,11 @@ public class AdminController {
         model.addAttribute("categoryNames", categoryNames);
         model.addAttribute("categorySales", categorySales);
         model.addAttribute("title", "Admin Dashboard");
+        
+        // Add dynamic data for dashboard
+        model.addAttribute("stats", reportService.getDashboardStats());
+        model.addAttribute("recentOrders", reportService.getRecentOrders(5));
+        model.addAttribute("charts", reportService.getDashboardCharts());
         
         return "admin/admindashboard";
     }
@@ -372,4 +379,142 @@ public class AdminController {
         return "admin/reports";
     }
 
+    // Revenue Report
+    @GetMapping("/reports/revenue")
+    public String revenueReport(HttpSession session, Model model,
+                                @RequestParam(required = false) String startDate,
+                                @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusDays(7);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Revenue Report");
+        model.addAttribute("report", reportService.getRevenueReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        return "admin/revenue_report";
+    }
+
+    // Best Seller Report
+    @GetMapping("/reports/best-seller")
+    public String bestSellerReport(HttpSession session, Model model,
+                                  @RequestParam(required = false) String startDate,
+                                  @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(1);
+        LocalDate end = endDate != null ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Best Seller Report");
+        model.addAttribute("report", reportService.getBestSellerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        return "admin/best_seller_report";
+    }
+
+    // Best Seller Report Filter (POST)
+    @PostMapping("/reports/best-seller")
+    public String bestSellerReportFilter(HttpSession session, Model model,
+                                        @RequestParam(required = false) String startDate,
+                                        @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(1);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Best Seller Report");
+        model.addAttribute("report", reportService.getBestSellerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        return "admin/best_seller_report";
+    }
+
+    // Product Report
+    @GetMapping("/reports/product")
+    public String productReport(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("title", "Product Report");
+        model.addAttribute("report", reportService.getProductReport());
+        return "admin/product_report";
+    }
+
+    // Customer Report
+    @GetMapping("/reports/customer")
+    public String customerReport(HttpSession session, Model model,
+                                @RequestParam(required = false) String startDate,
+                                @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(6);
+        LocalDate end = endDate != null ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Customer Report");
+        model.addAttribute("report", reportService.getCustomerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        return "admin/customer_report";
+    }
+
+    // Customer Report Filter (POST)
+    @PostMapping("/reports/customer")
+    public String customerReportFilter(HttpSession session, Model model,
+                                      @RequestParam(required = false) String startDate,
+                                      @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        LocalDate start = startDate != null && !startDate.isEmpty() ? 
+            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now().minusMonths(6);
+        LocalDate end = endDate != null && !endDate.isEmpty() ? 
+            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
+            LocalDate.now();
+
+        model.addAttribute("title", "Customer Report");
+        model.addAttribute("report", reportService.getCustomerReport(start, end));
+        model.addAttribute("startDate", start);
+        model.addAttribute("endDate", end);
+        return "admin/customer_report";
+    }
+
+    // Inventory Report
+    @GetMapping("/reports/inventory")
+    public String inventoryReport(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("title", "Inventory Report");
+        model.addAttribute("report", reportService.getInventoryReport());
+        return "admin/inventory_report";
+    }
 }

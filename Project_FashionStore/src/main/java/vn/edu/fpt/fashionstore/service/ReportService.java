@@ -6,6 +6,7 @@ import vn.edu.fpt.fashionstore.repository.*;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,9 +45,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting revenue report from " + startDate + " to " + endDate);
             
             // Get daily revenue from database
-            // TODO: Implement getDailyRevenue method in OrderRepository
-            // List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate, ACTIVE_STATUSES);
-            List<Object[]> dailyRevenueData = new ArrayList<>(); // Placeholder
+            List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Daily revenue data size: " + (dailyRevenueData != null ? dailyRevenueData.size() : 0));
             
             List<Map<String, Object>> dailyRevenue = new ArrayList<>();
@@ -68,9 +67,7 @@ public class ReportService {
             }
             
             // Get monthly revenue from database
-            // TODO: Implement getMonthlyRevenue method in OrderRepository
-            // List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate, ACTIVE_STATUSES);
-            List<Object[]> monthlyRevenueData = new ArrayList<>(); // Placeholder
+            List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Monthly revenue data size: " + (monthlyRevenueData != null ? monthlyRevenueData.size() : 0));
             
             List<Map<String, Object>> monthlyRevenue = new ArrayList<>();
@@ -88,11 +85,8 @@ public class ReportService {
             }
             
             // Calculate totals
-            // TODO: Implement getTotalRevenue and getTotalOrders methods in OrderRepository
-            // Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate, ACTIVE_STATUSES);
-            // Long totalOrders = orderRepository.getTotalOrders(startDate, endDate, ACTIVE_STATUSES);
-            Double totalRevenue = 0.0; // Placeholder
-            Long totalOrders = 0L; // Placeholder
+            Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate, ACTIVE_STATUSES);
+            Long totalOrders = orderRepository.getTotalOrders(startDate, endDate, ACTIVE_STATUSES);
             System.out.println("DEBUG: Total revenue: " + totalRevenue + ", Total orders: " + totalOrders);
             
             Double averageOrderValue = totalOrders != null && totalOrders > 0 ? 
@@ -133,9 +127,7 @@ public class ReportService {
             System.out.println("DEBUG: Getting best seller report from " + startDate + " to " + endDate);
             
             // Get best selling products
-            // TODO: Implement getBestSellingProducts method in OrderItemRepository
-            // List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate, ACTIVE_STATUSES);
-            List<Object[]> bestSellingProducts = new ArrayList<>(); // Placeholder
+            List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> products = new ArrayList<>();
             
             if (bestSellingProducts != null) {
@@ -157,9 +149,7 @@ public class ReportService {
             }
             
             // Get best selling categories
-            // TODO: Implement getBestSellingCategories method in OrderItemRepository
-            // List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate, ACTIVE_STATUSES);
-            List<Object[]> bestSellingCategories = new ArrayList<>(); // Placeholder
+            List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> categories = new ArrayList<>();
             
             if (bestSellingCategories != null) {
@@ -594,11 +584,9 @@ public class ReportService {
         LocalDate start = LocalDate.now().minusYears(10); // Historical catch-all
         LocalDate end = LocalDate.now();
         
-        // TODO: Implement getTotalRevenue and getTotalOrders methods in OrderRepository
-        // Double totalRevenue = orderRepository.getTotalRevenue(start, end, ACTIVE_STATUSES);
-        // Long totalOrders = orderRepository.getTotalOrders(start, end, ACTIVE_STATUSES);
-        Double totalRevenue = 0.0; // Placeholder
-        Long totalOrders = 0L; // Placeholder
+        // Calculate totals for dashboard
+        Double totalRevenue = orderRepository.getTotalRevenue(start, end, ACTIVE_STATUSES);
+        Long totalOrders = orderRepository.getTotalOrders(start, end, ACTIVE_STATUSES);
         long totalCustomers = customerReportRepository.count();
         long totalProducts = productReportRepository.count();
         
@@ -640,9 +628,7 @@ public class ReportService {
         LocalDate startOfRange = LocalDate.now().minusYears(3).withDayOfYear(1);
         LocalDate endOfRange = LocalDate.now();
         
-        // TODO: Implement getMonthlyRevenue method in OrderRepository
-        // List<Object[]> monthlyData = orderRepository.getMonthlyRevenue(startOfRange, endOfRange, ACTIVE_STATUSES);
-        List<Object[]> monthlyData = new ArrayList<>(); // Placeholder
+        List<Object[]> monthlyData = orderRepository.getMonthlyRevenue(startOfRange, endOfRange, ACTIVE_STATUSES);
         List<Double> revenueData = new ArrayList<>(Collections.nCopies(12, 0.0));
         
         if (monthlyData != null) {
@@ -658,9 +644,7 @@ public class ReportService {
         charts.put("revenueData", revenueData);
         
         // Sales by Category (Top 6)
-        // TODO: Implement getBestSellingCategories method in OrderItemRepository
-        // List<Object[]> categoryData = orderItemRepository.getBestSellingCategories(LocalDate.now().minusYears(10), LocalDate.now(), ACTIVE_STATUSES);
-        List<Object[]> categoryData = new ArrayList<>(); // Placeholder
+        List<Object[]> categoryData = orderItemRepository.getBestSellingCategories(LocalDate.now().minusYears(10), LocalDate.now(), ACTIVE_STATUSES);
         List<String> categoryLabels = new ArrayList<>();
         List<Long> categoryValues = new ArrayList<>();
         

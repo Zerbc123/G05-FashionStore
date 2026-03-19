@@ -1,7 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -19,10 +19,10 @@ public class Customer {
     private boolean gender;
 
     @Column(name = "birthday", columnDefinition = "DATE")
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Column(name = "created_at")
-    private Date createdDate;
+    private LocalDate createdDate;
 
     private String email;
     // số điện thoại lưu dưới dạng chuỗi để giữ số 0 đầu
@@ -39,7 +39,7 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(Long customerId, String fullName, boolean gender, Date dateOfBirth, Date createdDate, String email, String phone, String address) {
+    public Customer(Long customerId, String fullName, boolean gender, LocalDate dateOfBirth, LocalDate createdDate, String email, String phone, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.gender = gender;
@@ -74,19 +74,19 @@ public class Customer {
         this.gender = gender;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public Date getCreatedDate() {
+    public LocalDate getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
+    public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
     }
 

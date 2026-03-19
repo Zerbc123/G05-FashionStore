@@ -3,7 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "orderitem")
+@Table(name = "order_items")
 public class OrderItem {
     
     @Id
@@ -22,7 +22,10 @@ public class OrderItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
     
-    @Column(name = "price")
+    @Column(name = "unit_price", nullable = false)
+    private Double unitPrice;
+    
+    @Column(name = "total_price", nullable = false)
     private Double totalPrice;
     
     // Constructor
@@ -32,10 +35,11 @@ public class OrderItem {
         this.order = order;
         this.productVariant = productVariant;
         this.quantity = (quantity != null) ? quantity : 0;
-        // Tính totalPrice trực tiếp từ productVariant price * quantity
-        this.totalPrice = (productVariant != null && productVariant.getPrice() != null) 
-            ? productVariant.getPrice() * this.quantity 
+        this.unitPrice = (productVariant != null && productVariant.getPrice() != null) 
+            ? productVariant.getPrice() 
             : 0.0;
+        // Tính totalPrice trực tiếp từ productVariant price * quantity
+        this.totalPrice = this.unitPrice * this.quantity;
     }
     
     // Getters and Setters
@@ -70,7 +74,17 @@ public class OrderItem {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
         // Auto calculate total price when quantity changes
-        // Không còn unitPrice nên không tính lại ở đây
+        if (this.unitPrice != null && this.quantity != null) {
+            this.totalPrice = this.unitPrice * this.quantity;
+        }
+    }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
     }
     
     public Double getTotalPrice() {

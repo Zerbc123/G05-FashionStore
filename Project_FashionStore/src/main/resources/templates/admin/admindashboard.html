@@ -277,12 +277,12 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon revenue">
-                    <i class="bi bi-currency-dollar"></i>
+                    <i class="bi bi-cash-stack"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + 'đ'">$45,678</h3>
+                    <h3 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND</h3>
                     <p>Total Revenue</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +12.5% from last month</span>
+                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Dynamic Update</span>
                 </div>
             </div>
 
@@ -291,9 +291,9 @@
                     <i class="bi bi-cart-check"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 th:text="${totalOrders}">1,234</h3>
+                    <h3 th:text="${stats.totalOrders}">1,245</h3>
                     <p>Total Orders</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +8.2% from last month</span>
+                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Real-time tracking</span>
                 </div>
             </div>
 
@@ -302,9 +302,9 @@
                     <i class="bi bi-people"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 th:text="${totalCustomers}">3,567</h3>
+                    <h3 th:text="${stats.totalCustomers}">3,567</h3>
                     <p>Total Customers</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +15.2% from last month</span>
+                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Growing community</span>
                 </div>
             </div>
 
@@ -313,9 +313,9 @@
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 th:text="${totalProducts}">456</h3>
+                    <h3 th:text="${stats.totalProducts}">456</h3>
                     <p>Total Products</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +5 new this week</span>
+                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Live inventory</span>
                 </div>
             </div>
         </div>
@@ -359,12 +359,14 @@
                     <h3>Recent Orders</h3>
                     <div th:each="order : ${recentOrders}" class="order-item">
                         <div class="order-info">
-                            <h6 th:text="'#' + ${order.orderId}">#ORD-2024-001</h6>
-                            <p th:text="${order.customer != null ? order.customer.fullName : 'Unknown Customer'} + ' - ' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">John Doe - $139.97</p>
+                            <h6 th:text="${order.orderId}">#ORD-2024-001</h6>
+                            <p th:text="${order.customerName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}">John Doe - 150,000 VND</p>
                         </div>
-                        <span th:class="'badge ' + ${#strings.toLowerCase(order.status)}" 
-                              th:text="${order.status}" 
-                              class="badge pending">Pending</span>
+                        <span th:text="${order.status}" 
+                              th:class="'badge ' + ${#strings.toLowerCase(order.status)}">Pending</span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentOrders)}" class="p-3 text-center text-muted">
+                        No recent orders.
                     </div>
                 </div>
             </div>
@@ -416,7 +418,15 @@
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000000) {
+                                return (value / 1000000).toFixed(1) + 'M';
+                            }
+                            return value.toLocaleString() + ' VND';
+                        }
+                    }
                 }
             }
         }

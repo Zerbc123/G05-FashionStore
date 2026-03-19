@@ -31,8 +31,8 @@ import vn.edu.fpt.fashionstore.util.PhoneUtils;
 import vn.edu.fpt.fashionstore.util.DateUtils;
 import vn.edu.fpt.fashionstore.util.AddressUtils;
 
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -348,7 +348,7 @@ public class HomeController {
             @RequestParam String phone,
             @RequestParam String address,
             @RequestParam String gender,
-            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateOfBirth,
             HttpSession session,
             RedirectAttributes ra) {
 

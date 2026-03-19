@@ -1,7 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -21,10 +21,13 @@ public class Order {
     @JoinColumn(name = "account_id")
     private Account account;
 
-    @Column(name = "order_date", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date orderDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id")
+    private Voucher voucher;
 
+    @Column(name = "order_date", nullable = false)
+    private LocalDate orderDate;
+    
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
@@ -36,8 +39,29 @@ public class Order {
     @Column(name = "shipping_address", length = 500)
     private String shippingAddress;
 
+    @Transient
+    private String orderCode;
+
+    @Transient
+    private String deliveryAddress;
+
+    @Transient
+    private String confirmedBy;
+
+    @Transient
+    private java.time.LocalDateTime confirmedDate;
+
+    @Transient
+    private String cancelledBy;
+
+    @Transient
+    private java.time.LocalDateTime cancelledDate;
+
+    @Transient
+    private String cancellationReason;
+
     // THÊM BIẾN NÀY ĐỂ ĐỒNG BỘ VỚI CODE BẠN CỦA BẠN
-    @Column(name = "payment_status")
+    @Transient
     private String paymentStatus;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -45,7 +69,7 @@ public class Order {
 
     // Constructor
     public Order() {
-        this.orderDate = new Date();
+        this.orderDate = LocalDate.now();
         this.status = OrderStatus.PENDING;
     }
 
@@ -62,8 +86,8 @@ public class Order {
     public Customer getCustomer() { return customer; }
     public void setCustomer(Customer customer) { this.customer = customer; }
 
-    public Date getOrderDate() { return orderDate; }
-    public void setOrderDate(Date orderDate) { this.orderDate = orderDate; }
+    public LocalDate getOrderDate() { return orderDate; }
+    public void setOrderDate(LocalDate orderDate) { this.orderDate = orderDate; }
 
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
@@ -80,8 +104,38 @@ public class Order {
     public Account getAccount() { return account; }
     public void setAccount(Account account) { this.account = account; }
 
+    public Voucher getVoucher() { return voucher; }
+    public void setVoucher(Voucher voucher) { this.voucher = voucher; }
+
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getOrderCode() { 
+        if (orderCode != null && !orderCode.isEmpty()) return orderCode;
+        return "#" + String.format("%06d", orderId); 
+    }
+    public void setOrderCode(String orderCode) { this.orderCode = orderCode; }
+
+    public String getDeliveryAddress() { 
+        if (deliveryAddress != null && !deliveryAddress.isEmpty()) return deliveryAddress;
+        return customer != null ? customer.getAddress() : "N/A";
+    }
+    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+
+    public String getConfirmedBy() { return confirmedBy; }
+    public void setConfirmedBy(String confirmedBy) { this.confirmedBy = confirmedBy; }
+
+    public java.time.LocalDateTime getConfirmedDate() { return confirmedDate; }
+    public void setConfirmedDate(java.time.LocalDateTime confirmedDate) { this.confirmedDate = confirmedDate; }
+
+    public String getCancelledBy() { return cancelledBy; }
+    public void setCancelledBy(String cancelledBy) { this.cancelledBy = cancelledBy; }
+
+    public java.time.LocalDateTime getCancelledDate() { return cancelledDate; }
+    public void setCancelledDate(java.time.LocalDateTime cancelledDate) { this.cancelledDate = cancelledDate; }
+
+    public String getCancellationReason() { return cancellationReason; }
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
 
     // --- Business methods cũ của bạn ---
     public boolean canBeCancelled() {
@@ -97,6 +151,8 @@ public class Order {
             throw new RuntimeException("Đơn hàng không thể xác nhận ở trạng thái: " + status);
         }
         this.status = OrderStatus.CONFIRMED;
+        this.confirmedBy = confirmedBy;
+        this.confirmedDate = java.time.LocalDateTime.now();
         System.out.println("Order #" + orderId + " confirmed by: " + confirmedBy);
     }
 
@@ -105,16 +161,19 @@ public class Order {
             throw new RuntimeException("Đơn hàng không thể hủy ở trạng thái: " + status);
         }
         this.status = OrderStatus.CANCELLED;
+        this.cancelledBy = cancelledBy;
+        this.cancelledDate = java.time.LocalDateTime.now();
+        this.cancellationReason = reason;
         System.out.println("Order #" + orderId + " cancelled by: " + cancelledBy + ", reason: " + reason);
     }
 
-    public String getOrderCode() {
-        return "#" + String.format("%06d", orderId);
-    }
+    // public String getOrderCode() {
+    //     return "#" + String.format("%06d", orderId);
+    // }
 
-    public String getDeliveryAddress() {
-        return customer != null ? customer.getAddress() : "";
-    }
+    // public String getDeliveryAddress() {
+    //     return customer != null ? customer.getAddress() : "";
+    // }
 
     // --- THÊM HÀM NÀY CỦA BẠN CÙNG NHÓM ---
     public Double getCalculatedTotal() {
