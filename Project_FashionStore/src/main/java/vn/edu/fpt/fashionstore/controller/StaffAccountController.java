@@ -2,6 +2,7 @@ package vn.edu.fpt.fashionstore.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,6 +11,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Role;
 import vn.edu.fpt.fashionstore.service.AccountService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/staff")
@@ -109,6 +113,16 @@ public class StaffAccountController {
         return "redirect:/admin/staff";
     }
 
+    // Đặt trạng thái nghỉ phép
+    @GetMapping("/leave/{id}")
+    public String leave(@PathVariable Integer id) {
+        if (id == null || id <= 0) {
+            return "redirect:/admin/staff?error=Invalid staff ID";
+        }
+        accountService.leaveAccount(id);
+        return "redirect:/admin/staff";
+    }
+
     // Xem chi tiết staff
     @GetMapping("/details/{id}")
     public String staffDetails(@PathVariable Integer id, Model model) {
@@ -147,8 +161,9 @@ public class StaffAccountController {
     @PostMapping("/edit/{id}")
     public String updateStaff(@PathVariable Integer id, 
                           @Valid @ModelAttribute Account staff, 
+                          BindingResult bindingResult,
                           @RequestParam(required = false) Integer roleId,
-                          BindingResult bindingResult, Model model) {
+                          Model model) {
         if (id == null || id <= 0) {
             return "redirect:/admin/staff?error=Invalid staff ID";
         }
@@ -201,8 +216,9 @@ public class StaffAccountController {
     @PostMapping("/edit-info/{id}")
     public String updateStaffInfo(@PathVariable Integer id, 
                                   @Valid @ModelAttribute Account staff, 
+                                  BindingResult bindingResult,
                                   @RequestParam(required = false) Integer roleId,
-                                  BindingResult bindingResult, Model model) {
+                                  Model model) {
         if (id == null || id <= 0) {
             return "redirect:/admin/staff?error=Invalid staff ID";
         }
@@ -326,5 +342,35 @@ public class StaffAccountController {
         }
 
         return "redirect:/admin/staff/trash";
+    }
+
+    // Check phone duplicate (AJAX endpoint)
+    @GetMapping("/check-phone-duplicate")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> checkPhoneDuplicate(
+            @RequestParam String phone,
+            @RequestParam(required = false) Integer accountId) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            boolean exists;
+            if (accountId != null) {
+                // Check for update (exclude current account)
+                exists = accountService.existsByPhoneAndAccountIdNot(phone, accountId);
+            } else {
+                // Check for create
+                exists = accountService.existsByPhone(phone);
+            }
+            
+            response.put("exists", exists);
+            response.put("message", exists ? "Số điện thoại đã tồn tại" : "Số điện thoại có thể sử dụng");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("exists", false);
+            response.put("message", "Lỗi khi kiểm tra số điện thoại");
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

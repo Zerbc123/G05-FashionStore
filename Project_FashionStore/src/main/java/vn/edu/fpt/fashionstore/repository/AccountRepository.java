@@ -23,10 +23,14 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByPhone(String phone);
+
     // CHECK TRÙNG KHI UPDATE (TRỪ CHÍN NÓ)
     boolean existsByUsernameAndAccountIdNot(String username, Integer accountId);
 
     boolean existsByEmailAndAccountIdNot(String email, Integer accountId);
+
+    boolean existsByPhoneAndAccountIdNot(String phone, Integer accountId);
 
     // LẤY TẤT CẢ ACCOUNT KHÔNG BỊ DELETED (PHÂN TRANG)
     Page<Account> findByStatusIn(
@@ -82,7 +86,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     // LẤY DANH SÁCH NHÂN VIÊN (SALE, STOCK, SUPPORT, MANAGER)
     @Query("""
         SELECT a FROM Account a
-        WHERE a.status IN ('ACTIVE','LOCKED')
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
         AND a.role.roleId IN (3,4,5,6)
     """)
     Page<Account> findStaffAccounts(Pageable pageable);
@@ -90,7 +94,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     // SEARCH NHÂN VIÊN
     @Query("""
         SELECT a FROM Account a
-        WHERE a.status IN ('ACTIVE','LOCKED')
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
         AND a.role.roleId IN (3,4,5,6)
         AND (
             LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))

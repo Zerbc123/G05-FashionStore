@@ -285,11 +285,15 @@
 
       th:classappend="${s.status}=='ACTIVE' ? ' bg-green-100 text-green-700' : 
 
-                       (${s.status}=='LOCKED' ? ' bg-red-100 text-red-700' : ' bg-yellow-100 text-yellow-700')" 
+                       (${s.status}=='LOCKED' ? ' bg-red-100 text-red-700' : 
+
+                       (${s.status}=='LEAVE' ? ' bg-yellow-100 text-yellow-700' : ' bg-gray-100 text-gray-700'))" 
 
       th:text="${s.status}=='ACTIVE' ? 'Đang hoạt động' : 
 
-                  (${s.status}=='LOCKED' ? 'Đã khóa' : 'Nghỉ phép')">Đang hoạt động</span>
+                  (${s.status}=='LOCKED' ? 'Đã khóa' : 
+
+                  (${s.status}=='LEAVE' ? 'Nghỉ phép' : 'Không xác định'))">Đang hoạt động</span>
 
                 </td>
 
@@ -298,6 +302,8 @@
                     <a th:href="@{'/admin/staff/details/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">Chi tiết</a>
 
                     <a th:if="${s.status}=='ACTIVE'" th:href="@{'/admin/staff/lock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-yellow-500 text-yellow-600 text-xs font-bold rounded-lg hover:bg-yellow-500 hover:text-white transition shadow-sm inline-block no-underline">Khoá</a>
+
+                    <a th:if="${s.status}=='ACTIVE'" th:href="@{'/admin/staff/leave/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-blue-500 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-500 hover:text-white transition shadow-sm inline-block no-underline">Nghỉ phép</a>
 
                     <a th:if="${s.status}=='LOCKED' or ${s.status}=='LEAVE'" th:href="@{'/admin/staff/unlock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-green-600 text-green-700 text-xs font-bold rounded-lg hover:bg-green-600 hover:text-white transition shadow-sm inline-block no-underline">Mở khoá</a>
 

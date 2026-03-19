@@ -79,6 +79,14 @@ public class AccountService {
         return roles;
     }
 
+    public boolean existsByPhone(String phone) {
+        return accountRepository.existsByPhone(phone);
+    }
+
+    public boolean existsByPhoneAndAccountIdNot(String phone, Integer accountId) {
+        return accountRepository.existsByPhoneAndAccountIdNot(phone, accountId);
+    }
+
     public void createStaff(Account account,Integer roleId){
 
         if(accountRepository.existsByUsername(account.getUsername()))
@@ -86,6 +94,10 @@ public class AccountService {
 
         if(accountRepository.existsByEmail(account.getEmail()))
             throw new RuntimeException("Email đã tồn tại");
+
+        if(account.getPhone() != null && !account.getPhone().trim().isEmpty() 
+           && accountRepository.existsByPhone(account.getPhone()))
+            throw new RuntimeException("Số điện thoại đã tồn tại");
 
         Role role = roleRepository.findById(roleId)
                 .orElseGet(() -> roleRepository.findByRoleName("SUPPORT").orElse(null));
@@ -119,6 +131,12 @@ public class AccountService {
     public void unlockAccount(Integer id){
         Account acc = getById(id);
         acc.setStatus("ACTIVE");
+        accountRepository.save(acc);
+    }
+
+    public void leaveAccount(Integer id){
+        Account acc = getById(id);
+        acc.setStatus("LEAVE");
         accountRepository.save(acc);
     }
 
@@ -156,11 +174,22 @@ public class AccountService {
             throw new RuntimeException("Email đã tồn tại");
         }
         
+        // Kiểm tra số điện thoại có bị trùng không (trừ với chính nó)
+        if(account.getPhone() != null && !account.getPhone().trim().isEmpty() 
+           && accountRepository.existsByPhoneAndAccountIdNot(account.getPhone(), account.getAccountId())){
+            throw new RuntimeException("Số điện thoại đã tồn tại");
+        }
+        
         // Cập nhật thông tin
         existingAccount.setUsername(account.getUsername());
         existingAccount.setEmail(account.getEmail());
         existingAccount.setFullName(account.getFullName());
         existingAccount.setPhone(account.getPhone());
+        
+        // Cập nhật status nếu có
+        if (account.getStatus() != null && !account.getStatus().trim().isEmpty()) {
+            existingAccount.setStatus(account.getStatus());
+        }
         
         // Cập nhật role nếu có
         if(account.getRole() != null && account.getRole().getRoleId() != null){
