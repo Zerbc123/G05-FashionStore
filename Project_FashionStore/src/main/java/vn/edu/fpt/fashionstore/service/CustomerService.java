@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
@@ -20,6 +21,7 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
+    private final AccountRepository accountRepository;
 
     // Get all customers with pagination
     public Page<Customer> getAllCustomers(int page, int size) {
@@ -79,8 +81,11 @@ public class CustomerService {
     public boolean updateCustomerAccountStatus(Long customerId, String status) {
         Optional<Customer> customerOpt = customerRepository.findById(customerId);
         if (customerOpt.isPresent() && customerOpt.get().getAccount() != null) {
-            customerOpt.get().getAccount().setStatus(status);
-            customerRepository.save(customerOpt.get());
+            Customer customer = customerOpt.get();
+            customer.getAccount().setStatus(status);
+            // Save the Account entity to ensure status changes are persisted
+            accountRepository.save(customer.getAccount());
+            customerRepository.save(customer);
             return true;
         }
         return false;
