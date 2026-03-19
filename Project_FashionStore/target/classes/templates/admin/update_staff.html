@@ -147,10 +147,6 @@
                     <label for="fullname">Full Name</label>
                     <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
                     <div th:if="${#fields.hasErrors('fullName')}" class="mt-2 text-red-600 text-xs" th:errors="*{fullName}"></div>
-                    <div id="fullNameError" class="mt-2 text-red-600 text-xs" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Full name không hợp lệ</span>
-                    </div>
                 </div>
 
                 <!-- Username (readonly) -->
@@ -169,7 +165,7 @@
                                 th:text="${r.roleName}"
                                 th:selected="${staff.role != null and staff.role.roleId == r.roleId}">ROLE</option>
                     </select>
-                    <div th:if="${#fields.hasErrors('role')}" class="mt-2 text-red-600 text-xs" th:errors="*{role}"></div>
+                    <div th:if="${#fields.hasErrors('roleId')}" class="mt-2 text-red-600 text-xs" th:errors="*{roleId}"></div>
                 </div>
 
                 <!-- Email -->
@@ -184,14 +180,194 @@
                     <label for="phone">Phone Number</label>
                     <input type="tel" id="phone" class="form-input" placeholder="09xx xxx xxx" th:field="*{phone}" required>
                     <div th:if="${#fields.hasErrors('phone')}" class="mt-2 text-red-600 text-xs" th:errors="*{phone}"></div>
-                    <div id="phoneError" class="mt-2 text-red-600 text-xs" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Số điện thoại không hợp lệ</span>
-                    </div>
-                    <div id="phoneDuplicateError" class="mt-2 text-red-600 text-xs" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Số điện thoại đã tồn tại</span>
-                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="input-group">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status" class="form-input" required>
+                        <option value="ACTIVE" th:selected="${staff.status == 'ACTIVE'}">Đang hoạt động</option>
+                        <option value="LOCKED" th:selected="${staff.status == 'LOCKED'}">Đã khóa</option>
+                        <option value="LEAVE" th:selected="${staff.status == 'LEAVE'}">Nghỉ phép</option>
+                    </select>
+                    <div th:if="${#fields.hasErrors('status')}" class="mt-2 text-red-600 text-xs" th:errors="*{status}"></div>
+                </div>
+
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-8 border-t border-divider">
+                <button type="button" th:onclick="|window.location.href='@{/admin/staff}'|" class="w-full sm:w-auto px-10 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm">
+                    Cancel
+                </button>
+                <button type="submit" class="w-full sm:w-auto px-12 py-3 bg-admin-gradient text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm">
+                    Cập nhật nhân viên
+                </button>
+            </div>
+        </form>
+    </div>
+
+</main>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        DEFAULT: '#F06292',
+                        light: '#F48FB1',
+                    },
+                    secondary: {
+                        bg: '#FFF5F7',
+                    },
+                    text: {
+                        main: '#2F2F2F',
+                        muted: '#7A7A7A',
+                    },
+                    divider: '#EAEAEA',
+                },
+                fontFamily: {
+                    heading: ['"Playfair Display"', 'serif'],
+                    body: ['"Poppins"', 'sans-serif'],
+                },
+                boxShadow: {
+                    'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                },
+                backgroundImage: {
+                    'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        padding: 40px;
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #2F2F2F;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid #EAEAEA;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #F06292;
+        box-shadow: 0 0 0 4px rgba(240, 98, 146, 0.1);
+    }
+
+    select.form-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237A7A7A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1em;
+    }
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div style="margin-top: 80px;">
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Quản trị viên</p>
+                <p class="text-[10px] opacity-80">Admin Root</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-gear"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow p-8 max-w-[900px] mx-auto w-full">
+
+    <!-- Page Title -->
+    <div class="mb-8">
+        <button th:onclick="|window.location.href='@{/admin/staff}'|" class="flex items-center gap-2 text-text-muted hover:text-primary transition font-medium mb-4 text-sm">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+        </button>
+        <h1 class="text-3xl font-heading font-bold text-text-main">Cập nhật nhân viên</h1>
+        <div class="w-12 h-1 bg-primary mt-2"></div>
+        <p class="text-text-muted mt-4 text-sm">Điền đầy đủ thông tin bên dưới để cập nhật tài khoản nhân viên cho hệ thống.</p>
+    </div>
+
+    <!-- Update Staff Form Card -->
+    <div class="form-card">
+        <!-- Check if staff object exists -->
+        <div th:if="${staff == null}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <span>Không tìm thấy thông tin nhân viên. Vui lòng thử lại.</span>
+        </div>
+        
+        <form th:action="@{'/admin/staff/edit/' + ${staff != null ? staff.accountId : ''}}" method="post" th:object="${staff}">
+            <div th:if="${error}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm" th:text="${error}"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+
+                <!-- Full Name -->
+                <div class="input-group">
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
+                    <div th:if="${#fields.hasErrors('fullName')}" class="mt-2 text-red-600 text-xs" th:errors="*{fullName}"></div>
+                </div>
+
+                <!-- Username (readonly) -->
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-input bg-gray-100" th:field="*{username}" readonly>
+                </div>
+
+                <!-- Role Dropdown -->
+                <div class="input-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="roleId" class="form-input" required>
+                        <option value="" disabled>Chọn vai trò</option>
+                        <option th:each="r : ${roles}" 
+                                th:value="${r.roleId}" 
+                                th:text="${r.roleName}
+                                th:selected="${staff.role != null and staff.role.roleId == r.roleId}">ROLE</option>
+                    </select>
+                    <div th:if="${#fields.hasErrors('roleId')}" class="mt-2 text-red-600 text-xs" th:errors="*{roleId}"></div>
+                </div>
+
+                <!-- Email -->
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="example@fashionstore.com" th:field="*{email}" required>
+                    <div th:if="${#fields.hasErrors('email')}" class="mt-2 text-red-600 text-xs" th:errors="*{email}"></div>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="input-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="09xx xxx xxx" th:field="*{phone}" required>
+                    <div th:if="${#fields.hasErrors('phone')}" class="mt-2 text-red-600 text-xs" th:errors="*{phone}"></div>
                 </div>
 
                 <!-- Status -->
@@ -226,128 +402,7 @@
 </footer>
 
 <script>
-// Phone validation function
-function validatePhone(phone) {
-    // Vietnamese phone number regex
-    const phoneRegex = /^(0|\+84)(3[2-9]|5[2689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
-    return phoneRegex.test(phone);
-}
-
-// Full name validation function
-function validateFullName(fullName) {
-    // Allow letters (including Vietnamese), spaces, apostrophes, hyphens, and periods
-    const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠƯăâêôơư\s'\-.]+$/;
-    return nameRegex.test(fullName) && fullName.trim().length >= 2;
-}
-
-// Check phone duplicate via AJAX
-async function checkPhoneDuplicate(phone, currentAccountId) {
-    try {
-        const response = await fetch(`/admin/staff/check-phone-duplicate?phone=${encodeURIComponent(phone)}&accountId=${currentAccountId}`);
-        const result = await response.json();
-        return result.exists;
-    } catch (error) {
-        console.error('Error checking phone duplicate:', error);
-        return false;
-    }
-}
-
-// Form validation
-document.addEventListener('DOMContentLoaded', function() {
-    const phoneInput = document.getElementById('phone');
-    const phoneError = document.getElementById('phoneError');
-    const phoneDuplicateError = document.getElementById('phoneDuplicateError');
-    const fullNameInput = document.getElementById('fullname');
-    const fullNameError = document.getElementById('fullNameError');
-    const form = document.querySelector('form');
-    const currentAccountId = /*[[${staff != null ? staff.accountId : 0}]]*/ 0;
-
-    if (phoneInput) {
-        let debounceTimer;
-
-        phoneInput.addEventListener('input', async function() {
-            clearTimeout(debounceTimer);
-            const phone = this.value.trim();
-            
-            // Hide all errors initially
-            phoneError.style.display = 'none';
-            phoneDuplicateError.style.display = 'none';
-            
-            if (phone === '') {
-                return; // Don't validate empty phone
-            }
-
-            // Debounce validation
-            debounceTimer = setTimeout(async () => {
-                // First check format
-                if (!validatePhone(phone)) {
-                    phoneError.style.display = 'flex';
-                    return;
-                }
-
-                // Then check duplicate
-                const isDuplicate = await checkPhoneDuplicate(phone, currentAccountId);
-                if (isDuplicate) {
-                    phoneDuplicateError.style.display = 'flex';
-                }
-            }, 500);
-        });
-    }
-
-    if (fullNameInput) {
-        fullNameInput.addEventListener('input', function() {
-            const fullName = this.value.trim();
-            
-            // Hide error initially
-            fullNameError.style.display = 'none';
-            
-            if (fullName === '') {
-                return; // Don't validate empty name
-            }
-
-            // Validate full name
-            if (!validateFullName(fullName)) {
-                fullNameError.style.display = 'flex';
-            }
-        });
-    }
-
-    // Prevent form submission if any field is invalid
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            const phone = phoneInput ? phoneInput.value.trim() : '';
-            const fullName = fullNameInput ? fullNameInput.value.trim() : '';
-            
-            // Validate full name
-            if (fullName !== '' && !validateFullName(fullName)) {
-                e.preventDefault();
-                fullNameError.style.display = 'flex';
-                fullNameInput.focus();
-                return;
-            }
-            
-            // Validate phone
-            if (phone !== '') {
-                // Check format
-                if (!validatePhone(phone)) {
-                    e.preventDefault();
-                    phoneError.style.display = 'flex';
-                    phoneInput.focus();
-                    return;
-                }
-
-                // Check duplicate
-                const isDuplicate = await checkPhoneDuplicate(phone, currentAccountId);
-                if (isDuplicate) {
-                    e.preventDefault();
-                    phoneDuplicateError.style.display = 'flex';
-                    phoneInput.focus();
-                    return;
-                }
-            }
-        });
-    }
-});
+// Simple form without complex validation
 </script>
 
 </body>

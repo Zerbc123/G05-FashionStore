@@ -462,10 +462,9 @@ public class OrderController {
 
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
-            boolean isManager = "Quản lý cửa hàng (Manager)".equals(userRole);
-
+            boolean isStaff = "Staff".equals(userRole);
             model.addAttribute("isAdmin", isAdmin);
-            model.addAttribute("isManager", isManager);
+            model.addAttribute("isStaff", isStaff);
 
             boolean hasReturnRequest = returnRequestService.hasReturnRequest(order);
             model.addAttribute("hasReturnRequest", hasReturnRequest);
@@ -517,65 +516,12 @@ public class OrderController {
 
     // =======================================================
     // 9. HỦY ĐƠN HÀNG (CHO KHÁCH HÀNG)
-    // 5. CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG (CHO ADMIN/STAFF)
-    // =======================================================
-    @PostMapping("/details/{orderId}/update-status")
-    public String updateOrderStatus(
-            @PathVariable String orderId,
-            @RequestParam String newStatus,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-        try {
-            String userRole = (String) session.getAttribute("userRole");
-
-            // Chỉ Admin và Staff Quản lý đơn mới được thao tác
-            if (!"Admin".equals(userRole) && !"Quản lý cửa hàng (Manager)".equals(userRole)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thao tác chức năng này!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            Long orderIdLong;
-            try {
-                orderIdLong = Long.parseLong(orderId);
-            } catch (NumberFormatException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", "ID đơn hàng không hợp lệ!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            vn.edu.fpt.fashionstore.entity.OrderStatus statusEnum;
-            try {
-                statusEnum = vn.edu.fpt.fashionstore.entity.OrderStatus.valueOf(newStatus);
-            } catch (IllegalArgumentException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Trạng thái không hợp lệ!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CONFIRMED) {
-                orderService.confirmOrder(orderIdLong, userRole);
-            } else if (statusEnum == vn.edu.fpt.fashionstore.entity.OrderStatus.CANCELLED) {
-                orderService.cancelOrder(orderIdLong, userRole, "Đã hủy bởi " + userRole);
-            }
-
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đơn hàng thành công!");
-            return "redirect:/order/details/" + orderId;
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật trạng thái.");
-            return "redirect:/order/details/" + orderId;
-        }
-    }
-
-    // =======================================================
-    // 6. HỦY ĐƠN HÀNG (CHO KHÁCH HÀNG)
     // =======================================================
     @PostMapping("/details/{oid}/cancel")
     public String cancelOrder(
             @PathVariable("oid") String orderId,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
-
-
-
         try {
             Customer currentCustomer = getCurrentCustomer(session);
 

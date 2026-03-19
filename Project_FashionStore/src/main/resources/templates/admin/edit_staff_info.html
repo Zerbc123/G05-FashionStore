@@ -138,21 +138,17 @@
             <span>Không tìm thấy thông tin nhân viên. Vui lòng thử lại.</span>
         </div>
         
-        <form th:action="@{'/admin/staff/edit-info/' + ${staff != null ? staff.accountId : ''}}" method="post" th:object="${staff}">
+        <form th:action="@{'/admin/staff/edit/' + ${staff != null ? staff.accountId : ''}}" method="post" th:object="${staff}">
             <div th:if="${error}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm" th:text="${error}"></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
                 <!-- Full Name -->
                 <div class="input-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" class="form-input" placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" class="form-input" placeholder="Nhập họ và tên nhân viên" th:field="*{fullName}" required>
                     <div th:if="${#fields.hasErrors('fullName')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-times-circle"></i>
-                        <span>Vui lòng điền vào ô này.</span>
-                    </div>
-                    <div id="fullNameError" class="mt-2 text-red-600 text-xs flex items-center gap-1" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Full name không hợp lệ</span>
+                        <span th:errors="*{fullName}">Error</span>
                     </div>
                 </div>
 
@@ -171,7 +167,7 @@
                     <label for="role">Role</label>
                     <select id="role" name="roleId" class="form-input" required>
                         <option value="" disabled>Chọn vai trò</option>
-                        <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}" th:selected="${staff != null and staff.role != null and r.roleId == staff.role.roleId}">ROLE</option>
+                        <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}">ROLE</option>
                     </select>
                     <div th:if="${#fields.hasErrors('role')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-times-circle"></i>
@@ -196,14 +192,6 @@
                     <div th:if="${#fields.hasErrors('phone')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-times-circle"></i>
                         <span th:errors="*{phone}">Error</span>
-                    </div>
-                    <div id="phoneError" class="mt-2 text-red-600 text-xs flex items-center gap-1" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Số điện thoại không hợp lệ</span>
-                    </div>
-                    <div id="phoneDuplicateError" class="mt-2 text-red-600 text-xs flex items-center gap-1" style="display: none;">
-                        <i class="fa-solid fa-times-circle"></i>
-                        <span>Số điện thoại đã tồn tại</span>
                     </div>
                 </div>
 
@@ -240,108 +228,6 @@
 <footer class="py-6 border-t border-divider bg-white text-center mt-auto">
     <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest">FashionStore Admin Console &copy; 2024</p>
 </footer>
-
-<script>
-// Phone validation function
-function validatePhone(phone) {
-    // Vietnamese phone number regex
-    const phoneRegex = /^(0|\+84)(3[2-9]|5[2689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
-    return phoneRegex.test(phone);
-}
-
-// Full name validation function
-function validateFullName(fullName) {
-    // Remove all whitespace and check if empty
-    const trimmedName = fullName.trim();
-    if (trimmedName === '') {
-        return false;
-    }
-    
-    // Allow letters (including Vietnamese), spaces, apostrophes, hyphens, and periods
-    const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠƯăâêôơư\s'\-.]+$/;
-    return nameRegex.test(trimmedName) && trimmedName.length >= 2;
-}
-
-// Check phone duplicate via AJAX
-async function checkPhoneDuplicate(phone, currentAccountId) {
-    try {
-        const response = await fetch(`/admin/staff/check-phone-duplicate?phone=${encodeURIComponent(phone)}&accountId=${currentAccountId}`);
-        const result = await response.json();
-        return result.exists;
-    } catch (error) {
-        console.error('Error checking phone duplicate:', error);
-        return false;
-    }
-}
-
-// Form validation
-document.addEventListener('DOMContentLoaded', function() {
-    const phoneInput = document.getElementById('phone');
-    const phoneError = document.getElementById('phoneError');
-    const phoneDuplicateError = document.getElementById('phoneDuplicateError');
-    const fullNameInput = document.getElementById('fullName');
-    const fullNameError = document.getElementById('fullNameError');
-    const form = document.querySelector('form');
-    const currentAccountId = /*[[${staff != null ? staff.accountId : 0}]]*/ 0;
-
-    if (phoneInput) {
-        // Remove real-time validation - only validate on submit
-    }
-
-    if (fullNameInput) {
-        // Remove real-time validation - only validate on submit
-    }
-
-    // Prevent form submission if any field is invalid
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            // Hide all errors initially
-            if (phoneError) phoneError.style.display = 'none';
-            if (phoneDuplicateError) phoneDuplicateError.style.display = 'none';
-            if (fullNameError) fullNameError.style.display = 'none';
-            
-            const phone = phoneInput ? phoneInput.value.trim() : '';
-            const fullName = fullNameInput ? fullNameInput.value : '';
-            
-            // Validate full name - check if empty or only whitespace
-            if (fullName.trim() === '') {
-                e.preventDefault();
-                if (fullNameError) fullNameError.style.display = 'flex';
-                if (fullNameInput) fullNameInput.focus();
-                return;
-            }
-            
-            // Validate full name format
-            if (!validateFullName(fullName)) {
-                e.preventDefault();
-                if (fullNameError) fullNameError.style.display = 'flex';
-                if (fullNameInput) fullNameInput.focus();
-                return;
-            }
-            
-            // Validate phone
-            if (phone !== '') {
-                // Check format
-                if (!validatePhone(phone)) {
-                    e.preventDefault();
-                    if (phoneError) phoneError.style.display = 'flex';
-                    if (phoneInput) phoneInput.focus();
-                    return;
-                }
-
-                // Check duplicate
-                const isDuplicate = await checkPhoneDuplicate(phone, currentAccountId);
-                if (isDuplicate) {
-                    e.preventDefault();
-                    if (phoneDuplicateError) phoneDuplicateError.style.display = 'flex';
-                    if (phoneInput) phoneInput.focus();
-                    return;
-                }
-            }
-        });
-    }
-});
-</script>
 
 </body>
 </html>

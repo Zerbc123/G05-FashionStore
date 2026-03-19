@@ -166,32 +166,27 @@ public class StaffSupportController {
             @RequestParam SupportStatus status,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
-
-        String role = (String) session.getAttribute("userRole");
-
-        if(role == null || !role.contains("Hỗ trợ khách hàng (Support)")){
-            return "redirect:/staff/access-denied";
+        
+        if (!isStaff(session)) {
+            return "redirect:/login";
         }
-
+        
         try {
             SupportRequest supportRequest = supportRequestService.findById(id);
             Integer currentStaffId = getCurrentStaffId(session);
-
+            
             // Kiểm tra xem staff có được phân công cho request này không
-            if (supportRequest.getAssignedStaffId() != null &&
-                    !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
+            if (supportRequest.getAssignedStaffId() != null && 
+                !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền cập nhật yêu cầu này!");
                 return "redirect:/staff/support";
             }
-
+            
             supportRequestService.updateStatus(id, status);
-
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
-
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật trạng thái");
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
         }
-
         return "redirect:/staff/support/view/" + id;
     }
 

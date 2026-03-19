@@ -192,18 +192,18 @@
 
         <div class="page-header"><h1><i class="bi bi-headset"></i> Customer Support Tickets</h1></div>
         <div class="stats-grid">
-            <div class="stat-card"><h3 th:text="${openTicketsCount}"></h3>
+            <div class="stat-card"><h3 th:text="${openTicketsCount}">15</h3>
                 <p>Open Tickets</p></div>
-            <div class="stat-card"><h3 th:text="${inProgressCount}"></h3>
+            <div class="stat-card"><h3 th:text="${inProgressCount}">8</h3>
                 <p>In Progress</p></div>
-            <div class="stat-card"><h3 th:text="${resolvedTodayCount}"></h3>
+            <div class="stat-card"><h3 th:text="${resolvedTodayCount}">42</h3>
                 <p>Resolved Today</p></div>
             <div class="stat-card">
                 <h3>
                     <span th:if="${avgResponseMinutes > 0}">
-                        <span th:if="${avgResponseMinutes < 60}" th:text="${avgResponseMinutes + 'm'}"></span>
+                        <span th:if="${avgResponseMinutes < 60}" th:text="${avgResponseMinutes + 'm'}">3.5h</span>
                         <span th:if="${avgResponseMinutes >= 60}"
-                              th:text="${(avgResponseMinutes / 60) + 'h'}"></span>
+                              th:text="${(avgResponseMinutes / 60) + 'h'}">3.5h</span>
                     </span>
                     <span th:if="${avgResponseMinutes == 0}">-</span>
                 </h3>
@@ -286,10 +286,12 @@ border:1px solid #f0f0f0;
                     <div th:if="${assignedRequests != null and !assignedRequests.empty}">
                         <div class="ticket-item" th:each="request : ${assignedRequests}">
                             <div class="ticket-info">
-                                <h6 th:text="'Ticket #' + ${request.id} + ' - ' + ${request.title}"></h6>
+                                <h6 th:text="'Ticket #' + ${request.id} + ' - ' + ${request.title}">Ticket #SUP-145 -
+                                    Chưa nhận được hàng</h6>
                                 <p th:text="'Khách hàng: ' + ${request.customerName} + ' | Email: ' + ${request.customerEmail} + ' | Tạo: ' + ${#temporals.format(request.createdAt, 'HH:mm dd/MM/yyyy')}">
-                                   </p>
-                                <small class="text-muted" th:text="${#strings.abbreviate(request.description, 100)}"></small>
+                                    Khách hàng: John Doe | Email: john@email.com | Tạo: 2 giờ trước</p>
+                                <small class="text-muted" th:text="${#strings.abbreviate(request.description, 100)}">Đơn
+                                    hàng #ORD-2024-001 - Đã vận chuyển 3 ngày</small>
                             </div>
                             <div>
                                 <span th:class="'badge ' + ${request.status.name().toLowerCase()}"
