@@ -12,10 +12,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
-import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
@@ -23,12 +23,10 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.InventoryService;
 
-import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageImpl;
@@ -39,7 +37,6 @@ import org.springframework.data.domain.PageImpl;
 public class AdminController {
 
     private final ProductService productService;
-    private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 

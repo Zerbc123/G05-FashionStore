@@ -12,7 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
@@ -26,18 +25,10 @@ import vn.edu.fpt.fashionstore.service.ProductVariantService;
 
 import java.util.List;
 import java.util.Objects;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
-import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.InventoryService;
 import vn.edu.fpt.fashionstore.util.RoleUtils;
-
-import java.util.List;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/staff")
@@ -50,9 +41,6 @@ public class StaffController {
     private final ProductVariantService productVariantService;
     private final CloudinaryService cloudinaryService;
     private static final Logger logger = LoggerFactory.getLogger(StaffController.class);
-
-    @Autowired
-    private AccountService accountService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -687,5 +675,4 @@ public class StaffController {
 
         return "staff/category-list";
     }
-}
 }
