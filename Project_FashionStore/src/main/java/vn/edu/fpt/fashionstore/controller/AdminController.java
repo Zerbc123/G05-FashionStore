@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.entity.Product;
+import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
@@ -70,8 +73,8 @@ public class AdminController {
         }
         
         // Lấy dữ liệu từ database
-        var products = productService.getAllProductsWithVariants();
-        var orders = orderRepository.findAll();
+        List<Product> products = productService.getAllProductsWithVariants();
+        List<Order> orders = orderRepository.findAll();
         
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -100,7 +103,7 @@ public class AdminController {
             .count();
         
         // Lấy 5 đơn hàng gần nhất
-        var recentOrders = orders.stream()
+        List<Order> recentOrders = orders.stream()
             .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()))
             .limit(5)
             .collect(java.util.stream.Collectors.toList());
@@ -173,7 +176,7 @@ public class AdminController {
         }
 
         // Lấy danh sách sản phẩm từ database
-        var products = productService.getAllProductsWithVariants();
+        List<Product> products = productService.getAllProductsWithVariants();
 
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -181,7 +184,7 @@ public class AdminController {
         long lowStockCount = 0;
         long outOfStockCount = 0;
         
-        for (var product : products) {
+        for (Product product : products) {
             if (product.getVariants() != null && !product.getVariants().isEmpty()) {
                 int stock = product.getVariants().get(0).getStock();
                 if (stock > 20) {
@@ -249,7 +252,7 @@ public class AdminController {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
-        var admin = accountService.getAccountByEmail(email);
+        Account admin = accountService.getAccountByEmail(email);
 
         if (admin == null) {
             model.addAttribute("error", "Không tìm thấy thông tin quản trị viên!");
