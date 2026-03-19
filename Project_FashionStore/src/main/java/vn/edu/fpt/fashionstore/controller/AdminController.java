@@ -6,12 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.ProductVariantService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
@@ -26,6 +32,7 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 public class AdminController {
 
     private final ProductService productService;
+    private final ProductVariantService productVariantService;
     private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
     @Autowired
@@ -192,6 +199,103 @@ public class AdminController {
         model.addAttribute("title", "Product Management");
         
         return "admin/adminproduct";
+    }
+
+    // Quản lý kho hàng
+    @GetMapping("/inventory")
+    public String inventory(HttpSession session, Model model,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "10") int size) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+        
+        // Create pageable request
+        Pageable pageable = PageRequest.of(page, size, Sort.by("variantId").ascending());
+        
+        // Get product variants with pagination
+        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
+        
+        // Flatten all variants and create a simple page
+        List<vn.edu.fpt.fashionstore.entity.ProductVariant> allVariants = products.stream()
+            .flatMap(p -> p.getVariants() != null ? p.getVariants().stream() : java.util.stream.Stream.empty())
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate pagination manually
+        int start = page * size;
+        int end = Math.min(start + size, allVariants.size());
+        List<vn.edu.fpt.fashionstore.entity.ProductVariant> pageVariants = 
+            start < allVariants.size() ? allVariants.subList(start, end) : java.util.Collections.emptyList();
+        
+        // Calculate statistics
+        long totalProducts = allVariants.size();
+        long inStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 20).count();
+        long lowStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 0 && v.getStock() <= 20).count();
+        long outOfStockCount = allVariants.stream().filter(v -> v.getStock() == null || v.getStock() == 0).count();
+        
+        // Create stats object
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalProducts", totalProducts);
+        stats.put("inStockCount", inStockCount);
+        stats.put("lowStockCount", lowStockCount);
+        stats.put("outOfStockCount", outOfStockCount);
+        
+        // Create a simple page object for the template
+        java.util.Map<String, Object> productVariantPage = new java.util.HashMap<>();
+        productVariantPage.put("totalElements", totalProducts);
+        productVariantPage.put("totalPages", (int) Math.ceil((double) totalProducts / size));
+        productVariantPage.put("currentPage", page);
+        productVariantPage.put("size", size);
+        
+        model.addAttribute("title", "Inventory Management");
+        model.addAttribute("stats", stats);
+        model.addAttribute("productVariants", pageVariants);
+        model.addAttribute("productVariantPage", productVariantPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", (int) Math.ceil((double) totalProducts / size));
+        model.addAttribute("size", size);
+        
+        return "admin/admininventory";
+    }
+
+    // Cập nhật số lượng tồn kho
+    @PostMapping("/inventory/update-stock")
+    public String updateStock(@RequestParam("variantId") Integer variantId,
+                            @RequestParam("newStock") Integer newStock,
+                            HttpSession session,
+                            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            // Validate input
+            if (newStock < 0) {
+                redirectAttributes.addFlashAttribute("error", "Số lượng tồn kho không thể âm!");
+                return "redirect:/admin/inventory";
+            }
+
+            // Get existing variant
+            java.util.Optional<vn.edu.fpt.fashionstore.entity.ProductVariant> variantOpt = 
+                productVariantService.getVariantById(variantId);
+            
+            if (!variantOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
+                return "redirect:/admin/inventory";
+            }
+
+            // Update stock
+            vn.edu.fpt.fashionstore.entity.ProductVariant variant = variantOpt.get();
+            variant.setStock(newStock);
+            productVariantService.updateVariant(variantId, variant);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật số lượng tồn kho thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật: " + e.getMessage());
+        }
+
+        return "redirect:/admin/inventory";
     }
 
     // Thêm sản phẩm mới
