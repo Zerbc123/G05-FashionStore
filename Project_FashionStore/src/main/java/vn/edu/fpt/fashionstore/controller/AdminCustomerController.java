@@ -35,51 +35,29 @@ public class AdminCustomerController {
             return "redirect:/login";
         }
 
-        try {
-            // Lấy danh sách khách hàng
-            Page<vn.edu.fpt.fashionstore.entity.Customer> customers;
-            if (search != null && !search.trim().isEmpty()) {
-                customers = customerService.searchCustomers(search, page, size);
-            } else {
-                customers = customerService.getAllCustomers(page, size);
-            }
-
-            // Lấy chi tiết cho từng khách hàng (bao gồm số đơn hàng, tổng chi tiêu, trạng thái)
-            Map<Long, Map<String, Object>> customerDetailsMap = new java.util.HashMap<>();
-            for (vn.edu.fpt.fashionstore.entity.Customer customer : customers.getContent()) {
-                try {
-                    Map<String, Object> details = customerService.getCustomerDetails(customer.getCustomerId());
-                    customerDetailsMap.put(customer.getCustomerId(), details);
-                } catch (Exception e) {
-                    // If there's an error getting customer details, create empty details
-                    Map<String, Object> emptyDetails = new java.util.HashMap<>();
-                    emptyDetails.put("totalOrders", 0L);
-                    emptyDetails.put("totalSpent", 0.0);
-                    emptyDetails.put("status", "Inactive");
-                    customerDetailsMap.put(customer.getCustomerId(), emptyDetails);
-                }
-            }
-
-            // Thêm dữ liệu vào model
-            model.addAttribute("customers", customers);
-            model.addAttribute("customerDetails", customerDetailsMap);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", customers.getTotalPages());
-            model.addAttribute("totalItems", customers.getTotalElements());
-            model.addAttribute("search", search != null ? search : "");
-            model.addAttribute("title", "Customer Management");
-
-        } catch (Exception e) {
-            // If there's a major error, create empty data
-            model.addAttribute("customers", Page.empty(org.springframework.data.domain.PageRequest.of(page, size)));
-            model.addAttribute("customerDetails", new java.util.HashMap<>());
-            model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", 0);
-            model.addAttribute("totalItems", 0);
-            model.addAttribute("search", search != null ? search : "");
-            model.addAttribute("title", "Customer Management");
-            model.addAttribute("error", "Error loading customers: " + e.getMessage());
+        // Lấy danh sách khách hàng
+        Page<vn.edu.fpt.fashionstore.entity.Customer> customers;
+        if (search != null && !search.trim().isEmpty()) {
+            customers = customerService.searchCustomers(search, page, size);
+        } else {
+            customers = customerService.getAllCustomers(page, size);
         }
+
+        // Lấy chi tiết cho từng khách hàng (bao gồm số đơn hàng, tổng chi tiêu, trạng thái)
+        Map<Long, Map<String, Object>> customerDetailsMap = new java.util.HashMap<>();
+        for (vn.edu.fpt.fashionstore.entity.Customer customer : customers.getContent()) {
+            Map<String, Object> details = customerService.getCustomerDetails(customer.getCustomerId());
+            customerDetailsMap.put(customer.getCustomerId(), details);
+        }
+
+        // Thêm dữ liệu vào model
+        model.addAttribute("customers", customers);
+        model.addAttribute("customerDetails", customerDetailsMap);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", customers.getTotalPages());
+        model.addAttribute("totalItems", customers.getTotalElements());
+        model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("title", "Customer Management");
 
         return "admin/admincustomer";
     }
@@ -91,18 +69,14 @@ public class AdminCustomerController {
             return "redirect:/login";
         }
 
-        try {
-            Map<String, Object> customerDetails = customerService.getCustomerDetails(id);
-            if (customerDetails.isEmpty()) {
-                return "redirect:/admin/customers";
-            }
-
-            model.addAttribute("customerDetails", customerDetails);
-            model.addAttribute("title", "Customer Details");
-            return "admin/customer_details";
-        } catch (Exception e) {
-            return "redirect:/admin/customers?error=Error loading customer details";
+        Map<String, Object> customerDetails = customerService.getCustomerDetails(id);
+        if (customerDetails.isEmpty()) {
+            return "redirect:/admin/customers";
         }
+
+        model.addAttribute("customerDetails", customerDetails);
+        model.addAttribute("title", "Customer Details");
+        return "admin/customer_details";
     }
 
     // Cập nhật trạng thái khách hàng

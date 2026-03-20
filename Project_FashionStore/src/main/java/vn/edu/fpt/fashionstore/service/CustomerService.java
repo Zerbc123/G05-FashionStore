@@ -13,7 +13,6 @@ import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
 import java.util.*;
-import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,9 +150,9 @@ public class CustomerService {
         stats.put("vipCustomers", vipCount);
         
         // New customers this month
-        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
+        Date oneMonthAgo = new Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
         long newCustomersThisMonth = allCustomers.stream()
-            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().isAfter(oneMonthAgo))
+            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().after(oneMonthAgo))
             .count();
         
         stats.put("newCustomersThisMonth", newCustomersThisMonth);
@@ -181,11 +180,11 @@ public class CustomerService {
         // Order statistics
         long totalOrders = customerOrders.size();
         long completedOrders = customerOrders.stream()
-            .filter(order -> order.getStatus() != null && order.getStatus().name().equals("COMPLETED"))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .count();
         
         double totalSpent = customerOrders.stream()
-            .filter(order -> order.getStatus() != null && order.getStatus().name().equals("COMPLETED"))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         

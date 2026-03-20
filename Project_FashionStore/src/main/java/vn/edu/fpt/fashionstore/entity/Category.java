@@ -1,12 +1,10 @@
 package vn.edu.fpt.fashionstore.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "Category")
 public class Category {
     @Id

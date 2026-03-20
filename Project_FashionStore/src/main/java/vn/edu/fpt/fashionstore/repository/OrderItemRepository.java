@@ -1,15 +1,15 @@
 package vn.edu.fpt.fashionstore.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import vn.edu.fpt.fashionstore.entity.OrderItem;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
-import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -43,7 +43,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     // Tính doanh thu theo khoảng thời gian
     @Query("SELECT COALESCE(SUM(oi.totalPrice), 0) FROM OrderItem oi WHERE oi.order.orderDate BETWEEN :startDate AND :endDate AND oi.order.status != 'CANCELLED'")
-    Double calculateRevenueBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    Double calculateRevenueBetween(@Param("startDate") java.util.Date startDate, @Param("endDate") java.util.Date endDate);
     
     // Lấy top sản phẩm bán chạy
     @Query("SELECT oi.productVariant, SUM(oi.quantity) as totalSold FROM OrderItem oi " +
@@ -54,36 +54,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     // Lấy order items theo danh sách đơn hàng
     List<OrderItem> findByOrderIn(List<Order> orders);
-
+    
     // Kiểm tra order item có thuộc đơn hàng không
     boolean existsByOrderItemIdAndOrder(Long orderItemId, Order order);
-
-    // Selling Report Queries
-    @Query("SELECT p.productName, SUM(oi.quantity) as totalSold, SUM(oi.totalPrice) as revenue, c.categoryName " +
-           "FROM OrderItem oi " +
-           "JOIN oi.productVariant v " +
-           "JOIN v.product p " +
-           "JOIN p.category c " +
-           "JOIN oi.order o " +
-           "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status IN :statuses " +
-           "GROUP BY p.productName, c.categoryName " +
-           "ORDER BY totalSold DESC")
-    List<Object[]> getBestSellingProducts(@Param("startDate") LocalDate startDate,
-                                        @Param("endDate") LocalDate endDate,
-                                        @Param("statuses") List<OrderStatus> statuses);
-
-    @Query("SELECT COALESCE(c.categoryName, 'Other'), SUM(oi.quantity) as totalSold, SUM(oi.totalPrice) as revenue " +
-           "FROM OrderItem oi " +
-           "JOIN oi.productVariant v " +
-           "JOIN v.product p " +
-           "LEFT JOIN p.category c " +
-           "JOIN oi.order o " +
-           "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "AND o.status IN :statuses " +
-           "GROUP BY c.categoryName " +
-           "ORDER BY revenue DESC")
-    List<Object[]> getBestSellingCategories(@Param("startDate") LocalDate startDate,
-                                         @Param("endDate") LocalDate endDate,
-                                         @Param("statuses") List<OrderStatus> statuses);
 }

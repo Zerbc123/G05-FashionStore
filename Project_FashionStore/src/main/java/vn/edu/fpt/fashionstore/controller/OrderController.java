@@ -10,11 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpSession;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.font.PdfFont;
@@ -108,8 +103,8 @@ public class OrderController {
             model.addAttribute("discountAmount", discountAmount);
             model.addAttribute("finalTotal", finalTotal);
 
-            // Lấy danh sách voucher hợp lệ từ database
-            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(LocalDate.now());
+            // Lấy danh sách voucher hợp lệ
+            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
             model.addAttribute("validVouchers", validVouchers);
 
             model.addAttribute("fullName", currentCustomer.getFullName());
