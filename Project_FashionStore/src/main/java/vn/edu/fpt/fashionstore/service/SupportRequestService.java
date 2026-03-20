@@ -35,6 +35,10 @@ public interface SupportRequestService {
 
     void create(SupportRequest request);
 
+    SupportRequest save(SupportRequest request);
+
+    List<SupportRequest> findByCustomerEmail(String customerEmail);
+
     boolean isStaffAssigned(Integer staffId);
 
     // Thống kê cho staff
