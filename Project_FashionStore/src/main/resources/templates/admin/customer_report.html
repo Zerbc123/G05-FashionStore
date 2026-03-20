@@ -104,10 +104,10 @@
             <div class="summary-card active">
                 <div class="card-body text-center">
                     <div class="icon"><i class="bi bi-person-check"></i></div>
-                    <div class="title">Active Customers</div>
+                    <div class="title">Khách hàng có đơn hàng</div>
                     <div class="value" th:text="${report.activeCustomers}">0</div>
                     <div class="mt-2">
-                        <small><i class="bi bi-arrow-up"></i> Recent activity</small>
+                        <small><i class="bi bi-cart-check"></i> Đã từng mua hàng</small>
                     </div>
                 </div>
             </div>
@@ -126,10 +126,10 @@
             <div class="summary-card inactive">
                 <div class="card-body text-center">
                     <div class="icon"><i class="bi bi-person-x"></i></div>
-                    <div class="title">Inactive Customers</div>
+                    <div class="title">Khách hàng chưa có đơn hàng</div>
                     <div class="value" th:text="${report.inactiveCustomers}">0</div>
                     <div class="mt-2">
-                        <small><i class="bi bi-pause"></i> No recent activity</small>
+                        <small><i class="bi bi-cart-x"></i> Chưa từng mua hàng</small>
                     </div>
                 </div>
             </div>
@@ -193,10 +193,10 @@
                             <td th:text="${item.totalSpent != null ? #numbers.formatDecimal(item.totalSpent, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="status-badge active" th:if="${item.status == 'Active'}">
-                                    <i class="bi bi-check"></i> Active
+                                    <i class="bi bi-check"></i> Có đơn hàng
                                 </span>
                                 <span class="status-badge inactive" th:if="${item.status == 'Inactive'}">
-                                    <i class="bi bi-x"></i> Inactive
+                                    <i class="bi bi-x"></i> Chưa có đơn hàng
                                 </span>
                             </td>
                         </tr>
@@ -235,10 +235,10 @@
                             <td th:text="${item.totalSpent != null ? #numbers.formatDecimal(item.totalSpent, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="status-badge active" th:if="${item.status == 'Active'}">
-                                    <i class="bi bi-check"></i> Active
+                                    <i class="bi bi-check"></i> Có đơn hàng
                                 </span>
                                 <span class="status-badge inactive" th:if="${item.status == 'Inactive'}">
-                                    <i class="bi bi-x"></i> Inactive
+                                    <i class="bi bi-x"></i> Chưa có đơn hàng
                                 </span>
                             </td>
                         </tr>
@@ -258,8 +258,8 @@ console.log('=== Customer Report Loading ===');
 // Use simple data embedding to avoid parsing errors
 var registrationData = /*[[${report.registrationSummary}]]*/ [];
 var statusData = [
-    {label: 'Active', value: /*[[${report.activeCustomers != null ? report.activeCustomers : 0}]]*/ 0, color: 'rgba(40, 167, 69, 0.8)'},
-    {label: 'Inactive', value: /*[[${report.inactiveCustomers != null ? report.inactiveCustomers : 0}]]*/ 0, color: 'rgba(220, 53, 69, 0.8)'}
+    {label: 'Có đơn hàng', value: /*[[${report.activeCustomers != null ? report.activeCustomers : 0}]]*/ 0, color: 'rgba(40, 167, 69, 0.8)'},
+    {label: 'Chưa có đơn hàng', value: /*[[${report.inactiveCustomers != null ? report.inactiveCustomers : 0}]]*/ 0, color: 'rgba(220, 53, 69, 0.8)'}
 ];
 
 console.log('Status Data:', statusData);

@@ -247,6 +247,13 @@
             color: #004085;
         }
 
+        .badge.cancelled {
+            background: #ff6b6b;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+        }
+
         /* Quick Actions */
         .quick-actions {
             display: grid;
@@ -388,7 +395,7 @@
                             <div class="order-info">
                                 <h6 th:text="${order.orderId}">#ORD-2024-001</h6>
                                 <p
-                                    th:text="${order.customerName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                                    th:text="${order.customer != null ? (order.customer.fullName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND') : ('Unknown Customer - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND')}">
                                     John Doe - 150,000 VND</p>
                             </div>
                             <span th:text="${order.status}"
@@ -487,9 +494,9 @@
 
         // Order Status Chart
         const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-        const pendingOrders = /*[[${pendingOrders}]]*/ 0;
-        const processingOrders = /*[[${processingOrders}]]*/ 0;
-        const completedOrders = /*[[${completedOrders}]]*/ 0;
+        const pendingOrders = /*[[${stats.pendingOrders}]]*/ 0;
+        const processingOrders = /*[[${stats.processingOrders}]]*/ 0;
+        const completedOrders = /*[[${stats.completedOrders}]]*/ 0;
 
         new Chart(orderStatusCtx, {
             type: 'bar',

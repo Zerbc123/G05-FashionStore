@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
+import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.service.ProductVariantService;
 import vn.edu.fpt.fashionstore.service.ReportService;
@@ -34,6 +35,7 @@ public class AdminController {
     private final ProductService productService;
     private final ProductVariantService productVariantService;
     private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
     private final ReportService reportService;
     @Autowired
     private AccountService accountService;
@@ -68,11 +70,7 @@ public class AdminController {
         // Tính toán thống kê
         long totalProducts = products.size();
         long totalOrders = orders.size();
-        long totalCustomers = orders.stream()
-            .map(order -> order.getCustomer() != null ? order.getCustomer().getCustomerId() : null)
-            .filter(customerId -> customerId != null)
-            .distinct()
-            .count();
+        long totalCustomers = customerRepository.count();
         
         // Tính tổng doanh thu
         double totalRevenue = orders.stream()
@@ -138,13 +136,17 @@ public class AdminController {
             categorySales.add(salesByCategory.get(categoryName));
         }
         
-        model.addAttribute("totalProducts", totalProducts);
-        model.addAttribute("totalOrders", totalOrders);
-        model.addAttribute("totalCustomers", totalCustomers);
-        model.addAttribute("totalRevenue", totalRevenue);
-        model.addAttribute("pendingOrders", pendingOrders);
-        model.addAttribute("processingOrders", processingOrders);
-        model.addAttribute("completedOrders", completedOrders);
+        // Create stats object for template
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalRevenue", totalRevenue);
+        stats.put("totalOrders", totalOrders);
+        stats.put("totalCustomers", totalCustomers);
+        stats.put("totalProducts", totalProducts);
+        stats.put("pendingOrders", pendingOrders);
+        stats.put("processingOrders", processingOrders);
+        stats.put("completedOrders", completedOrders);
+        
+        model.addAttribute("stats", stats);
         model.addAttribute("recentOrders", recentOrders);
         model.addAttribute("salesByCategory", salesByCategory);
         model.addAttribute("monthlyRevenue", monthlyRevenue);

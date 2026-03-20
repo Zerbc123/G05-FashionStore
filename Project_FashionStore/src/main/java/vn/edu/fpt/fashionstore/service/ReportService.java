@@ -8,9 +8,11 @@ import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -480,8 +482,11 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
+            // Convert LocalDate to Date for type compatibility with Customer.createdDate
+            Date startDateAsDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            
             // Customer summary with null safety
-            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate, ACTIVE_STATUSES);
+            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDateAsDate, ACTIVE_STATUSES);
             if (summaryList != null && !summaryList.isEmpty()) {
                 Object[] summary = summaryList.get(0);
                 if (summary != null && summary.length >= 4) {
@@ -521,7 +526,7 @@ public class ReportService {
             }
 
             // Registration summary
-            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDate,
+            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDateAsDate,
                     ACTIVE_STATUSES);
             List<Map<String, Object>> registrationSummary = new ArrayList<>();
             if (registrationData != null) {

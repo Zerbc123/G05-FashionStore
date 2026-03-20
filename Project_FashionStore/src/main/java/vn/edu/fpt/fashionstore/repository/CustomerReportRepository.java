@@ -7,20 +7,23 @@ import org.springframework.data.repository.query.Param;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 public interface CustomerReportRepository extends JpaRepository<Customer, Integer> {
 
        // Get customer summary
-       @Query("SELECT COUNT(DISTINCT c), " +
-                     "SUM(CASE WHEN o IS NOT NULL THEN 1 ELSE 0 END), " +
-                     "SUM(CASE WHEN c.createdDate >= :startDate THEN 1 ELSE 0 END), " +
-                     "SUM(CASE WHEN o IS NULL THEN 1 ELSE 0 END) " +
-                     "FROM Customer c " +
-                     "LEFT JOIN c.account a " +
-                     "LEFT JOIN Order o ON a.accountId = o.account.accountId AND o.status IN :statuses")
-       List<Object[]> getCustomerSummary(@Param("startDate") LocalDate startDate,
+       @Query("SELECT " +
+                     "COUNT(DISTINCT c) as totalCustomers, " +
+                     "(SELECT COUNT(DISTINCT c2) FROM Customer c2 WHERE EXISTS (" +
+                     "  SELECT 1 FROM Order o2 JOIN o2.account a2 WHERE a2.accountId = c2.account.accountId AND o2.status IN :statuses" +
+                     ")) as activeCustomers, " +
+                     "SUM(CASE WHEN c.createdDate >= :startDate THEN 1 ELSE 0 END) as newCustomers, " +
+                     "(SELECT COUNT(DISTINCT c3) FROM Customer c3 WHERE NOT EXISTS (" +
+                     "  SELECT 1 FROM Order o3 JOIN o3.account a3 WHERE a3.accountId = c3.account.accountId AND o3.status IN :statuses" +
+                     ")) as inactiveCustomers " +
+                     "FROM Customer c")
+       List<Object[]> getCustomerSummary(@Param("startDate") Date startDate,
                      @Param("statuses") List<OrderStatus> statuses);
 
        // Get top customers by revenue
@@ -62,6 +65,6 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
                      "WHERE c.createdDate >= :startDate " +
                      "GROUP BY YEAR(c.createdDate), MONTH(c.createdDate) " +
                      "ORDER BY YEAR(c.createdDate), MONTH(c.createdDate)")
-       List<Object[]> getRegistrationSummary(@Param("startDate") LocalDate startDate,
+       List<Object[]> getRegistrationSummary(@Param("startDate") Date startDate,
                      @Param("statuses") List<OrderStatus> statuses);
 }
