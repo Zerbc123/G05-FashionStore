@@ -162,7 +162,15 @@ public class StaffAccountController {
         try {
             staff.setAccountId(id); // Đảm bảo ID đúng
             
-            accountService.updateStaffInfo(staff, roleId);
+            // Set role if roleId is provided
+            if (roleId != null) {
+                Role role = accountService.getRoleById(roleId);
+                if (role != null) {
+                    staff.setRole(role);
+                }
+            }
+            
+            accountService.updateStaff(staff);
             return "redirect:/admin/staff";
         } catch (RuntimeException ex) {
             model.addAttribute("staff", staff);
@@ -214,7 +222,15 @@ public class StaffAccountController {
                 staff.setPassword(existingStaff.getPassword());
             }
             
-            accountService.updateStaffInfo(staff, roleId);
+            // Set role if roleId is provided
+            if (roleId != null) {
+                Role role = accountService.getRoleById(roleId);
+                if (role != null) {
+                    staff.setRole(role);
+                }
+            }
+            
+            accountService.updateStaff(staff);
             return "redirect:/admin/staff";
         } catch (RuntimeException ex) {
             model.addAttribute("staff", staff);

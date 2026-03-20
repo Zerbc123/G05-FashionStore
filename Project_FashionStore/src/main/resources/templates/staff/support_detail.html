@@ -102,41 +102,6 @@
                         <span class="info-value" th:text="${#temporals.format(supportRequest.updatedAt, 'HH:mm dd/MM/yyyy')}">16:45 11/03/2026</span>
                     </div>
                 </div>
-
-                <!-- Chat Messages Section -->
-                <div class="detail-card">
-                    <h3><i class="bi bi-chat-dots"></i> Cuộc trò chuyện</h3>
-                    <div class="chat-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; background: #f8f9fa;">
-                        <div th:if="${chatMessages != null and !chatMessages.empty}">
-                            <div th:each="message : ${chatMessages}" class="message-item mb-3"
-                                 th:classappend="${message.senderType.name() == 'CUSTOMER'} ? 'customer-message' : 'staff-message'">
-                                <div class="d-flex mb-2"
-                                     th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'justify-content: flex-start' : 'justify-content: flex-end'">
-                                    <div class="message-bubble p-3 rounded-3"
-                                         th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 
-                                             'background: #e3f2fd; color: #1976d2; max-width: 70%;' : 
-                                             'background: #11998e; color: white; max-width: 70%;'">
-                                        <div class="message-header d-flex justify-content-between align-items-center mb-1">
-                                            <small th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'color: #1976d2;' : 'color: white;'">
-                                                <i th:class="${message.senderType.name() == 'CUSTOMER'} ? 'bi bi-person-circle' : 'bi bi-headset'"></i>
-                                                <span th:text="${message.senderName}"></span>
-                                            </small>
-                                            <small th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'color: #1976d2;' : 'color: white;'">
-                                                <span th:text="${#temporals.format(message.sentAt, 'HH:mm')}"></span>
-                                                <span th:if="${!message.isRead}" class="ms-1">●</span>
-                                            </small>
-                                        </div>
-                                        <div class="message-content" th:text="${message.messageContent}"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div th:if="${chatMessages == null or chatMessages.empty}" class="text-center text-muted py-3">
-                            <i class="bi bi-chat-dots display-4"></i>
-                            <p class="mt-2">Chưa có tin nhắn nào. Bắt đầu cuộc trò chuyện!</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="col-lg-4">
@@ -159,12 +124,12 @@
                     <hr>
 
                     <h5 class="mb-3">Gửi phản hồi cho khách hàng</h5>
-                    <form th:action="@{/staff/support/send-message/{id}(id=${supportRequest.id})}" method="post">
+                    <form>
                         <div class="mb-3">
-                            <label for="messageContent" class="form-label">Nội dung phản hồi:</label>
-                            <textarea class="form-control" id="messageContent" name="messageContent" rows="4" placeholder="Nhập nội dung phản hồi..." required></textarea>
+                            <label for="response" class="form-label">Nội dung phản hồi:</label>
+                            <textarea class="form-control" id="response" rows="4" placeholder="Nhập nội dung phản hồi..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">
+                        <button type="button" class="btn btn-success w-100">
                             <i class="bi bi-send"></i> Gửi phản hồi
                         </button>
                     </form>

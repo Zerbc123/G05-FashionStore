@@ -37,6 +37,4 @@ public interface SupportRequestRepository extends JpaRepository<SupportRequest, 
     List<SupportRequest> findByAssignedStaffIdAndStatus(Integer staffId, SupportStatus status);
     
     List<SupportRequest> findByAssignedStaffIdAndCreatedAtBetween(Integer staffId, LocalDateTime startDateTime, LocalDateTime endDateTime);
-
-    List<SupportRequest> findByCustomerEmailOrderByCreatedAtDesc(String customerEmail);
 }

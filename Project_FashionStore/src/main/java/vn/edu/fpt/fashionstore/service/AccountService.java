@@ -40,7 +40,9 @@ public class AccountService {
 
     public static final String ROLE_CUSTOMER = "Customer";
 
-    /*  ADMIN - STAFF MANAGEMENT*/
+    /* =================================================
+                    ADMIN - STAFF MANAGEMENT
+       ================================================= */
 
     public Page<Account> getAllStaff(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accountId").descending());
@@ -132,12 +134,12 @@ public class AccountService {
     }
 
     public void restoreAccount(Integer id){
-        Account acc = getById(id);
-        acc.setStatus("ACTIVE");
-        accountRepository.save(acc);
+        Account account = getById(id);
+        account.setStatus("ACTIVE");
+        accountRepository.save(account);
     }
 
-    public void updateStaffInfo(Account account, Integer roleId){
+    public void updateStaff(Account account){
         if(account == null || account.getAccountId() == null){
             throw new RuntimeException("Account không hợp lệ");
         }
@@ -154,23 +156,6 @@ public class AccountService {
             throw new RuntimeException("Email đã tồn tại");
         }
         
-        // Kiểm tra số điện thoại có bị trùng không (trừ với chính nó)
-        if(account.getPhone() != null && !account.getPhone().trim().isEmpty() 
-           && accountRepository.existsByPhoneAndAccountIdNot(account.getPhone(), account.getAccountId())){
-            throw new RuntimeException("Số điện thoại đã tồn tại");
-        }
-        
-        // Kiểm tra nếu đang chuyển role từ Support sang role khác
-        if(roleId != null && existingAccount.getRole() != null && existingAccount.getRole().getRoleName() != null &&
-           existingAccount.getRole().getRoleName().equals("Hỗ trợ khách hàng (Support)") &&
-           !roleId.equals(existingAccount.getRole().getRoleId())){
-            
-            // Kiểm tra xem staff có đang được phân công xử lý yêu cầu hỗ trợ không
-            if(isStaffAssigned(existingAccount.getAccountId())){
-                throw new RuntimeException("Không thể chuyển vai trò của nhân viên này vì đang được phân công xử lý yêu cầu hỗ trợ khách hàng!");
-            }
-        }
-        
         // Cập nhật thông tin
         existingAccount.setUsername(account.getUsername());
         existingAccount.setEmail(account.getEmail());
@@ -178,8 +163,8 @@ public class AccountService {
         existingAccount.setPhone(account.getPhone());
         
         // Cập nhật role nếu có
-        if(roleId != null){
-            Role role = roleRepository.findById(roleId)
+        if(account.getRole() != null && account.getRole().getRoleId() != null){
+            Role role = roleRepository.findById(account.getRole().getRoleId())
                     .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
             existingAccount.setRole(role);
         }
@@ -257,7 +242,9 @@ public class AccountService {
         accountRepository.delete(account);
     }
 
-    /*  LOGIN */
+    /* =================================================
+                        LOGIN
+       ================================================= */
 
     public Account authenticate(String username,String password){
 
@@ -411,7 +398,9 @@ public class AccountService {
         return accountRepository.findByEmail(email).orElse(null);
     }
 
-/*  FIND ACCOUNT */
+/* =================================================
+                FIND ACCOUNT
+   ================================================= */
 
     public Optional<Account> findByEmail(String email){
         return accountRepository.findByEmail(email);
@@ -421,11 +410,9 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
-    public Customer findCustomerByEmail(String email) {
-        return customerRepository.findByAccountEmail(email).orElse(null);
-    }
-
-/*  GOOGLE OAUTH LOGIN*/
+/* =================================================
+                GOOGLE OAUTH LOGIN
+   ================================================= */
 
     public void processOAuthPostLogin(String email, String name) {
 

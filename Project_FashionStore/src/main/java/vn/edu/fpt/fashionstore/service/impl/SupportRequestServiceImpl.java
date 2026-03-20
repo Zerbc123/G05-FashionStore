@@ -96,11 +96,6 @@ public class SupportRequestServiceImpl implements SupportRequestService {
     }
 
     @Override
-    public SupportRequest save(SupportRequest request) {
-        return repository.save(request);
-    }
-
-    @Override
     public void updateStatus(Long id, SupportStatus status) {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
@@ -163,13 +158,5 @@ public class SupportRequestServiceImpl implements SupportRequestService {
         }
         
         return totalMinutes / resolvedRequests.size();
-    }
-
-    @Override
-    public List<SupportRequest> findByCustomerEmail(String customerEmail) {
-        if (customerEmail == null || customerEmail.trim().isEmpty()) {
-            return List.of();
-        }
-        return repository.findByCustomerEmailOrderByCreatedAtDesc(customerEmail);
     }
 }
