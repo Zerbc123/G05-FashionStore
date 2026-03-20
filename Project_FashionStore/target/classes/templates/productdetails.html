@@ -269,7 +269,7 @@
                                                th:class="${i <= review.rating ? 'bi bi-star-fill text-warning small' : 'bi bi-star text-warning small'}"></i>
                                         </div>
                                     </div>
-                                    <div class="comment-date" th:text="${#dates.format(review.reviewDate, 'dd/MM/yyyy HH:mm')}"></div>
+                                    <div class="comment-date" th:text="${#temporals.format(review.reviewDate, 'dd/MM/yyyy')}"></div>
                                 </div>
                                 <div class="comment-text" th:text="${review.comment}"></div>
                             </div>

@@ -151,7 +151,7 @@
 
                             <td th:text="${order.customer.fullName}"></td>
 
-                            <td th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></td>
 
                             <td>
                                 <strong

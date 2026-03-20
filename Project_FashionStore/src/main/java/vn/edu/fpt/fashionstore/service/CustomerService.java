@@ -8,9 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,7 +119,7 @@ public class CustomerService {
         Map<Long, Long> customerOrderCount = new HashMap<>();
         
         allOrders.stream()
-            .filter(order -> order.getCustomer() != null && "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getCustomer() != null && OrderStatus.COMPLETED.equals(order.getStatus()))
             .forEach(order -> {
                 Long customerId = order.getCustomer().getCustomerId();
                 Double amount = order.getTotalAmount() != null ? order.getTotalAmount() : 0.0;
@@ -175,11 +177,11 @@ public class CustomerService {
         // Order statistics
         long totalOrders = customerOrders.size();
         long completedOrders = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .count();
         
         double totalSpent = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         

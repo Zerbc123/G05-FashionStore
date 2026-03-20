@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.fashionstore.service.ReportService;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
@@ -113,27 +110,16 @@ public class AdminController {
             monthlyRevenue[month - 1] = revenueByMonth.getOrDefault(month, 0.0);
         }
         
-        // Tính doanh thu theo danh mục với số lượng (Sales by Category)
-        Map<String, Long> salesByCategory = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
-            .flatMap(order -> order.getOrderItems() != null ? order.getOrderItems().stream() : java.util.stream.Stream.empty())
-            .collect(java.util.stream.Collectors.groupingBy(
-                item -> {
-                    ProductVariant variant = item.getProductVariant();
-                    if (variant != null && variant.getProduct() != null && variant.getProduct().getCategory() != null) {
-                        return variant.getProduct().getCategory().getCategoryName();
-                    }
-                    return "Unknown";
-                },
-                java.util.stream.Collectors.summingLong(item -> item.getQuantity() != null ? item.getQuantity() : 0)
-            ));
+        // Add dynamic data for dashboard
+        Map<String, Object> stats = reportService.getDashboardStats();
+        List<Map<String, Object>> recentOrdersFromReport = reportService.getRecentOrders(5);
+        Map<String, Object> charts = reportService.getDashboardCharts();
         
-        // Chuyển đổi thành dữ liệu cho chart
-        List<String> categoryNames = new ArrayList<>(salesByCategory.keySet());
-        List<Long> categorySales = new ArrayList<>();
-        for (String categoryName : categoryNames) {
-            categorySales.add(salesByCategory.get(categoryName));
-        }
+        // Use category data from charts (properly queried via JPQL, not lazy-loaded)
+        @SuppressWarnings("unchecked")
+        List<String> chartCategoryNames = (List<String>) charts.getOrDefault("categoryLabels", new ArrayList<>());
+        @SuppressWarnings("unchecked")
+        List<Long> chartCategorySales = (List<Long>) charts.getOrDefault("categoryValues", new ArrayList<>());
         
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("totalOrders", totalOrders);
@@ -142,17 +128,13 @@ public class AdminController {
         model.addAttribute("pendingOrders", pendingOrders);
         model.addAttribute("processingOrders", processingOrders);
         model.addAttribute("completedOrders", completedOrders);
-        model.addAttribute("recentOrders", recentOrders);
-        model.addAttribute("salesByCategory", salesByCategory);
+        model.addAttribute("recentOrders", recentOrdersFromReport);
         model.addAttribute("monthlyRevenue", monthlyRevenue);
-        model.addAttribute("categoryNames", categoryNames);
-        model.addAttribute("categorySales", categorySales);
+        model.addAttribute("categoryNames", chartCategoryNames);
+        model.addAttribute("categorySales", chartCategorySales);
         model.addAttribute("title", "Admin Dashboard");
-        
-        // Add dynamic data for dashboard
-        model.addAttribute("stats", reportService.getDashboardStats());
-        model.addAttribute("recentOrders", reportService.getRecentOrders(5));
-        model.addAttribute("charts", reportService.getDashboardCharts());
+        model.addAttribute("stats", stats);
+        model.addAttribute("charts", charts);
         
         return "admin/admindashboard";
     }

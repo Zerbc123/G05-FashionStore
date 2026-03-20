@@ -84,7 +84,7 @@
             <div class="order-header">
                 <div>
                     <div class="order-id" th:text="${order.orderCode}">#DH123456</div>
-                    <div class="text-muted" th:text="${#dates.format(order.orderDate, 'dd/MM/yyyy')}">23/01/2026</div>
+                    <div class="text-muted" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy')}">23/01/2026</div>
                 </div>
                 <span class="order-status" th:class="'status-' + ${order.status.name().toLowerCase()}" th:text="${order.status.displayName}">Đang giao hàng</span>
             </div>

@@ -1,5 +1,7 @@
 package vn.edu.fpt.fashionstore.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;

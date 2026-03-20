@@ -327,7 +327,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Member Since:</span>
-                            <span class="info-value" th:text="${#dates.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
+                            <span class="info-value" th:text="${#temporals.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Gender:</span>
@@ -335,7 +335,7 @@
                         </div>
                         <div class="info-item" th:if="${customerDetails.customer.dateOfBirth}">
                             <span class="info-label">Date of Birth:</span>
-                            <span class="info-value" th:text="${#dates.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
+                            <span class="info-value" th:text="${#temporals.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
                         </div>
                     </div>
                 </div>
@@ -354,7 +354,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">Order #<span th:text="${order.orderId}">12345</span></h6>
-                                    <small class="text-muted" th:text="${#dates.format(order.orderDate, 'dd MMM yyyy HH:mm')}">Jan 1, 2024 10:30 AM</small>
+                                    <small class="text-muted" th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy')}">Jan 1, 2024</small>
                                 </div>
                                 <div class="text-end">
                                     <div class="fw-bold" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 0)} + ' ₫'">250,000 ₫</div>

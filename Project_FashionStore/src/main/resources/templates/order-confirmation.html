@@ -206,7 +206,7 @@
                     <i class="bi bi-calendar"></i>
                     <div class="info-content">
                         <div class="info-label">Ngày đặt hàng</div>
-                        <div class="info-value" th:text="${#dates.format(orderDate, 'dd/MM/yyyy')}">01/03/2026</div>
+                        <div class="info-value" th:text="${#temporals.format(orderDate, 'dd/MM/yyyy')}">01/03/2026</div>
                     </div>
                 </div>
                 

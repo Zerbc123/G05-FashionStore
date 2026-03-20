@@ -67,7 +67,7 @@
 
                         <td class="comment-text" th:text="${review.comment}" th:title="${review.comment}"></td>
 
-                        <td th:text="${#dates.format(review.reviewDate,'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${#temporals.format(review.reviewDate,'dd/MM/yyyy')}"></td>
 
                         <td>
                             <span th:if="${review.isActive}" class="badge bg-success rounded-pill px-3 py-2">Đang hiển thị</span>

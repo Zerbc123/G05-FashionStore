@@ -83,7 +83,15 @@
                 </li>
             </ul>
             <div class="nav-icons">
-                <i class="bi bi-search nav-icon"></i>
+                <!-- Search Form -->
+                <form th:action="@{/products}" method="get" class="header-search-form">
+                    <div class="header-search-wrapper">
+                        <input type="text" name="keyword" class="header-search-input" placeholder="Tìm kiếm..." th:value="${param.keyword}">
+                        <button type="submit" class="header-search-btn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
                 <a th:href="@{/cart}" style="position: relative; text-decoration: none; color: inherit;">
                     <i class="bi bi-cart3 nav-icon"></i>
                     <span class="cart-badge" th:if="${session.cartCount != null and session.cartCount > 0}" th:text="${session.cartCount}">0</span>

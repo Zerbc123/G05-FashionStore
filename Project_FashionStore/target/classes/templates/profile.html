@@ -89,7 +89,7 @@
                             <button class="avatar-edit-btn"><i class="bi bi-camera"></i></button>
                         </div>
                         <h3 class="user-name" th:text="${account.fullName}">Họ và Tên</h3>
-                        <p class="member-since" th:text="'Member since ' + ${#dates.format(customer.createdDate, 'MMM yyyy')}">Member since 2024</p>
+                        <p class="member-since" th:text="'Member since ' + ${#temporals.format(customer.createdDate, 'MMM yyyy')}">Member since 2024</p>
                     </div>
 
                     <div>
@@ -141,7 +141,7 @@
                         <div class="col-md-6">
                             <div class="info-item">
                                 <div class="info-label">Date of Birth</div>
-                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
+                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
                             </div>
                         </div>
 

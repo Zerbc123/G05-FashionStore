@@ -29,7 +29,7 @@
                 </p>
 
                 <p><strong>Ngày đặt:</strong>
-                    <span th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></span>
+                    <span th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></span>
                 </p>
 
                 <p><strong>Trạng thái:</strong>
@@ -133,7 +133,7 @@
             </p>
 
             <p><strong>Ngày đặt:</strong>
-                <span th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></span>
+                <span th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></span>
             </p>
 
             <p><strong>Trạng thái:</strong>
