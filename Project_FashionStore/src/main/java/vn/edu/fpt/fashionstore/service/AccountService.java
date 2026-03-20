@@ -270,6 +270,28 @@ public class AccountService {
         return account;
     }
 
+    public String getAccountStatus(String username){
+        Account account = accountRepository.findByUsername(username)
+                .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
+        
+        if(account == null) return "NOT_FOUND";
+        
+        if(account.getPassword() == null) return "NO_PASSWORD";
+        
+        boolean passwordValid;
+        if(account.getPassword().startsWith("$2a$")){
+            passwordValid = passwordEncoder.matches("dummy",account.getPassword());
+        }else{
+            passwordValid = false;
+        }
+        
+        if(!passwordValid && !"ACTIVE".equalsIgnoreCase(account.getStatus())){
+            return account.getStatus();
+        }
+        
+        return "ACTIVE";
+    }
+
     //REGISTER
 
     public Account registerAccount(String email,String password,String fullName,String phone){
