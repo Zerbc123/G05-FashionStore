@@ -3,8 +3,10 @@ package vn.edu.fpt.fashionstore.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.edu.fpt.fashionstore.entity.Account;
 
@@ -94,5 +96,11 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    // Update account status without cascade issues
+    @Modifying
+    @Transactional
+    @Query("UPDATE Account a SET a.status = :status WHERE a.accountId = :accountId")
+    int updateAccountStatus(@Param("accountId") Integer accountId, @Param("status") String status);
 
 }

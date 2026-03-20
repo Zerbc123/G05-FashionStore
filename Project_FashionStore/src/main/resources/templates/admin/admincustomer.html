@@ -1022,7 +1022,7 @@
                             <strong>Inactive</strong>
                             <small class="text-muted d-block">Customer cannot login but account is preserved</small>
                         </div>
-                        <input type="hidden" name="status" id="selectedStatus" th:value="${customerDetails != null and customerDetails[customer.customerId] != null ? customerDetails[customer.customerId].status : ''}" />
+                        <input type="hidden" name="status" th:id="'selectedStatus' + ${customer.customerId}" th:value="${customerDetails != null and customerDetails[customer.customerId] != null ? customerDetails[customer.customerId].status : ''}" />
                     </div>
                     
                     <div class="modal-footer">
@@ -1045,31 +1045,36 @@
 
     // Search functionality
     function searchCustomers() {
-
-        const searchValue = document.getElementById('searchInput').value;
-
-        const currentUrl = new URL(window.location);
-
-        currentUrl.searchParams.set('search', searchValue);
-
-        currentUrl.searchParams.set('page', '0'); // Reset to first page when searching
-
-        window.location.href = currentUrl.toString();
-
+        try {
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) {
+                showNotification('Error: Search input not found', 'error');
+                return;
+            }
+            
+            const searchValue = searchInput.value;
+            const currentUrl = new URL(window.location);
+            
+            currentUrl.searchParams.set('search', searchValue);
+            currentUrl.searchParams.set('page', '0'); // Reset to first page when searching
+            
+            window.location.href = currentUrl.toString();
+        } catch (error) {
+            console.error('Error during search:', error);
+            showNotification('An error occurred during search', 'error');
+        }
     }
 
-
-
     // Real-time search on Enter key
-
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-
-        if (e.key === 'Enter') {
-
-            searchCustomers();
-
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchCustomers();
+                }
+            });
         }
-
     });
 
 
@@ -1093,64 +1098,80 @@
 
 
     function showNotification(message, type) {
-
-        const alertDiv = document.createElement('div');
-
-        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-
-        alertDiv.style.position = 'fixed';
-
-        alertDiv.style.top = '20px';
-
-        alertDiv.style.right = '20px';
-
-        alertDiv.style.zIndex = '9999';
-
-        alertDiv.innerHTML = `
-
-            ${message}
-
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
-        `;
-
-        document.body.appendChild(alertDiv);
-
-        
-
-        // Auto remove after 5 seconds
-
-        setTimeout(() => {
-
-            if (alertDiv.parentNode) {
-
-                alertDiv.parentNode.removeChild(alertDiv);
-
+        try {
+            if (!message || !type) {
+                console.error('Invalid notification parameters:', { message, type });
+                return;
             }
-
-        }, 5000);
-
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                try {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                } catch (error) {
+                    console.error('Error removing notification:', error);
+                }
+            }, 5000);
+        } catch (error) {
+            console.error('Error showing notification:', error);
+            // Fallback: use console.log if notification fails
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
     }
 
     // Status update confirmation
     document.addEventListener('DOMContentLoaded', function() {
         // Handle status option clicks
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.status-option')) {
-                const option = e.target.closest('.status-option');
-                const modal = option.closest('.modal');
-                const allOptions = modal.querySelectorAll('.status-option');
-                
-                // Remove selected class from all options
-                allOptions.forEach(opt => opt.classList.remove('selected'));
-                
-                // Add selected class to clicked option
-                option.classList.add('selected');
-                
-                // Update hidden input value
-                const status = option.getAttribute('data-status');
-                const hiddenInput = modal.querySelector('#selectedStatus');
-                hiddenInput.value = status;
+            try {
+                if (e.target.closest('.status-option')) {
+                    const option = e.target.closest('.status-option');
+                    const modal = option.closest('.modal');
+                    
+                    if (!modal) {
+                        console.error('Modal not found for status option');
+                        return;
+                    }
+                    
+                    const allOptions = modal.querySelectorAll('.status-option');
+                    
+                    // Remove selected class from all options
+                    allOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    option.classList.add('selected');
+                    
+                    // Update hidden input value
+                    const status = option.getAttribute('data-status');
+                    const customerId = modal.id.replace('statusModal', '');
+                    const hiddenInput = modal.querySelector('#selectedStatus' + customerId);
+                    
+                    if (!hiddenInput) {
+                        console.error('Hidden input not found for customer: ' + customerId);
+                        showNotification('Error: Status input not found', 'error');
+                        return;
+                    }
+                    
+                    hiddenInput.value = status;
+                }
+            } catch (error) {
+                console.error('Error handling status option click:', error);
+                showNotification('An error occurred while selecting status', 'error');
             }
         });
         
@@ -1158,27 +1179,51 @@
         const statusForms = document.querySelectorAll('form[action*="update-status"]');
         statusForms.forEach(form => {
             form.addEventListener('submit', function(e) {
-                const selectedStatus = form.querySelector('#selectedStatus').value;
-                if (!selectedStatus) {
+                try {
+                    const customerId = form.action.split('/').pop();
+                    const selectedStatusInput = form.querySelector('[name="status"]');
+                    
+                    if (!selectedStatusInput) {
+                        e.preventDefault();
+                        showNotification('Error: Status input not found', 'error');
+                        return;
+                    }
+                    
+                    const selectedStatus = selectedStatusInput.value;
+                    if (!selectedStatus) {
+                        e.preventDefault();
+                        showNotification('Please select a status before updating.', 'error');
+                        return;
+                    }
+                    
+                    const customerNameElement = form.closest('.modal-body')?.querySelector('h6');
+                    if (!customerNameElement) {
+                        e.preventDefault();
+                        showNotification('Error: Customer information not found', 'error');
+                        return;
+                    }
+                    
+                    const customerName = customerNameElement.textContent;
+                    
+                    let confirmMessage = '';
+                    switch(selectedStatus) {
+                        case 'inactive':
+                            confirmMessage = `Are you sure you want to deactivate ${customerName}? They will not be able to login but their account will be preserved.`;
+                            break;
+                        case 'active':
+                            confirmMessage = `Are you sure you want to activate ${customerName}? They will regain full access to the system.`;
+                            break;
+                        default:
+                            confirmMessage = `Are you sure you want to update ${customerName}'s status to ${selectedStatus}?`;
+                    }
+                    
+                    if (!confirm(confirmMessage)) {
+                        e.preventDefault();
+                    }
+                } catch (error) {
+                    console.error('Error handling form submission:', error);
                     e.preventDefault();
-                    showNotification('Please select a status before updating.', 'error');
-                    return;
-                }
-                
-                const customerName = form.closest('.modal-body').querySelector('h6').textContent;
-                
-                let confirmMessage = '';
-                switch(selectedStatus) {
-                    case 'inactive':
-                        confirmMessage = `Are you sure you want to deactivate ${customerName}? They will not be able to login but their account will be preserved.`;
-                        break;
-                    case 'active':
-                        confirmMessage = `Are you sure you want to activate ${customerName}? They will regain full access to the system.`;
-                        break;
-                }
-                
-                if (!confirm(confirmMessage)) {
-                    e.preventDefault();
+                    showNotification('An error occurred while processing your request', 'error');
                 }
             });
         });

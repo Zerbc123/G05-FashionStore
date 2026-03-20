@@ -6,6 +6,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
@@ -78,17 +80,27 @@ public class CustomerService {
     }
 
     // Update customer account status
+    @Transactional
     public boolean updateCustomerAccountStatus(Long customerId, String status) {
-        Optional<Customer> customerOpt = customerRepository.findById(customerId);
-        if (customerOpt.isPresent() && customerOpt.get().getAccount() != null) {
-            Customer customer = customerOpt.get();
-            customer.getAccount().setStatus(status);
-            // Save the Account entity to ensure status changes are persisted
-            accountRepository.save(customer.getAccount());
-            customerRepository.save(customer);
-            return true;
+        try {
+            Optional<Customer> customerOpt = customerRepository.findById(customerId);
+            if (customerOpt.isPresent() && customerOpt.get().getAccount() != null) {
+                Customer customer = customerOpt.get();
+                Account account = customer.getAccount();
+                
+                // Use a native query to update only the status field
+                // This avoids cascade issues entirely
+                int updated = accountRepository.updateAccountStatus(account.getAccountId(), status);
+                
+                return updated > 0;
+            }
+            return false;
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error updating customer status: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update customer status", e);
         }
-        return false;
     }
 
     // Delete customer by ID
