@@ -33,7 +33,8 @@ public interface ReportRepository extends JpaRepository<ProductVariant, Long> {
                      "WHERE v.stock < :threshold " +
                      "GROUP BY p.productName, v.variantId, v.stock, c.categoryName " +
                      "ORDER BY v.stock ASC")
-       List<Object[]> getLowStockProducts(@Param("threshold") Integer threshold, @Param("statuses") List<OrderStatus> statuses);
+       List<Object[]> getLowStockProducts(@Param("threshold") Integer threshold,
+                     @Param("statuses") List<OrderStatus> statuses);
 
        @Query("SELECT c.categoryName, COUNT(p.productId) as productCount, " +
                      "SUM(v.stock) as totalStock, " +

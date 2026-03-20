@@ -22,30 +22,30 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
        List<Object[]> getProductsByCategory();
 
        // Get top selling products
-        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
-                      "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                      "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
-                      "FROM Product p " +
-                      "JOIN p.category c " +
-                      "JOIN p.variants pv " +
-                      "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
-                      "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
-                      "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
-                      "ORDER BY soldQuantity DESC")
-        List<Object[]> getTopSellingProducts(@Param("statuses") List<OrderStatus> statuses);
+       @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
+                     "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
+                     "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
+                     "FROM Product p " +
+                     "JOIN p.category c " +
+                     "JOIN p.variants pv " +
+                     "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
+                     "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
+                     "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
+                     "ORDER BY soldQuantity DESC")
+       List<Object[]> getTopSellingProducts(@Param("statuses") List<OrderStatus> statuses);
 
        // Get all products with sales info
-        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
-                      "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                      "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
-                      "FROM Product p " +
-                      "JOIN p.category c " +
-                      "JOIN p.variants pv " +
-                      "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
-                      "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
-                      "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
-                      "ORDER BY p.productName")
-        List<Object[]> getAllProductsWithSales(@Param("statuses") List<OrderStatus> statuses);
+       @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
+                     "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
+                     "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
+                     "FROM Product p " +
+                     "JOIN p.category c " +
+                     "JOIN p.variants pv " +
+                     "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
+                     "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
+                     "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
+                     "ORDER BY p.productName")
+       List<Object[]> getAllProductsWithSales(@Param("statuses") List<OrderStatus> statuses);
 
        // Get product summary statistics
        @Query("SELECT COUNT(DISTINCT p), " +

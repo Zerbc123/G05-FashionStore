@@ -15,9 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
-import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
 import vn.edu.fpt.fashionstore.service.ProductVariantService;
+import vn.edu.fpt.fashionstore.service.ReportService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
@@ -33,8 +33,8 @@ public class AdminController {
 
     private final ProductService productService;
     private final ProductVariantService productVariantService;
-    private final CloudinaryService cloudinaryService;
     private final OrderRepository orderRepository;
+    private final ReportService reportService;
     @Autowired
     private AccountService accountService;
 
@@ -210,9 +210,6 @@ public class AdminController {
             return "redirect:/login";
         }
         
-        // Create pageable request
-        Pageable pageable = PageRequest.of(page, size, Sort.by("variantId").ascending());
-        
         // Get product variants with pagination
         List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
         
@@ -370,6 +367,130 @@ public class AdminController {
         }
         model.addAttribute("title", "Reports");
         return "admin/reports";
+    }
+
+    // Revenue Report
+    @GetMapping("/reports/revenue")
+    public String revenueReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
+
+            Map<String, Object> reportData = reportService.getRevenueReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Revenue Report");
+            
+            return "admin/revenue_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/revenue_report";
+        }
+    }
+
+    // Best Seller Report
+    @GetMapping("/reports/best-seller")
+    public String bestSellerReport(HttpSession session, Model model,
+                                  @RequestParam(required = false) String startDate,
+                                  @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
+
+            Map<String, Object> reportData = reportService.getBestSellerReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Best Seller Report");
+            
+            return "admin/best_seller_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/best_seller_report";
+        }
+    }
+
+    // Inventory Report
+    @GetMapping("/reports/inventory")
+    public String inventoryReport(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            Map<String, Object> reportData = reportService.getInventoryReport();
+            model.addAttribute("report", reportData);
+            model.addAttribute("title", "Inventory Report");
+            
+            return "admin/inventory_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/inventory_report";
+        }
+    }
+
+    // Product Report
+    @GetMapping("/reports/product")
+    public String productReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            Map<String, Object> reportData = reportService.getProductReport();
+            model.addAttribute("report", reportData);
+            model.addAttribute("title", "Product Report");
+            
+            return "admin/product_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/product_report";
+        }
+    }
+
+    // Customer Report
+    @GetMapping("/reports/customer")
+    public String customerReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
+
+            Map<String, Object> reportData = reportService.getCustomerReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Customer Report");
+            
+            return "admin/customer_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/customer_report";
+        }
     }
 
 }
