@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import vn.edu.fpt.fashionstore.entity.SupportStatus;
+import vn.edu.fpt.fashionstore.entity.SupportChat;
+import vn.edu.fpt.fashionstore.entity.SenderType;
 import vn.edu.fpt.fashionstore.service.SupportRequestService;
+import vn.edu.fpt.fashionstore.service.SupportChatService;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.entity.Account;
 import java.util.List;
@@ -24,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 public class StaffSupportController {
 
     private final SupportRequestService supportRequestService;
+    private final SupportChatService supportChatService;
     private final AccountService accountService;
 
     // Kiểm tra quyền truy cập STAFF
@@ -46,6 +50,19 @@ public class StaffSupportController {
         if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
             return account.getAccountId();
+        }
+        return null;
+    }
+
+    // Lấy tên của staff đang đăng nhập
+    private String getCurrentStaffName(HttpSession session) {
+        String email = (String) session.getAttribute("user");
+        if (email == null) return null;
+        
+        Optional<Account> accountOpt = accountService.findByEmail(email);
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+            return account.getFullName();
         }
         return null;
     }
@@ -143,19 +160,27 @@ public class StaffSupportController {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
-        
+
         SupportRequest supportRequest = supportRequestService.findById(id);
         Integer currentStaffId = getCurrentStaffId(session);
-        
+
         // Kiểm tra xem staff có được phân công cho request này không
         if (supportRequest.getAssignedStaffId() != null && 
             !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
             return "redirect:/staff/support?error=not_assigned";
         }
+
+        // Lấy tin nhắn chat cho support request này
+        List<SupportChat> chatMessages = supportChatService.getMessagesBySupportRequestId(id);
+        
+        // Đánh dấu tin nhắn của customer là đã đọc
+        supportChatService.markCustomerMessagesAsRead(id);
         
         model.addAttribute("title", "Chi tiết yêu cầu hỗ trợ");
         model.addAttribute("supportRequest", supportRequest);
+        model.addAttribute("chatMessages", chatMessages);
         model.addAttribute("currentStaffId", currentStaffId);
+        model.addAttribute("currentStaffName", getCurrentStaffName(session));
         
         return "staff/support_detail";
     }
@@ -187,6 +212,43 @@ public class StaffSupportController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
         }
+        return "redirect:/staff/support/view/" + id;
+    }
+
+    @PostMapping("/send-message/{id}")
+    public String sendMessage(
+            @PathVariable Long id,
+            @RequestParam String messageContent,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        String role = (String) session.getAttribute("userRole");
+
+        if(role == null || !role.contains("Hỗ trợ khách hàng (Support)")){
+            return "redirect:/staff/access-denied";
+        }
+
+        try {
+            SupportRequest supportRequest = supportRequestService.findById(id);
+            Integer currentStaffId = getCurrentStaffId(session);
+            String currentStaffName = getCurrentStaffName(session);
+
+            // Kiểm tra xem staff có được phân công cho request này không
+            if (supportRequest.getAssignedStaffId() != null &&
+                    !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền gửi tin nhắn cho yêu cầu này!");
+                return "redirect:/staff/support";
+            }
+
+            // Gửi tin nhắn
+            supportChatService.sendStaffMessage(id, currentStaffId, currentStaffName, messageContent);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi tin nhắn thành công!");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi gửi tin nhắn: " + e.getMessage());
+        }
+
         return "redirect:/staff/support/view/" + id;
     }
 
