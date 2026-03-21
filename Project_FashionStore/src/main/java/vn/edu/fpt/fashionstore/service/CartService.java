@@ -42,33 +42,32 @@ public class CartService {
             ProductVariant productVariant = productVariantRepository.findById(variantId)
                     .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));
 
-            System.out.println("Found product variant: " + productVariant.getVariantId());
+        // Kiểm tra stock trước khi thêm vào giỏ
+        if (productVariant.getStock() < quantity) {
+            throw new RuntimeException("Sản phẩm chỉ còn " + productVariant.getStock() + " sản phẩm. Bạn không thể thêm " + quantity + " sản phẩm vào giỏ hàng.");
+        }
 
-            // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
-            Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
+        // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
+        Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
 
-            if (existingCartItem.isPresent()) {
-                // Nếu đã có, cập nhật số lượng
-                CartItem cartItem = existingCartItem.get();
-                System.out.println("Updating existing cart item - Old quantity: " + cartItem.getQuantity());
-                cartItem.setQuantity(cartItem.getQuantity() + quantity);
-                cartRepository.save(cartItem);
-                System.out.println("Updated cart item - New quantity: " + cartItem.getQuantity());
-            } else {
-                // Nếu chưa có, tạo mới một CartItem
-                CartItem newCartItem = new CartItem();
-                newCartItem.setCustomer(customer);
-                newCartItem.setProductVariant(productVariant);
-                newCartItem.setQuantity(quantity);
-                cartRepository.save(newCartItem);
-                System.out.println("Created new cart item with ID: " + newCartItem.getCartItemId());
+        if (existingCartItem.isPresent()) {
+            // Nếu đã có, kiểm tra tổng số lượng sau khi cập nhật
+            CartItem cartItem = existingCartItem.get();
+            int newQuantity = cartItem.getQuantity() + quantity;
+            
+            if (productVariant.getStock() < newQuantity) {
+                throw new RuntimeException("Sản phẩm chỉ còn " + productVariant.getStock() + " sản phẩm. Bạn đã có " + cartItem.getQuantity() + " trong giỏ hàng, không thể thêm " + quantity + " sản phẩm nữa.");
             }
             
-            System.out.println("Successfully added to cart!");
-        } catch (Exception e) {
-            System.err.println("Error adding to cart: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to add item to cart: " + e.getMessage(), e);
+            cartItem.setQuantity(newQuantity);
+            cartRepository.save(cartItem);
+        } else {
+            // Nếu chưa có, tạo mới một CartItem
+            CartItem newCartItem = new CartItem();
+            newCartItem.setCustomer(customer);
+            newCartItem.setProductVariant(productVariant);
+            newCartItem.setQuantity(quantity);
+            cartRepository.save(newCartItem);
         }
     }
 

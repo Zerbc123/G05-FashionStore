@@ -27,11 +27,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     // METHOD ĐỂ CHECK TRƯỚC KHI DELETE CATEGORY
     boolean existsByCategory_CategoryId(int categoryId);
 
-    @Query("""
-                SELECT p FROM Product p
-                LEFT JOIN FETCH p.variants
-                LEFT JOIN FETCH p.category
-            """)
+    @Query("SELECT p FROM Product p " +
+            "LEFT JOIN FETCH p.variants " +
+            "LEFT JOIN FETCH p.category")
     List<Product> findAllWithVariants();
 
     // Hiện sản phẩm bán chạy/mới nhất (Trả về Entity gốc)

@@ -87,7 +87,7 @@ public class StaffController {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
-        var staff = accountService.getAccountByEmail(email);
+        vn.edu.fpt.fashionstore.entity.Account staff = accountService.getAccountByEmail(email);
 
         if (staff == null) {
             model.addAttribute("error", "Không tìm thấy thông tin nhân viên!");
@@ -111,7 +111,7 @@ public class StaffController {
         }
 
         // Lấy danh sách sản phẩm từ database
-        var products = productVariantService.getAllProducts();
+        List<vn.edu.fpt.fashionstore.entity.Product> products = productVariantService.getAllProducts();
 
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -119,7 +119,7 @@ public class StaffController {
         long lowStockCount = 0;
         long outOfStockCount = 0;
         
-        for (var product : products) {
+        for (vn.edu.fpt.fashionstore.entity.Product product : products) {
             if (product.getVariants() != null && !product.getVariants().isEmpty()) {
                 int stock = product.getVariants().get(0).getStock();
                 if (stock > 20) {

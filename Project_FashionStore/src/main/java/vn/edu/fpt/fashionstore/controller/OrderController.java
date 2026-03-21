@@ -50,7 +50,7 @@ public class OrderController {
     private final VoucherService voucherService;
     private final MomoService momoService;
 
-    // Lấy customer từ session - chuyển sang service
+    // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
         return orderService.getCurrentCustomer(session);
     }
@@ -218,10 +218,13 @@ public class OrderController {
                 model.addAttribute("errorPhone", e.getMessage().contains("điện thoại") ? e.getMessage() : null);
                 model.addAttribute("errorAddress", e.getMessage().contains("địa chỉ") ? e.getMessage() : null);
 
-                return "checkout"; // Trả lại trang để khách sửa lỗi
-            } catch (Exception ex) {
-                return "redirect:/login";
-            }
+        if (deliveryAddress.trim().isEmpty()) {
+            model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
+            hasError = true;
+        }
+
+        if (hasError) {
+            return checkoutPage(model, session, redirectAttributes);
         }
 
         try {
@@ -246,6 +249,14 @@ public class OrderController {
 
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
             order.setTotalAmount(totalAmount);
+            order.setPaymentMethod(paymentMethod != null && !paymentMethod.trim().isEmpty() ? paymentMethod : "COD");
+            order.setPaymentStatus("COD".equals(order.getPaymentMethod()) ? "UNPAID" : "PAID");
+
+            Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+            if (appliedVoucher != null) {
+                order.setVoucher(appliedVoucher);
+            }
+
             orderRepository.save(order);
 
             session.removeAttribute("deliveryAddress");
@@ -260,6 +271,7 @@ public class OrderController {
             model.addAttribute("deliveryAddress", deliveryAddress);
             model.addAttribute("orderStatus", order.getStatus());
             model.addAttribute("totalAmount", order.getTotalAmount());
+            model.addAttribute("paymentMethod", order.getPaymentMethod());
             model.addAttribute("customerName", currentCustomer.getFullName());
             model.addAttribute("customerPhone", currentCustomer.getPhone());
             model.addAttribute("customerEmail", currentCustomer.getEmail());
@@ -300,6 +312,14 @@ public class OrderController {
             Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
             order.setTotalAmount(totalAmount);
             order.setStatus(OrderStatus.CONFIRMED);
+            order.setPaymentMethod("MOMO");
+            order.setPaymentStatus("PAID");
+
+            Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+            if (appliedVoucher != null) {
+                order.setVoucher(appliedVoucher);
+            }
+
             orderRepository.save(order);
 
             session.removeAttribute("momo_deliveryAddress");
@@ -406,6 +426,7 @@ public class OrderController {
                 model.addAttribute("deliveryAddress", order.getCustomer().getAddress());
                 model.addAttribute("orderStatus", order.getStatus());
                 model.addAttribute("totalAmount", order.getTotalAmount());
+            model.addAttribute("paymentMethod", order.getPaymentMethod());
 
                 List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
                 model.addAttribute("orderItems", orderItems);
@@ -477,6 +498,7 @@ public class OrderController {
             List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
             model.addAttribute("orderItems", orderItems);
             model.addAttribute("totalAmount", order.getTotalAmount());
+            model.addAttribute("paymentMethod", order.getPaymentMethod());
 
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);

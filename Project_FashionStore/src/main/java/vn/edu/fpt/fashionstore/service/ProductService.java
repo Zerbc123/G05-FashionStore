@@ -43,9 +43,6 @@ public class ProductService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     // Lấy tất cả sản phẩm với phân trang
     @Transactional(readOnly = true)
     public Page<Product> getAllProducts(Pageable pageable) {
@@ -84,20 +81,6 @@ public class ProductService {
             return criteriaBuilder.like(
                     criteriaBuilder.lower(root.get("productName")),
                     "%" + keyword.toLowerCase() + "%");
-        };
-        return productRepository.findAll(spec, pageable);
-    }
-    
-    // Lọc sản phẩm theo tên danh mục (category name)
-    public Page<Product> filterByCategoryName(String categoryName, Pageable pageable) {
-        Specification<Product> spec = (root, query, criteriaBuilder) -> {
-            if (categoryName == null || categoryName.trim().isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.like(
-                criteriaBuilder.lower(root.get("category").get("categoryName")),
-                "%" + categoryName.toLowerCase() + "%"
-            );
         };
         return productRepository.findAll(spec, pageable);
     }

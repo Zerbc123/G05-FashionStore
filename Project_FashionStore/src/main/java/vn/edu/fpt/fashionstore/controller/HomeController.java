@@ -86,7 +86,6 @@ public class HomeController {
         model.addAttribute("products", products);
 
         String email = (String) session.getAttribute("user");
-        boolean isGoogleLogin = false;
 
         if (email == null && principal != null) {
             email = principal.getAttribute("email");
@@ -272,7 +271,16 @@ public class HomeController {
             return "redirect:/home";
         }
 
-        ra.addFlashAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
+        // Check specific account status for better error messages
+        String accountStatus = accountService.getAccountStatus(username);
+        if ("INACTIVE".equalsIgnoreCase(accountStatus)) {
+            ra.addFlashAttribute("error", "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
+        } else if ("LOCKED".equalsIgnoreCase(accountStatus)) {
+            ra.addFlashAttribute("error", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
+        } else {
+            ra.addFlashAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
+        }
+
         return "redirect:/login";
     }
 

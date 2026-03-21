@@ -115,6 +115,14 @@
             <i class="bi bi-check-circle"></i> Bạn đã đăng xuất thành công!
         </div>
 
+        <div class="alert alert-danger" th:if="${param.account_disabled}">
+            <i class="bi bi-exclamation-circle"></i> Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!
+        </div>
+
+        <div class="alert alert-success" th:if="${param.logout}">
+            <i class="bi bi-check-circle"></i> Bạn đã đăng xuất thành công!
+        </div>
+
         <!-- FORM LOGIN -->
         <form th:action="@{/login}" method="post" id="loginForm">
             <div class="form-group">

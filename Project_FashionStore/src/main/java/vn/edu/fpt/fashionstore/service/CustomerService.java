@@ -13,6 +13,14 @@ import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
 import java.time.LocalDate;
+import org.springframework.transaction.annotation.Transactional;
+import vn.edu.fpt.fashionstore.entity.Account;
+import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.repository.AccountRepository;
+import vn.edu.fpt.fashionstore.repository.CustomerRepository;
+import vn.edu.fpt.fashionstore.repository.OrderRepository;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,6 +30,7 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
+    private final AccountRepository accountRepository;
 
     // Get all customers with pagination
     public Page<Customer> getAllCustomers(int page, int size) {
@@ -78,14 +87,27 @@ public class CustomerService {
     }
 
     // Update customer account status
+    @Transactional
     public boolean updateCustomerAccountStatus(Long customerId, String status) {
-        Optional<Customer> customerOpt = customerRepository.findById(customerId);
-        if (customerOpt.isPresent() && customerOpt.get().getAccount() != null) {
-            customerOpt.get().getAccount().setStatus(status);
-            customerRepository.save(customerOpt.get());
-            return true;
+        try {
+            Optional<Customer> customerOpt = customerRepository.findById(customerId);
+            if (customerOpt.isPresent() && customerOpt.get().getAccount() != null) {
+                Customer customer = customerOpt.get();
+                Account account = customer.getAccount();
+                
+                // Use a native query to update only the status field
+                // This avoids cascade issues entirely
+                int updated = accountRepository.updateAccountStatus(account.getAccountId(), status);
+                
+                return updated > 0;
+            }
+            return false;
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error updating customer status: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update customer status", e);
         }
-        return false;
     }
 
     // Delete customer by ID
@@ -119,7 +141,7 @@ public class CustomerService {
         Map<Long, Long> customerOrderCount = new HashMap<>();
         
         allOrders.stream()
-            .filter(order -> order.getCustomer() != null && OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> order.getCustomer() != null && "COMPLETED".equals(order.getStatus()))
             .forEach(order -> {
                 Long customerId = order.getCustomer().getCustomerId();
                 Double amount = order.getTotalAmount() != null ? order.getTotalAmount() : 0.0;
@@ -147,9 +169,9 @@ public class CustomerService {
         stats.put("vipCustomers", vipCount);
         
         // New customers this month
-        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
+        Date oneMonthAgo = new Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
         long newCustomersThisMonth = allCustomers.stream()
-            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().isAfter(oneMonthAgo))
+            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().after(oneMonthAgo))
             .count();
         
         stats.put("newCustomersThisMonth", newCustomersThisMonth);
@@ -177,11 +199,11 @@ public class CustomerService {
         // Order statistics
         long totalOrders = customerOrders.size();
         long completedOrders = customerOrders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .count();
         
         double totalSpent = customerOrders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> "COMPLETED".equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         

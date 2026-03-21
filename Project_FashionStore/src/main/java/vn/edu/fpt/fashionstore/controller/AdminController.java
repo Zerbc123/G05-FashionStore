@@ -5,11 +5,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import vn.edu.fpt.fashionstore.service.ReportService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
-import vn.edu.fpt.fashionstore.service.CloudinaryService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.ProductVariantService;
+import vn.edu.fpt.fashionstore.service.ReportService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Map;
@@ -17,10 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
-import vn.edu.fpt.fashionstore.entity.Account;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @Controller
 @RequestMapping("/admin")
@@ -28,10 +32,9 @@ import java.time.format.DateTimeFormatter;
 public class AdminController {
 
     private final ProductService productService;
-    private final CloudinaryService cloudinaryService;
+    private final ProductVariantService productVariantService;
     private final OrderRepository orderRepository;
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
     @Autowired
     private AccountService accountService;
 
@@ -59,8 +62,8 @@ public class AdminController {
         }
         
         // Lấy dữ liệu từ database
-        var products = productService.getAllProductsWithVariants();
-        var orders = orderRepository.findAll();
+        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
+        List<vn.edu.fpt.fashionstore.entity.Order> orders = orderRepository.findAll();
         
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -89,7 +92,7 @@ public class AdminController {
             .count();
         
         // Lấy 5 đơn hàng gần nhất
-        var recentOrders = orders.stream()
+        List<vn.edu.fpt.fashionstore.entity.Order> recentOrders = orders.stream()
             .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()))
             .limit(5)
             .collect(java.util.stream.Collectors.toList());
@@ -98,7 +101,12 @@ public class AdminController {
         Map<Integer, Double> revenueByMonth = orders.stream()
             .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
-                order -> order.getOrderDate().getMonthValue(),
+                order -> {
+                    // Convert Date to LocalDate safely using Calendar
+                    java.util.Calendar calendar = java.util.Calendar.getInstance();
+                    calendar.setTime(order.getOrderDate());
+                    return calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
+                },
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
         
@@ -108,16 +116,27 @@ public class AdminController {
             monthlyRevenue[month - 1] = revenueByMonth.getOrDefault(month, 0.0);
         }
         
-        // Add dynamic data for dashboard
-        Map<String, Object> stats = reportService.getDashboardStats();
-        List<Map<String, Object>> recentOrdersFromReport = reportService.getRecentOrders(5);
-        Map<String, Object> charts = reportService.getDashboardCharts();
+        // Tính doanh thu theo danh mục với số lượng (Sales by Category)
+        Map<String, Long> salesByCategory = orders.stream()
+            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .flatMap(order -> order.getOrderItems() != null ? order.getOrderItems().stream() : java.util.stream.Stream.empty())
+            .collect(java.util.stream.Collectors.groupingBy(
+                item -> {
+                    ProductVariant variant = item.getProductVariant();
+                    if (variant != null && variant.getProduct() != null && variant.getProduct().getCategory() != null) {
+                        return variant.getProduct().getCategory().getCategoryName();
+                    }
+                    return "Unknown";
+                },
+                java.util.stream.Collectors.summingLong(item -> item.getQuantity() != null ? item.getQuantity() : 0)
+            ));
         
-        // Use category data from charts (properly queried via JPQL, not lazy-loaded)
-        @SuppressWarnings("unchecked")
-        List<String> chartCategoryNames = (List<String>) charts.getOrDefault("categoryLabels", new ArrayList<>());
-        @SuppressWarnings("unchecked")
-        List<Long> chartCategorySales = (List<Long>) charts.getOrDefault("categoryValues", new ArrayList<>());
+        // Chuyển đổi thành dữ liệu cho chart
+        List<String> categoryNames = new ArrayList<>(salesByCategory.keySet());
+        List<Long> categorySales = new ArrayList<>();
+        for (String categoryName : categoryNames) {
+            categorySales.add(salesByCategory.get(categoryName));
+        }
         
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("totalOrders", totalOrders);
@@ -126,13 +145,12 @@ public class AdminController {
         model.addAttribute("pendingOrders", pendingOrders);
         model.addAttribute("processingOrders", processingOrders);
         model.addAttribute("completedOrders", completedOrders);
-        model.addAttribute("recentOrders", recentOrdersFromReport);
+        model.addAttribute("recentOrders", recentOrders);
+        model.addAttribute("salesByCategory", salesByCategory);
         model.addAttribute("monthlyRevenue", monthlyRevenue);
-        model.addAttribute("categoryNames", chartCategoryNames);
-        model.addAttribute("categorySales", chartCategorySales);
+        model.addAttribute("categoryNames", categoryNames);
+        model.addAttribute("categorySales", categorySales);
         model.addAttribute("title", "Admin Dashboard");
-        model.addAttribute("stats", stats);
-        model.addAttribute("charts", charts);
         
         return "admin/admindashboard";
     }
@@ -147,7 +165,7 @@ public class AdminController {
         }
 
         // Lấy danh sách sản phẩm từ database
-        var products = productService.getAllProductsWithVariants();
+        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
 
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -155,7 +173,7 @@ public class AdminController {
         long lowStockCount = 0;
         long outOfStockCount = 0;
         
-        for (var product : products) {
+        for (vn.edu.fpt.fashionstore.entity.Product product : products) {
             if (product.getVariants() != null && !product.getVariants().isEmpty()) {
                 int stock = product.getVariants().get(0).getStock();
                 if (stock > 20) {
@@ -181,6 +199,100 @@ public class AdminController {
         model.addAttribute("title", "Product Management");
         
         return "admin/adminproduct";
+    }
+
+    // Quản lý kho hàng
+    @GetMapping("/inventory")
+    public String inventory(HttpSession session, Model model,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "10") int size) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+        
+        // Get product variants with pagination
+        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
+        
+        // Flatten all variants and create a simple page
+        List<vn.edu.fpt.fashionstore.entity.ProductVariant> allVariants = products.stream()
+            .flatMap(p -> p.getVariants() != null ? p.getVariants().stream() : java.util.stream.Stream.empty())
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate pagination manually
+        int start = page * size;
+        int end = Math.min(start + size, allVariants.size());
+        List<vn.edu.fpt.fashionstore.entity.ProductVariant> pageVariants = 
+            start < allVariants.size() ? allVariants.subList(start, end) : java.util.Collections.emptyList();
+        
+        // Calculate statistics
+        long totalProducts = allVariants.size();
+        long inStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 20).count();
+        long lowStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 0 && v.getStock() <= 20).count();
+        long outOfStockCount = allVariants.stream().filter(v -> v.getStock() == null || v.getStock() == 0).count();
+        
+        // Create stats object
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalProducts", totalProducts);
+        stats.put("inStockCount", inStockCount);
+        stats.put("lowStockCount", lowStockCount);
+        stats.put("outOfStockCount", outOfStockCount);
+        
+        // Create a simple page object for the template
+        java.util.Map<String, Object> productVariantPage = new java.util.HashMap<>();
+        productVariantPage.put("totalElements", totalProducts);
+        productVariantPage.put("totalPages", (int) Math.ceil((double) totalProducts / size));
+        productVariantPage.put("currentPage", page);
+        productVariantPage.put("size", size);
+        
+        model.addAttribute("title", "Inventory Management");
+        model.addAttribute("stats", stats);
+        model.addAttribute("productVariants", pageVariants);
+        model.addAttribute("productVariantPage", productVariantPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", (int) Math.ceil((double) totalProducts / size));
+        model.addAttribute("size", size);
+        
+        return "admin/admininventory";
+    }
+
+    // Cập nhật số lượng tồn kho
+    @PostMapping("/inventory/update-stock")
+    public String updateStock(@RequestParam("variantId") Integer variantId,
+                            @RequestParam("newStock") Integer newStock,
+                            HttpSession session,
+                            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            // Validate input
+            if (newStock < 0) {
+                redirectAttributes.addFlashAttribute("error", "Số lượng tồn kho không thể âm!");
+                return "redirect:/admin/inventory";
+            }
+
+            // Get existing variant
+            java.util.Optional<vn.edu.fpt.fashionstore.entity.ProductVariant> variantOpt = 
+                productVariantService.getVariantById(variantId);
+            
+            if (!variantOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
+                return "redirect:/admin/inventory";
+            }
+
+            // Update stock
+            vn.edu.fpt.fashionstore.entity.ProductVariant variant = variantOpt.get();
+            variant.setStock(newStock);
+            productVariantService.updateVariant(variantId, variant);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật số lượng tồn kho thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật: " + e.getMessage());
+        }
+
+        return "redirect:/admin/inventory";
     }
 
     // Thêm sản phẩm mới
@@ -223,7 +335,7 @@ public class AdminController {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
 
-        var admin = accountService.getAccountByEmail(email);
+        vn.edu.fpt.fashionstore.entity.Account admin = accountService.getAccountByEmail(email);
 
         if (admin == null) {
             model.addAttribute("error", "Không tìm thấy thông tin quản trị viên!");
@@ -260,24 +372,29 @@ public class AdminController {
     // Revenue Report
     @GetMapping("/reports/revenue")
     public String revenueReport(HttpSession session, Model model,
-                                @RequestParam(required = false) String startDate,
-                                @RequestParam(required = false) String endDate) {
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null && !startDate.isEmpty() ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusDays(7);
-        LocalDate end = endDate != null && !endDate.isEmpty() ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
 
-        model.addAttribute("title", "Revenue Report");
-        model.addAttribute("report", reportService.getRevenueReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/revenue_report";
+            Map<String, Object> reportData = reportService.getRevenueReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Revenue Report");
+            
+            return "admin/revenue_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/revenue_report";
+        }
     }
 
     // Best Seller Report
@@ -289,99 +406,23 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        LocalDate start = startDate != null ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.of(2025, 1, 1); // Default: from 2025 to catch all historical data
-        LocalDate end = endDate != null ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
 
-        model.addAttribute("title", "Best Seller Report");
-        model.addAttribute("report", reportService.getBestSellerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/best_seller_report";
-    }
-
-    // Best Seller Report Filter (POST)
-    @PostMapping("/reports/best-seller")
-    public String bestSellerReportFilter(HttpSession session, Model model,
-                                        @RequestParam(required = false) String startDate,
-                                        @RequestParam(required = false) String endDate) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
+            Map<String, Object> reportData = reportService.getBestSellerReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Best Seller Report");
+            
+            return "admin/best_seller_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/best_seller_report";
         }
-
-        LocalDate start = startDate != null && !startDate.isEmpty() ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.of(2025, 1, 1); // Default: from 2025 to catch all historical data
-        LocalDate end = endDate != null && !endDate.isEmpty() ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
-
-        model.addAttribute("title", "Best Seller Report");
-        model.addAttribute("report", reportService.getBestSellerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/best_seller_report";
-    }
-
-    // Product Report
-    @GetMapping("/reports/product")
-    public String productReport(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        model.addAttribute("title", "Product Report");
-        model.addAttribute("report", reportService.getProductReport());
-        return "admin/product_report";
-    }
-
-    // Customer Report
-    @GetMapping("/reports/customer")
-    public String customerReport(HttpSession session, Model model,
-                                @RequestParam(required = false) String startDate,
-                                @RequestParam(required = false) String endDate) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        LocalDate start = startDate != null ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(6);
-        LocalDate end = endDate != null ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
-
-        model.addAttribute("title", "Customer Report");
-        model.addAttribute("report", reportService.getCustomerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/customer_report";
-    }
-
-    // Customer Report Filter (POST)
-    @PostMapping("/reports/customer")
-    public String customerReportFilter(HttpSession session, Model model,
-                                      @RequestParam(required = false) String startDate,
-                                      @RequestParam(required = false) String endDate) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        LocalDate start = startDate != null && !startDate.isEmpty() ? 
-            LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(6);
-        LocalDate end = endDate != null && !endDate.isEmpty() ? 
-            LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now();
-
-        model.addAttribute("title", "Customer Report");
-        model.addAttribute("report", reportService.getCustomerReport(start, end));
-        model.addAttribute("startDate", start);
-        model.addAttribute("endDate", end);
-        return "admin/customer_report";
     }
 
     // Inventory Report
@@ -391,8 +432,65 @@ public class AdminController {
             return "redirect:/login";
         }
 
-        model.addAttribute("title", "Inventory Report");
-        model.addAttribute("report", reportService.getInventoryReport());
-        return "admin/inventory_report";
+        try {
+            Map<String, Object> reportData = reportService.getInventoryReport();
+            model.addAttribute("report", reportData);
+            model.addAttribute("title", "Inventory Report");
+            
+            return "admin/inventory_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/inventory_report";
+        }
     }
+
+    // Product Report
+    @GetMapping("/reports/product")
+    public String productReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            Map<String, Object> reportData = reportService.getProductReport();
+            model.addAttribute("report", reportData);
+            model.addAttribute("title", "Product Report");
+            
+            return "admin/product_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/product_report";
+        }
+    }
+
+    // Customer Report
+    @GetMapping("/reports/customer")
+    public String customerReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            java.time.LocalDate start = startDate != null ? 
+                java.time.LocalDate.parse(startDate) : java.time.LocalDate.now().minusMonths(1);
+            java.time.LocalDate end = endDate != null ? 
+                java.time.LocalDate.parse(endDate) : java.time.LocalDate.now();
+
+            Map<String, Object> reportData = reportService.getCustomerReport(start, end);
+            model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+            model.addAttribute("title", "Customer Report");
+            
+            return "admin/customer_report";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error generating report: " + e.getMessage());
+            return "admin/customer_report";
+        }
+    }
+
 }

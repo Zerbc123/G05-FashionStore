@@ -9,9 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.service.*;
 import vn.edu.fpt.fashionstore.repository.*;
@@ -38,33 +35,6 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private ImageUploadService imageUploadService;
-
-    @Autowired
-    private ProductVariantService productVariantService;
-    
-    @Autowired
-    private CategoriesRepository categoryRepository;
-    
-    @Autowired
-    private ColorRepository colorRepository;
-    
-    @Autowired
-    private CategorySizeRepository categorySizeRepository;
-    
-    @Autowired
-    private CloudinaryService cloudinaryService;
-    
-    @Autowired
-    private ProductRepository productRepository;
-    
-    @Autowired
-    private ProductVariantRepository productVariantRepository;
-    
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-
     // ========================================================================
     // 1. DANH SÁCH SẢN PHẨM (LIST)
     // URL: /products
@@ -84,6 +54,8 @@ public class ProductController {
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
+            @RequestParam(defaultValue = "productName") String sort,
+            @RequestParam(defaultValue = "asc") String direction,
             Model model) {
 
         // Xử lý priceRange để chuyển thành minPrice và maxPrice
@@ -364,16 +336,16 @@ public class ProductController {
     }
 
     // ========================================================================
-    // 3. HÀM PHỤ TRỢ (CHECK FILTER)
+    // 3. HELPER METHODS
     // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String categoryName, String size, String color, Double minPrice, Double maxPrice) {
-        return (keyword != null && !keyword.isBlank()) || 
-                categoryId != null ||
-                (categoryName != null && !categoryName.isBlank()) ||
-                (size != null && !size.isBlank()) || 
-                (color != null && !color.isBlank()) || 
-                minPrice != null || 
-                maxPrice != null;
+    private boolean hasFilter(String keyword, Long categoryId, String size,
+            Double minPrice, Double maxPrice) {
+
+        return (keyword != null && !keyword.isBlank())
+                || categoryId != null
+                || (size != null && !size.isBlank())
+                || minPrice != null
+                || maxPrice != null;
     }
 
     // ========================================================================
@@ -859,25 +831,9 @@ public class ProductController {
     // ========================================================================
     // 11. ADMIN - DELETE PRODUCT
     // ========================================================================
-    @PostMapping("/admin/delete")
-    public String deleteProduct(
-            @RequestParam("productId") Long productId,
-            RedirectAttributes redirectAttributes) {
-        
-        try {
-            boolean success = productService.deleteProduct(productId);
-            if (success) {
-                redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm thành công!");
-            } else {
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm");
-            }
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa sản phẩm: " + e.getMessage());
-        }
-        
-        return "redirect:/admin/products";
+    private boolean hasFilter(String keyword, Long categoryId, String size, Double minPrice, Double maxPrice) {
+        return (keyword != null && !keyword.isBlank()) || categoryId != null ||
+                (size != null && !size.isBlank()) || minPrice != null || maxPrice != null;
     }
 
     // --- THÊM MỚI HÀM NÀY ĐỂ LẤY KHÁCH HÀNG ---

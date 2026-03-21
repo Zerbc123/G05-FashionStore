@@ -97,8 +97,10 @@ public class AdminCustomerController {
             } else {
                 return "redirect:/admin/customers?error=Customer not found or has no account";
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return "redirect:/admin/customers?error=Error updating customer status: " + e.getMessage();
+        } catch (Exception e) {
+            return "redirect:/admin/customers?error=Unexpected error occurred. Please try again.";
         }
     }
 

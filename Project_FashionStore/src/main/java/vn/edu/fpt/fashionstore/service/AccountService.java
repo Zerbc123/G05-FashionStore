@@ -72,15 +72,19 @@ public class AccountService implements UserDetailsService {
         return roleRepository.findAll();
     }
 
-    public List<Role> getStaffRoles() {
+    public List<Role> getStaffRoles(){
         List<Role> roles = roleRepository.findAll();
-        // Loại bỏ Admin và Customer
+
+        // loại bỏ Admin và Customer
         roles.removeIf(role ->
                 role.getRoleName().equalsIgnoreCase("Admin") ||
-                role.getRoleName().equalsIgnoreCase("Customer")
+                        role.getRoleName().equalsIgnoreCase("Customer")
         );
+
         return roles;
     }
+
+    public void createStaff(Account account,Integer roleId){
 
     public void createStaff(Account account, Integer roleId) {
         if (accountRepository.existsByUsername(account.getUsername()))
@@ -248,11 +252,38 @@ public class AccountService implements UserDetailsService {
         return account;
     }
 
-    @Transactional
-    public Account registerAccount(String email, String password, String fullName, String phone) {
-        if (accountRepository.existsByEmail(email)) return null;
+    public String getAccountStatus(String username){
+        Account account = accountRepository.findByUsername(username)
+                .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
+        
+        if(account == null) return "NOT_FOUND";
+        
+        if(account.getPassword() == null) return "NO_PASSWORD";
+        
+        boolean passwordValid;
+        if(account.getPassword().startsWith("$2a$")){
+            passwordValid = passwordEncoder.matches("dummy",account.getPassword());
+        }else{
+            passwordValid = false;
+        }
+        
+        if(!passwordValid && !"ACTIVE".equalsIgnoreCase(account.getStatus())){
+            return account.getStatus();
+        }
+        
+        return "ACTIVE";
+    }
 
-        String baseUsername = email.split("@")[0];
+    //REGISTER
+
+    public Account registerAccount(String email,String password,String fullName,String phone){
+
+        if(accountRepository.existsByEmail(email))
+            return null;
+
+        String rawUsername = email.split("@")[0];
+        String safeUsername = rawUsername.replaceAll("[^a-zA-Z0-9_]", "_");
+        String baseUsername = safeUsername;
         String finalUsername = baseUsername;
         int count = 1;
         while (accountRepository.existsByUsername(finalUsername)) {
@@ -360,23 +391,32 @@ public class AccountService implements UserDetailsService {
                         OAUTH LOGIN
        ================================================= */
 
-    @Transactional
-    public Account processOAuthPostLogin(String email, String fullName) {
-        Optional<Account> existAccount = accountRepository.findByEmail(email);
-        if (existAccount.isEmpty()) {
-            String baseUsername = email.split("@")[0];
-            String finalUsername = baseUsername;
+    public void processOAuthPostLogin(String email, String name) {
+
+        Optional<Account> accountOpt = accountRepository.findByEmail(email);
+
+        // Nếu account chưa tồn tại thì tạo mới
+        if (accountOpt.isEmpty()) {
+
+            Account account = new Account();
+
+            account.setEmail(email);
+            account.setFullName(name);
+            
+            // Lọc bỏ ký tự đặc biệt khỏi username để tránh lỗi validate ^[a-zA-Z0-9_]+$
+            String rawUsername = email.split("@")[0];
+            String safeUsername = rawUsername.replaceAll("[^a-zA-Z0-9_]", "_");
+            String finalUsername = safeUsername;
             int count = 1;
-            while (accountRepository.existsByUsername(finalUsername)) {
-                finalUsername = baseUsername + count++;
+            while(accountRepository.existsByUsername(finalUsername)){
+                finalUsername = safeUsername + count++;
             }
-            Account newAccount = new Account();
-            newAccount.setUsername(finalUsername);
-            newAccount.setEmail(email);
-            newAccount.setFullName(fullName);
-            newAccount.setPassword(null); // No password for Google users
-            newAccount.setStatus("ACTIVE");
-            Role customerRole = roleRepository.findByRoleName("Customer")
+            account.setUsername(finalUsername); 
+            
+            account.setPassword(null); // OAuth không cần password
+            account.setStatus("ACTIVE");
+
+            Role role = roleRepository.findByRoleName("Customer")
                     .orElseGet(() -> roleRepository.findById(3).orElse(null));
             newAccount.setRole(customerRole);
             Account savedAccount = accountRepository.save(newAccount);

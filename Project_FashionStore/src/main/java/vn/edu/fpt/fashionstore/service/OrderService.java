@@ -18,27 +18,17 @@ import java.util.Optional;
 @Service
 public class OrderService {
 
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final CartService cartService;
-    private final AccountRepository accountRepository;
-    private final ProductVariantRepository productVariantRepository;
-    private final VoucherRepository voucherRepository;
-
-    public OrderService(
-            OrderRepository orderRepository,
-            OrderItemRepository orderItemRepository,
-            CartService cartService,
-            AccountRepository accountRepository,
-            ProductVariantRepository productVariantRepository,
-            VoucherRepository voucherRepository) {
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.cartService = cartService;
-        this.accountRepository = accountRepository;
-        this.productVariantRepository = productVariantRepository;
-        this.voucherRepository = voucherRepository;
-    }
+    @Autowired
+    private OrderRepository orderRepository;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+    
+    @Autowired
+    private CartService cartService;
+    
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Transactional
     public long countSuccessfulPurchases(Customer customer, Long productId) {
