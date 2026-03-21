@@ -147,12 +147,73 @@
 }
 
 /* ========================================
-   MEGA DROPDOWN
+   HEADER SEARCH FORM
 ======================================== */
-.nav-item {
-    position: relative;
+.header-search-form {
+    margin: 0;
+    padding: 0;
 }
 
+.header-search-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--light-bg);
+    border: 1px solid rgba(255, 107, 157, 0.2);
+    border-radius: 25px;
+    padding: 0.3rem 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.header-search-wrapper:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
+}
+
+.header-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+    color: var(--dark-text);
+    width: 140px;
+    transition: width 0.3s ease;
+}
+
+.header-search-input::placeholder {
+    color: var(--light-text);
+}
+
+.header-search-input:focus {
+    width: 180px;
+}
+
+.header-search-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.header-search-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+}
+
+.header-search-btn i {
+    font-size: 0.9rem;
+}
+
+/* ========================================
+   MEGA DROPDOWN
+======================================== */
 .mega-dropdown {
     position: absolute;
     top: 100%;

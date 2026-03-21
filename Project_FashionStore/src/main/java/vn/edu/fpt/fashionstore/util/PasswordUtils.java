@@ -6,17 +6,20 @@ import java.util.regex.Pattern;
  * Utility class for password validation rules used across the application.
  */
 public class PasswordUtils {
-    // exactly 6 characters, only ASCII letters and digits
-    private static final Pattern SIX_ALPHANUMERIC = Pattern.compile("^[A-Za-z0-9]{6}$");
+    // 8-12 characters, letters (uppercase/lowercase), digits, and special characters (no accents/diacritics)
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^[A-Za-z0-9!@#$%^&*()_+\\-=\\[\\]{};':\",./<>?]{8,12}$");
 
     /**
      * Checks whether the provided password matches the application's policy.
      *
      * Policy:
      * <ul>
-     *   <li>Exactly 6 characters long</li>
-     *   <li>Contains only letters (A–Z, a–z) and digits (0–9)</li>
-     *   <li>No special characters or accent marks</li>
+     *   <li>8-12 characters long</li>
+     *   <li>Contains at least one uppercase letter (A-Z)</li>
+     *   <li>Contains at least one lowercase letter (a-z)</li>
+     *   <li>Contains at least one digit (0-9)</li>
+     *   <li>May contain special characters like !@#$%^&*()_+-=[]{};':",./<>?</li>
+     *   <li>No accent marks or diacritics</li>
      * </ul>
      *
      * @param password the password to validate
@@ -26,6 +29,32 @@ public class PasswordUtils {
         if (password == null) {
             return false;
         }
-        return SIX_ALPHANUMERIC.matcher(password).matches();
+        
+        // Check length first
+        if (password.length() < 8 || password.length() > 12) {
+            return false;
+        }
+        
+        // Check if it matches the allowed character pattern
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            return false;
+        }
+        
+        // Check for at least one uppercase letter
+        if (!password.matches(".*[A-Z].*")) {
+            return false;
+        }
+        
+        // Check for at least one lowercase letter
+        if (!password.matches(".*[a-z].*")) {
+            return false;
+        }
+        
+        // Check for at least one digit
+        if (!password.matches(".*\\d.*")) {
+            return false;
+        }
+        
+        return true;
     }
 }

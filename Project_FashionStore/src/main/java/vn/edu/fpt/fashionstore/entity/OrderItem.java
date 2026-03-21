@@ -3,7 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "orderitem")
+@Table(name = "OrderItem")
 public class OrderItem {
     
     @Id
@@ -22,8 +22,8 @@ public class OrderItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
     
-    @Column(name = "price")
-    private Double totalPrice;
+    @Column(name = "price", nullable = false)
+    private Double price;
     
     // Constructor
     public OrderItem() {}
@@ -32,9 +32,8 @@ public class OrderItem {
         this.order = order;
         this.productVariant = productVariant;
         this.quantity = (quantity != null) ? quantity : 0;
-        // Tính totalPrice trực tiếp từ productVariant price * quantity
-        this.totalPrice = (productVariant != null && productVariant.getPrice() != null) 
-            ? productVariant.getPrice() * this.quantity 
+        this.price = (productVariant != null && productVariant.getPrice() != null) 
+            ? productVariant.getPrice() 
             : 0.0;
     }
     
@@ -69,16 +68,22 @@ public class OrderItem {
     
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-        // Auto calculate total price when quantity changes
-        // Không còn unitPrice nên không tính lại ở đây
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
     
+    // Helper method to calculate total
     public Double getTotalPrice() {
-        return totalPrice;
-    }
-    
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+        if (price != null && quantity != null) {
+            return price * quantity;
+        }
+        return 0.0;
     }
     
     // Business methods
@@ -110,7 +115,7 @@ public class OrderItem {
         return "OrderItem{" +
                 "orderItemId=" + orderItemId +
                 ", quantity=" + quantity +
-                ", totalPrice=" + totalPrice +
+                ", price=" + price +
                 '}';
     }
 }

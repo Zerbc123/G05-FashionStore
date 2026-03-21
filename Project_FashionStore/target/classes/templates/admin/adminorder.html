@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:temp="http://www.thymeleaf.org/extras/temporal">
 
 <head>
     <meta charset="UTF-8">
@@ -149,9 +149,9 @@
                         <tr th:each="order : ${orders}">
                             <td><strong>#DH[[${order.orderId}]]</strong></td>
 
-                            <td th:text="${order.customer.fullName}"></td>
+                            <td th:text="${order.customer != null ? order.customer.fullName : 'N/A'}"></td>
 
-                            <td th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></td>
 
                             <td>
                                 <strong

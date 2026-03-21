@@ -1,12 +1,14 @@
 package vn.edu.fpt.fashionstore.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 
 @Entity
-@Table(name = "ProductVariant")
+@Table(name = "ProductVariant", schema = "dbo")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProductVariant {
 
     @Id

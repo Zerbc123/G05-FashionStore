@@ -351,19 +351,142 @@
         // 3. Cập nhật UI tổng tiền
         document.getElementById('displayTotalAmount').textContent = safeTotal.toLocaleString('vi-VN') + 'đ';
 
-        // 4. Cập nhật thẻ input ẩn để submit lên Server lúc Đặt Hàng
-        document.getElementById('hiddenTotalAmount').value = safeTotal;
+// Form validation before submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkoutForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitting...');
+            
+            // Kiểm tra các trường bắt buộc
+            const fullName = document.querySelector('input[name="fullName"]').value.trim();
+            const phone = document.querySelector('input[name="phone"]').value.trim();
+            const deliveryAddress = document.querySelector('input[name="deliveryAddress"]').value.trim();
+            
+            console.log('Form data:', { fullName, phone, deliveryAddress });
+            
+            // Validation cơ bản
+            if (!fullName) {
+                e.preventDefault();
+                alert('Vui lòng nhập họ và tên!');
+                return false;
+            }
+            
+            if (!phone) {
+                e.preventDefault();
+                alert('Vui lòng nhập số điện thoại!');
+                return false;
+            }
+            
+            if (!deliveryAddress) {
+                e.preventDefault();
+                alert('Vui lòng chọn địa chỉ giao hàng!');
+                return false;
+            }
+            
+            // Check payment method
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('Vui lòng chọn phương thức thanh toán!');
+                return false;
+            }
+            
+            console.log('Payment method:', paymentMethod.value);
+            
+            // If Momo is selected, handle Momo payment
+            if (paymentMethod.value === 'MOMO') {
+                e.preventDefault();
+                
+                // Get form data
+                const totalAmount = document.getElementById('hiddenTotalAmount').value;
+                const orderInfo = 'Thanh toan don hang - ' + fullName;
+                
+                // Generate order ID
+                const orderId = 'ORD-' + Date.now();
+                
+                console.log('Creating Momo payment:', { orderId, totalAmount, orderInfo });
+                
+                // Create hidden form to submit POST request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/fashionstore/payment/momo/create';
+                
+                const orderIdInput = document.createElement('input');
+                orderIdInput.type = 'hidden';
+                orderIdInput.name = 'orderId';
+                orderIdInput.value = orderId;
+                form.appendChild(orderIdInput);
+                
+                const amountInput = document.createElement('input');
+                amountInput.type = 'hidden';
+                amountInput.name = 'amount';
+                amountInput.value = totalAmount;
+                form.appendChild(amountInput);
+                
+                const orderInfoInput = document.createElement('input');
+                orderInfoInput.type = 'hidden';
+                orderInfoInput.name = 'orderInfo';
+                orderInfoInput.value = orderInfo;
+                form.appendChild(orderInfoInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting...');
+            return true;
+        });
+    }
+});
+
+// Hàm áp dụng voucher
+function applyVoucher() {
+    const select = document.getElementById('voucherSelect');
+    const voucherCode = select.value;
+    const messageDiv = document.getElementById('voucherMessage');
+
+    if (!voucherCode) {
+        messageDiv.textContent = 'Vui lòng chọn mã voucher!';
+        messageDiv.className = 'text-warning';
+        return;
     }
 
-    function changeAddress() {
-        window.location.href = '/fashionstore/order/checkout/select-delivery-address';
-    }
+    const selectedOption = select.options[select.selectedIndex];
+    const discountAmount = parseFloat(selectedOption.getAttribute('data-discount')) || 0;
 
-    // Form validation before submit
-    document.addEventListener('DOMContentLoaded', function() {
-        // NẾU LÀ COD hoặc MOMO: Để cho form submit tự nhiên bay thẳng về Java Backend
-        // Java Backend sẽ xử lý redirect hoặc logic tương ứng
-    });
+    // 1. Lưu thông tin voucher vào hidden
+    document.getElementById('hiddenVoucherCode').value = voucherCode;
+    document.getElementById('hiddenVoucherDiscount').value = discountAmount;
+
+    // 2. Cập nhật UI giảm giá
+    document.getElementById('discountRow').style.display = 'flex';
+    document.getElementById('discountAmount').textContent = '-' + discountAmount.toLocaleString('vi-VN') + 'đ';
+
+    // 3. Gọi hàm tính lại tổng cuối để cập nhật hiddenTotalAmount
+    calculateFinalTotal();
+
+    messageDiv.textContent = 'Áp dụng voucher thành công!';
+    messageDiv.className = 'text-success';
+}
+
+function calculateFinalTotal() {
+    // Lấy giá trị hiện tại từ các hidden inputs
+    const shippingFee = parseFloat(document.getElementById('hiddenShippingFee').value) || 0;
+    const discount = parseFloat(document.getElementById('hiddenVoucherDiscount').value) || 0;
+
+    // Tính toán
+    const finalTotal = subtotal + shippingFee - discount;
+    const safeTotal = Math.max(0, finalTotal); // Không để tổng âm
+
+    // Cập nhật hiển thị (UI)
+    document.getElementById('totalAmount').textContent = safeTotal.toLocaleString('vi-VN') + 'đ';
+
+    // CẬP NHẬT DỮ LIỆU GỬI ĐI (Server)
+    document.getElementById('hiddenTotalAmount').value = safeTotal;
+}
+
 </script>
 
 </body>

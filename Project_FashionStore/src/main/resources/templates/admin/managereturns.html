@@ -42,7 +42,7 @@
                         <span class="badge bg-secondary mb-1" th:text="${req.reason}"></span>
                         <div class="small text-truncate" style="max-width: 250px;" th:title="${req.description}" th:text="${req.description}"></div>
                     </td>
-                    <td th:text="${#dates.format(req.requestDate, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#temporals.format(req.requestDate, 'dd/MM/yyyy')}"></td>
                     <td>
                         <span th:if="${req.status.name() == 'PENDING'}" class="badge bg-warning text-dark">Chờ Xử Lý</span>
                         <span th:if="${req.status.name() == 'APPROVED'}" class="badge bg-info text-dark">Đã Duyệt (Chờ nhận hàng)</span>

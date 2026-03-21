@@ -112,7 +112,6 @@ public class ReportService {
             report.put("startDate", startDate);
             report.put("endDate", endDate);
         }
-
         return report;
     }
 
@@ -180,7 +179,6 @@ public class ReportService {
             report.put("startDate", startDate);
             report.put("endDate", endDate);
         }
-
         return report;
     }
 
@@ -208,14 +206,12 @@ public class ReportService {
                     item.put("stock", row[1] != null ? row[1] : 0);
                     item.put("categoryName", row[2] != null ? row[2] : "N/A");
                     item.put("soldQuantity", row[3] != null ? row[3] : 0);
-
                     Integer stock = row[1] != null ? (Integer) row[1] : 0;
                     if (stock == 0) {
                         outOfStockCount++;
                     } else if (stock < 10) {
                         lowStockCount++;
                     }
-
                     totalProducts++;
                     inventory.add(item);
                 }
@@ -254,7 +250,6 @@ public class ReportService {
                     categories.add(item);
                 }
             }
-
             report.put("inventory", inventory);
             report.put("lowStockProducts", lowStockProducts);
             report.put("categories", categories);
@@ -278,7 +273,6 @@ public class ReportService {
             report.put("outOfStockCount", 0);
             report.put("categoryCount", 0);
         }
-
         return report;
     }
 
@@ -288,7 +282,6 @@ public class ReportService {
 
         try {
             System.out.println("DEBUG: Getting product report");
-
             // Get product summary from database
             List<Object[]> productSummaryList = productReportRepository.getProductSummary();
             if (productSummaryList != null && !productSummaryList.isEmpty()) {
@@ -572,7 +565,6 @@ public class ReportService {
             report.put("allCustomers", new ArrayList<>());
             report.put("startDate", startDate);
             report.put("endDate", endDate);
-
             System.err.println("Error in getCustomerReport: " + e.getMessage());
             e.printStackTrace();
         }
@@ -590,12 +582,10 @@ public class ReportService {
         Long totalOrders = orderRepository.getTotalOrders(start, end, ACTIVE_STATUSES);
         long totalCustomers = customerReportRepository.count();
         long totalProducts = productReportRepository.count();
-
         stats.put("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
         stats.put("totalOrders", totalOrders != null ? totalOrders : 0L);
         stats.put("totalCustomers", totalCustomers);
         stats.put("totalProducts", totalProducts);
-
         return stats;
     }
 
@@ -667,7 +657,6 @@ public class ReportService {
         }
         charts.put("categoryLabels", categoryLabels);
         charts.put("categoryValues", categoryValues);
-
         // Order Status Counts
         Map<String, Long> statusCounts = new HashMap<>();
         for (OrderStatus status : OrderStatus.values()) {

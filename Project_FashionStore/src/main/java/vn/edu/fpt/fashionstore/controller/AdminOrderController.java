@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -20,6 +20,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 
+import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
@@ -38,6 +39,7 @@ public class AdminOrderController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public String viewOrders(HttpSession session, Model model) {
 
         if (!isAdmin(session)) {
@@ -74,6 +76,7 @@ public class AdminOrderController {
     }
 
     @PostMapping("/update-status/{id}")
+    @Transactional
     public String updateStatus(@PathVariable Long id,
                                @RequestParam String status, HttpSession session, Model model) {
 
@@ -104,6 +107,7 @@ public class AdminOrderController {
     }
 
     @GetMapping("/orderdetails/{id}")
+    @Transactional(readOnly = true)
     public String viewOrderDetails(@PathVariable Long id, Model model) {
 
         Order order = orderRepository.findOrderWithItems(id);
@@ -113,6 +117,7 @@ public class AdminOrderController {
     }
 
     @GetMapping("/orderdetails/{id}/pdf")
+    @Transactional(readOnly = true)
     public void exportOrderToPDF(@PathVariable Long id,
                                  HttpServletResponse response) throws IOException {
 

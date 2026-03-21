@@ -2,17 +2,15 @@ package vn.edu.fpt.fashionstore.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import vn.edu.fpt.fashionstore.entity.OrderItem;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 
-import java.util.List;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
@@ -40,12 +38,12 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     Long countTotalSoldQuantityByVariant(@Param("variant") ProductVariant variant);
     
     // Tính doanh thu theo đơn hàng
-    @Query("SELECT COALESCE(SUM(oi.totalPrice), 0) FROM OrderItem oi WHERE oi.order = :order")
+    @Query("SELECT COALESCE(SUM(oi.price * oi.quantity), 0) FROM OrderItem oi WHERE oi.order = :order")
     Double calculateOrderTotal(@Param("order") Order order);
     
     // Tính doanh thu theo khoảng thời gian
-    @Query("SELECT COALESCE(SUM(oi.totalPrice), 0) FROM OrderItem oi WHERE oi.order.orderDate BETWEEN :startDate AND :endDate AND oi.order.status != 'CANCELLED'")
-    Double calculateRevenueBetween(@Param("startDate") java.util.Date startDate, @Param("endDate") java.util.Date endDate);
+    @Query("SELECT COALESCE(SUM(oi.price * oi.quantity), 0) FROM OrderItem oi WHERE oi.order.orderDate BETWEEN :startDate AND :endDate AND oi.order.status != 'CANCELLED'")
+    Double calculateRevenueBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     
     // Lấy top sản phẩm bán chạy
     @Query("SELECT oi.productVariant, SUM(oi.quantity) as totalSold FROM OrderItem oi " +
@@ -56,7 +54,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     // Lấy order items theo danh sách đơn hàng
     List<OrderItem> findByOrderIn(List<Order> orders);
-    
+
     // Kiểm tra order item có thuộc đơn hàng không
     boolean existsByOrderItemIdAndOrder(Long orderItemId, Order order);
 
@@ -65,7 +63,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     // ==========================================
 
     // Get best selling products with details
-    @Query("SELECT pv.product.productName, SUM(oi.quantity), SUM(oi.totalPrice), pv.product.category.categoryName " +
+    @Query("SELECT pv.product.productName, SUM(oi.quantity), SUM(oi.price * oi.quantity), pv.product.category.categoryName " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +
@@ -77,7 +75,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                                           @Param("statuses") List<OrderStatus> statuses);
 
     // Get best selling categories
-    @Query("SELECT pv.product.category.categoryName, SUM(oi.quantity), SUM(oi.totalPrice) " +
+    @Query("SELECT pv.product.category.categoryName, SUM(oi.quantity), SUM(oi.price * oi.quantity) " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +

@@ -9,7 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import vn.edu.fpt.fashionstore.entity.CartItem;
+import vn.edu.fpt.fashionstore.entity.Customer;
+import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.OrderItem;
+import vn.edu.fpt.fashionstore.entity.Voucher;
+import vn.edu.fpt.fashionstore.service.CartService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.font.PdfFont;
@@ -42,22 +52,7 @@ public class OrderController {
 
     // Lấy customer từ session
     private Customer getCurrentCustomer(HttpSession session) {
-        String email = (String) session.getAttribute("user");
-        if (email == null) {
-            throw new RuntimeException("Bạn chưa đăng nhập!");
-        }
-
-        Optional<Account> accountOpt = accountRepository.findByEmail(email);
-        if (accountOpt.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy tài khoản!");
-        }
-
-        Account account = accountOpt.get();
-        if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
-            throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
-        }
-
-        return account.getCustomers().get(0);
+        return orderService.getCurrentCustomer(session);
     }
 
     // =======================================================
@@ -67,14 +62,19 @@ public class OrderController {
     @Transactional(readOnly = true)
     public String checkoutPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
+            System.out.println("=== CHECKOUT PAGE START ===");
             Customer currentCustomer = getCurrentCustomer(session);
             if (currentCustomer == null) {
+                System.out.println("No customer found, redirecting to login");
                 return "redirect:/login";
             }
-
-            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            
+            List<CartItem> cartItems = orderService.getCartItemsForCheckout(session, currentCustomer);
+            
+            System.out.println("Found cart items: " + (cartItems != null ? cartItems.size() : 0));
 
             if (cartItems == null || cartItems.isEmpty()) {
+                System.out.println("Cart is empty, redirecting to cart");
                 redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
                 return "redirect:/cart";
             }
@@ -97,31 +97,37 @@ public class OrderController {
                     model.addAttribute("appliedVoucher", appliedVoucher);
                 }
             }
+            System.out.println("Cart total: " + total);
 
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
             model.addAttribute("discountAmount", discountAmount);
             model.addAttribute("finalTotal", finalTotal);
 
-            // Lấy danh sách voucher hợp lệ
-            List<Voucher> validVouchers = voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+            // Lấy danh sách voucher hợp lệ từ database
+            List<Voucher> validVouchers = orderService.getValidVouchers();
             model.addAttribute("validVouchers", validVouchers);
 
             model.addAttribute("fullName", currentCustomer.getFullName());
             String phoneStr = currentCustomer.getPhone();
             if (phoneStr == null) phoneStr = "";
             model.addAttribute("phone", phoneStr);
+            
+            // Ưu tiên địa chỉ từ session (đã chọn từ trang chọn địa chỉ), nếu không có thì dùng từ profile
+            String deliveryAddress = orderService.getDeliveryAddressFromSession(session, currentCustomer);
+            model.addAttribute("address", deliveryAddress);
 
-            String deliveryAddress = (String) session.getAttribute("deliveryAddress");
-            if (deliveryAddress != null && !deliveryAddress.trim().isEmpty()) {
-                model.addAttribute("address", deliveryAddress);
-            } else {
-                model.addAttribute("address", currentCustomer.getAddress());
-            }
-
+            System.out.println("=== CHECKOUT PAGE SUCCESS ===");
             return "checkout";
         } catch (RuntimeException e) {
+            System.err.println("Error in checkoutPage: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/cart";
+        } catch (Exception e) {
+            System.err.println("Unexpected error in checkoutPage: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống! Vui lòng thử lại.");
             return "redirect:/cart";
         }
     }
@@ -186,28 +192,61 @@ public class OrderController {
             return "redirect:/login";
         }
 
+        // Validation qua service
+        try {
+            orderService.validateCheckoutData(fullName, phone, deliveryAddress);
+        } catch (RuntimeException e) {
+            // Nếu có lỗi -> Load lại danh sách sản phẩm và trả về trang checkout kèm lỗi
+            try {
+                List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
+                double subtotal = orderService.calculateCartTotal(cartItems);
+
+                // Gửi lại data giỏ hàng
+                model.addAttribute("cartItems", cartItems);
+                model.addAttribute("total", subtotal);
+                
+                // Lấy danh sách voucher hợp lệ từ database
+                List<Voucher> validVouchers = orderService.getValidVouchers();
+                model.addAttribute("validVouchers", validVouchers);
+
+                // Giữ nguyên chữ khách đã nhập
+                model.addAttribute("fullName", fullName);
+                model.addAttribute("phone", phone);
+                model.addAttribute("address", deliveryAddress);
+                model.addAttribute("note", note);
+                model.addAttribute("errorFullName", e.getMessage().contains("tên") ? e.getMessage() : null);
+                model.addAttribute("errorPhone", e.getMessage().contains("điện thoại") ? e.getMessage() : null);
+                model.addAttribute("errorAddress", e.getMessage().contains("địa chỉ") ? e.getMessage() : null);
+                return "checkout";
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải trang: " + ex.getMessage());
+                return "redirect:/order/checkout";
+            }
+        }
+
+        // Kiểm tra deliveryAddress riêng
         boolean hasError = false;
-
-        if (fullName.trim().isEmpty()) {
-            model.addAttribute("errorFullName", "Vui lòng nhập họ và tên của bạn.");
-            hasError = true;
-        } else if (!fullName.matches("^[\\p{L}\\s]+$")) {
-            model.addAttribute("errorFullName", "Họ và tên chỉ được chứa chữ cái, không nhập số hay ký tự đặc biệt.");
-            hasError = true;
-        }
-
-        if (phone.trim().isEmpty() || !phone.matches("^0[0-9]{9}$")) {
-            model.addAttribute("errorPhone", "Số điện thoại không hợp lệ (Bắt buộc 10 số và bắt đầu bằng 0).");
-            hasError = true;
-        }
-
-        if (deliveryAddress.trim().isEmpty()) {
+        if (deliveryAddress == null || deliveryAddress.trim().isEmpty()) {
             model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
             hasError = true;
         }
 
         if (hasError) {
-            return checkoutPage(model, session, redirectAttributes);
+            // Load lại cart và trả về checkout với lỗi
+            try {
+                List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
+                double subtotal = orderService.calculateCartTotal(cartItems);
+                model.addAttribute("cartItems", cartItems);
+                model.addAttribute("total", subtotal);
+                model.addAttribute("fullName", fullName);
+                model.addAttribute("phone", phone);
+                model.addAttribute("address", deliveryAddress);
+                model.addAttribute("validVouchers", orderService.getValidVouchers());
+                return "checkout";
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+                return "redirect:/order/checkout";
+            }
         }
 
         try {
@@ -344,7 +383,7 @@ public class OrderController {
     }
 
     // =======================================================
-    // 4. XỬ LÝ CẬP NHẬT ĐỊA CHỈ GIAO HÀNG
+    // 4. XỬ LÝ CẬP NHẬT ĐỊA CHỈ GIAO HÀNG (CHUYỂN LOGIC SANG SERVICE)
     // =======================================================
     @PostMapping("/checkout/update-delivery-address")
     public String updateDeliveryAddress(
@@ -368,6 +407,10 @@ public class OrderController {
                 return "redirect:/order/checkout/select-delivery-address";
             }
 
+            
+            // Gọi service để xử lý logic
+            orderService.updateDeliveryAddressInSession(session, currentCustomer, addressOption, finalAddress);
+            
             return "redirect:/order/checkout";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
