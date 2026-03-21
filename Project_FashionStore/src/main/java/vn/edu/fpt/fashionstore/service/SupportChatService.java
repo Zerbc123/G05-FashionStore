@@ -1,53 +1,148 @@
 package vn.edu.fpt.fashionstore.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.fashionstore.entity.SupportChat;
 import vn.edu.fpt.fashionstore.entity.SenderType;
+import vn.edu.fpt.fashionstore.repository.SupportChatRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface SupportChatService {
+@Service
+public class SupportChatService {
 
-    // Lấy tất cả tin nhắn của một support request
-    List<SupportChat> getMessagesBySupportRequestId(Long supportRequestId);
+    @Autowired
+    private SupportChatRepository supportChatRepository;
 
-    // Gửi tin nhắn mới
-    SupportChat sendMessage(Long supportRequestId, SenderType senderType, String senderName, 
-                           String messageContent, Integer staffId);
+    public List<SupportChat> getMessagesBySupportRequestId(Long supportRequestId) {
+        if (supportRequestId == null) {
+            throw new IllegalArgumentException("Support Request ID cannot be null");
+        }
+        return supportChatRepository.findBySupportRequestIdOrderBySentAtAsc(supportRequestId);
+    }
 
-    // Gửi tin nhắn từ customer
-    SupportChat sendCustomerMessage(Long supportRequestId, String customerName, String messageContent);
+    @Transactional
+    public SupportChat sendMessage(Long supportRequestId, SenderType senderType, String senderName, 
+                                  String messageContent, Integer staffId) {
+        if (supportRequestId == null) {
+            throw new IllegalArgumentException("Support Request ID cannot be null");
+        }
+        if (senderType == null) {
+            throw new IllegalArgumentException("Sender type cannot be null");
+        }
+        if (senderName == null || senderName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Sender name cannot be null or empty");
+        }
+        if (messageContent == null || messageContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message content cannot be null or empty");
+        }
 
-    // Gửi tin nhắn từ staff
-    SupportChat sendStaffMessage(Long supportRequestId, Integer staffId, String staffName, String messageContent);
+        SupportChat chat = new SupportChat();
+        chat.setSupportRequestId(supportRequestId);
+        chat.setSenderType(senderType);
+        chat.setSenderName(senderName.trim());
+        chat.setMessageContent(messageContent.trim());
+        chat.setStaffId(staffId);
 
-    // Đánh dấu tin nhắn đã đọc
-    void markMessagesAsRead(Long supportRequestId, SenderType senderType);
+        return supportChatRepository.save(chat);
+    }
 
-    // Đánh dấu tin nhắn của customer đã đọc (khi staff xem)
-    void markCustomerMessagesAsRead(Long supportRequestId);
+    @Transactional
+    public SupportChat sendCustomerMessage(Long supportRequestId, String customerName, String messageContent) {
+        return sendMessage(supportRequestId, SenderType.CUSTOMER, customerName, messageContent, null);
+    }
 
-    // Đánh dấu tin nhắn của staff đã đọc (khi customer xem)
-    void markStaffMessagesAsRead(Long supportRequestId);
+    @Transactional
+    public SupportChat sendStaffMessage(Long supportRequestId, Integer staffId, String staffName, String messageContent) {
+        return sendMessage(supportRequestId, SenderType.STAFF, staffName, messageContent, staffId);
+    }
 
-    // Lấy tin nhắn chưa đọc của staff
-    List<SupportChat> getUnreadMessagesForStaff(Integer staffId);
+    @Transactional
+    public void markMessagesAsRead(Long supportRequestId, SenderType senderType) {
+        if (supportRequestId == null) {
+            throw new IllegalArgumentException("Support Request ID cannot be null");
+        }
+        if (senderType == null) {
+            throw new IllegalArgumentException("Sender type cannot be null");
+        }
+        supportChatRepository.markMessagesAsRead(supportRequestId, senderType);
+    }
 
-    // Đếm số tin nhắn chưa đọc của staff
-    long countUnreadMessagesForStaff(Integer staffId);
+    @Transactional
+    public void markCustomerMessagesAsRead(Long supportRequestId) {
+        markMessagesAsRead(supportRequestId, SenderType.CUSTOMER);
+    }
 
-    // Đếm số tin nhắn chưa đọc của customer cho một support request
-    long countUnreadCustomerMessages(Long supportRequestId);
+    @Transactional
+    public void markStaffMessagesAsRead(Long supportRequestId) {
+        markMessagesAsRead(supportRequestId, SenderType.STAFF);
+    }
 
-    // Lấy lịch sử tin nhắn của staff
-    List<SupportChat> getStaffMessageHistory(Integer staffId);
+    public List<SupportChat> getUnreadMessagesForStaff(Integer staffId) {
+        if (staffId == null) {
+            throw new IllegalArgumentException("Staff ID cannot be null");
+        }
+        return supportChatRepository.findBySupportRequestIdAndSenderTypeAndIsReadFalseOrderBySentAtAsc(
+                null, SenderType.CUSTOMER);
+    }
 
-    // Lấy lịch sử tin nhắn của staff trong khoảng thời gian
-    List<SupportChat> getStaffMessageHistoryByDateRange(Integer staffId, LocalDateTime startDate, LocalDateTime endDate);
+    public long countUnreadMessagesForStaff(Integer staffId) {
+        if (staffId == null) {
+            throw new IllegalArgumentException("Staff ID cannot be null");
+        }
+        return supportChatRepository.countUnreadMessagesByStaffId(staffId);
+    }
 
-    // Lấy tin nhắn gần đây của staff
-    List<SupportChat> getRecentMessagesForStaff(Integer staffId, int limit);
+    public long countUnreadCustomerMessages(Long supportRequestId) {
+        if (supportRequestId == null) {
+            throw new IllegalArgumentException("Support Request ID cannot be null");
+        }
+        return supportChatRepository.countUnreadCustomerMessagesBySupportRequestId(supportRequestId);
+    }
 
-    // Xóa tất cả tin nhắn của một support request
-    void deleteMessagesBySupportRequestId(Long supportRequestId);
+    public List<SupportChat> getStaffMessageHistory(Integer staffId) {
+        if (staffId == null) {
+            throw new IllegalArgumentException("Staff ID cannot be null");
+        }
+        return supportChatRepository.findByStaffIdOrderBySentAtDesc(staffId);
+    }
+
+    public List<SupportChat> getStaffMessageHistoryByDateRange(Integer staffId, LocalDateTime startDate, LocalDateTime endDate) {
+        if (staffId == null) {
+            throw new IllegalArgumentException("Staff ID cannot be null");
+        }
+        if (startDate == null) {
+            throw new IllegalArgumentException("Start date cannot be null");
+        }
+        if (endDate == null) {
+            throw new IllegalArgumentException("End date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        return supportChatRepository.findByStaffIdAndSentAtBetweenOrderBySentAtDesc(staffId, startDate, endDate);
+    }
+
+    public List<SupportChat> getRecentMessagesForStaff(Integer staffId, int limit) {
+        if (staffId == null) {
+            throw new IllegalArgumentException("Staff ID cannot be null");
+        }
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be greater than 0");
+        }
+        
+        // Repository chỉ có method findTop10, nên nếu limit > 10 thì lấy 10
+        int actualLimit = Math.min(limit, 10);
+        return supportChatRepository.findTop10ByStaffIdOrderBySentAtDesc(staffId);
+    }
+
+    @Transactional
+    public void deleteMessagesBySupportRequestId(Long supportRequestId) {
+        if (supportRequestId == null) {
+            throw new IllegalArgumentException("Support Request ID cannot be null");
+        }
+        supportChatRepository.deleteBySupportRequestId(supportRequestId);
+    }
 }
