@@ -417,6 +417,51 @@
                             </div>
                             <span th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}"
                                 th:class="'badge ' + ${order.status != null ? #strings.toLowerCase(order.status.name()) : 'unknown'}">Pending</span>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a th:href="@{/admin/products/add}" class="action-btn">
+                <i class="bi bi-plus-circle"></i>
+                <div>Add Product</div>
+            </a>
+            <a th:href="@{/admin/inventory}" class="action-btn">
+                <i class="bi bi-box-seam"></i>
+                <div>Inventory</div>
+            </a>
+            <a th:href="@{/admin/orders}" class="action-btn">
+                <i class="bi bi-cart-check"></i>
+                <div>View Orders</div>
+            </a>
+            <a th:href="@{/admin/customers}" class="action-btn">
+                <i class="bi bi-people"></i>
+                <div>Manage Customers</div>
+            </a>
+            <a th:href="@{/admin/reports}" class="action-btn">
+                <i class="bi bi-graph-up"></i>
+                <div>View Reports</div>
+            </a>
+            <a th:href="@{/admin/support}" class="action-btn">
+                <i class="bi bi-headset"></i>
+                <div>Quản Lý Hỗ Trợ</div>
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Revenue Chart -->
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <h3>Revenue Overview</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="col-lg-4">
+                <div class="recent-orders">
+                    <h3>Recent Orders</h3>
+                    <div class="order-item">
+                        <div class="order-info">
+                            <h6>#ORD-2024-001</h6>
+                            <p>John Doe - $139.97</p>
                         </div>
                         <div th:if="${#lists.isEmpty(recentOrders)}" class="p-3 text-center text-muted">
                             No recent orders.

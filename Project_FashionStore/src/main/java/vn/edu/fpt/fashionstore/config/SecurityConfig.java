@@ -52,7 +52,7 @@ public class SecurityConfig {
         if (customOAuth2UserService != null) {
             http.oauth2Login(oauth2 -> oauth2
                     .loginPage("/login")
-                    .defaultSuccessUrl("/home", true)
+                    .successHandler(new OAuth2LoginSuccessHandler())
                     .userInfoEndpoint(userInfo -> userInfo
                             .userService(customOAuth2UserService)
                     )

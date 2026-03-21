@@ -2,6 +2,8 @@ package vn.edu.fpt.fashionstore.repository;
 
 import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +39,11 @@ public interface SupportRequestRepository extends JpaRepository<SupportRequest, 
     List<SupportRequest> findByAssignedStaffIdAndStatus(Integer staffId, SupportStatus status);
     
     List<SupportRequest> findByAssignedStaffIdAndCreatedAtBetween(Integer staffId, LocalDateTime startDateTime, LocalDateTime endDateTime);
+
+    List<SupportRequest> findByCustomerEmailOrderByCreatedAtDesc(String customerEmail);
+    
+    // Clear assigned staff ID when staff account is deleted
+    @Modifying
+    @Query("UPDATE SupportRequest sr SET sr.assignedStaffId = NULL, sr.assignedStaffName = NULL WHERE sr.assignedStaffId = :staffId")
+    void clearAssignedStaffId(Integer staffId);
 }

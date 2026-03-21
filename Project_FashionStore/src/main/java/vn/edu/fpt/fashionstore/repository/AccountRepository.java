@@ -29,10 +29,14 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByPhone(String phone);
+
     // CHECK TRÙNG KHI UPDATE (TRỪ CHÍN NÓ)
     boolean existsByUsernameAndAccountIdNot(String username, Integer accountId);
 
     boolean existsByEmailAndAccountIdNot(String email, Integer accountId);
+
+    boolean existsByPhoneAndAccountIdNot(String phone, Integer accountId);
 
     // LẤY TẤT CẢ ACCOUNT KHÔNG BỊ DELETED (PHÂN TRANG)
     Page<Account> findByStatusIn(
@@ -96,6 +100,24 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
         "OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
         "OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
         ")")
+    @Query("""
+        SELECT a FROM Account a
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
+        AND a.role.roleId IN (3,4,5,6)
+    """)
+    Page<Account> findStaffAccounts(Pageable pageable);
+
+    // SEARCH NHÂN VIÊN
+    @Query("""
+        SELECT a FROM Account a
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
+        AND a.role.roleId IN (3,4,5,6)
+        AND (
+            LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
     Page<Account> searchStaffAccounts(
             @Param("keyword") String keyword,
             Pageable pageable

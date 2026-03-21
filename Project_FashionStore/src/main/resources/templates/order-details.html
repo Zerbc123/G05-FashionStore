@@ -314,6 +314,10 @@
         </div>
 
         <div class="order-info">
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
             <!-- 1. CHI TIẾT CÁC SẢN PHẨM CÓ TRONG ĐƠN HÀNG - LÊN ĐẦU -->
             <div class="info-section">
                 <div class="info-title">
@@ -435,6 +439,13 @@
                 </a>
 
 
+                <form th:if="${orderStatus.name() == 'PENDING'}"
+                      th:action="@{'/order/details/' + ${orderId} + '/cancel'}"
+                      method="post">
+                    <button type="submit" class="btn btn-danger px-4 py-2" style="border-radius: 10px;" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                        <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                    </button>
+                </form>
 
                 <button th:if="${orderStatus.name() == 'COMPLETED' and !hasReturnRequest}" type="button" class="btn btn-warning text-dark px-4 py-2 fw-bold" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#returnModal">
                     <i class="bi bi-box-arrow-left"></i> Yêu cầu Đổi Trả
@@ -473,29 +484,37 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Cancel Confirmation Modal -->
     <div id="cancelModal" class="modal-overlay">
+
         <div class="modal-content">
+
             <div class="modal-title">
-                <i class="bi bi-exclamation-triangle me-2"></i>
                 Xác nhận hủy đơn hàng
             </div>
+
             <div class="modal-text">
-                Bạn có chắc chắn muốn hủy đơn hàng <span th:text="${orderCode}">#123456</span> không?<br>
-                Hành động này không thể hoàn tác.
+                Bạn có chắc muốn hủy đơn
+                <span th:text="${orderCode}">#123456</span> không?
             </div>
+
             <div class="modal-buttons">
-                <button class="btn-action btn-secondary" onclick="hideCancelModal()">
-                    <i class="bi bi-x"></i> Không hủy
+
+                <button onclick="hideCancelModal()" class="btn-action btn-secondary">
+                    Không
                 </button>
-                <form th:action="@{/order/details/{oid}/cancel(oid=${orderId})}" method="post" style="display: inline;">
+
+                <form th:action="@{/order/details/{oid}/cancel(oid=${orderId})}" method="post">
                     <button type="submit" class="btn-action btn-danger">
-                        <i class="bi bi-check"></i> Xác nhận hủy
+                        Xác nhận hủy
                     </button>
                 </form>
+
             </div>
+
         </div>
+
     </div>
     <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

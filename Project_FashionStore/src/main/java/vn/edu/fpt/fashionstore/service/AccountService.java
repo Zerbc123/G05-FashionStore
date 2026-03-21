@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Role;
+import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.RoleRepository;
@@ -47,9 +48,7 @@ public class AccountService implements UserDetailsService {
 
     public static final String ROLE_CUSTOMER = "Customer";
 
-    /* =================================================
-                    ADMIN - STAFF MANAGEMENT
-       ================================================= */
+    /*  ADMIN - STAFF MANAGEMENT*/
 
     public Page<Account> getAllStaff(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accountId").descending());
@@ -86,9 +85,24 @@ public class AccountService implements UserDetailsService {
 
     public void createStaff(Account account, Integer roleId) {
         if (accountRepository.existsByUsername(account.getUsername()))
+    public boolean existsByPhone(String phone) {
+        return accountRepository.existsByPhone(phone);
+    }
+
+    public boolean existsByPhoneAndAccountIdNot(String phone, Integer accountId) {
+        return accountRepository.existsByPhoneAndAccountIdNot(phone, accountId);
+    }
+
+    public void createStaff(Account account,Integer roleId){
+
+        if(accountRepository.existsByUsername(account.getUsername()))
             throw new RuntimeException("Username đã tồn tại");
         if (accountRepository.existsByEmail(account.getEmail()))
             throw new RuntimeException("Email đã tồn tại");
+
+        if(account.getPhone() != null && !account.getPhone().trim().isEmpty() 
+           && accountRepository.existsByPhone(account.getPhone()))
+            throw new RuntimeException("Số điện thoại đã tồn tại");
 
         Role role = roleRepository.findById(roleId)
                 .orElseGet(() -> roleRepository.findByRoleName("SUPPORT").orElse(null));
@@ -125,6 +139,13 @@ public class AccountService implements UserDetailsService {
     }
 
     public Account getById(Integer id) {
+    public void leaveAccount(Integer id){
+        Account acc = getById(id);
+        acc.setStatus("LEAVE");
+        accountRepository.save(acc);
+    }
+
+    public Account getById(Integer id){
         return accountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
     }
@@ -143,6 +164,14 @@ public class AccountService implements UserDetailsService {
 
     public void updateStaff(Account account) {
         if (account == null || account.getAccountId() == null) {
+    public void restoreAccount(Integer id){
+        Account acc = getById(id);
+        acc.setStatus("ACTIVE");
+        accountRepository.save(acc);
+    }
+
+    public void updateStaffInfo(Account account, Integer roleId){
+        if(account == null || account.getAccountId() == null){
             throw new RuntimeException("Account không hợp lệ");
         }
         Account existingAccount = getById(account.getAccountId());
@@ -152,12 +181,40 @@ public class AccountService implements UserDetailsService {
         if (accountRepository.existsByEmailAndAccountIdNot(account.getEmail(), account.getAccountId())) {
             throw new RuntimeException("Email đã tồn tại");
         }
+        
+        // Kiểm tra số điện thoại có bị trùng không (trừ với chính nó)
+        if(account.getPhone() != null && !account.getPhone().trim().isEmpty() 
+           && accountRepository.existsByPhoneAndAccountIdNot(account.getPhone(), account.getAccountId())){
+            throw new RuntimeException("Số điện thoại đã tồn tại");
+        }
+        
+        // Kiểm tra nếu đang chuyển role từ Support sang role khác
+        if(roleId != null && existingAccount.getRole() != null && existingAccount.getRole().getRoleName() != null &&
+           existingAccount.getRole().getRoleName().equals("Hỗ trợ khách hàng (Support)") &&
+           !roleId.equals(existingAccount.getRole().getRoleId())){
+            
+            // Kiểm tra xem staff có đang được phân công xử lý yêu cầu hỗ trợ không
+            if(isStaffAssigned(existingAccount.getAccountId())){
+                throw new RuntimeException("Không thể chuyển vai trò của nhân viên này vì đang được phân công xử lý yêu cầu hỗ trợ khách hàng!");
+            }
+        }
+        
+        // Cập nhật thông tin
         existingAccount.setUsername(account.getUsername());
         existingAccount.setEmail(account.getEmail());
         existingAccount.setFullName(account.getFullName());
         existingAccount.setPhone(account.getPhone());
         if (account.getRole() != null && account.getRole().getRoleId() != null) {
             Role role = roleRepository.findById(account.getRole().getRoleId())
+        
+        // Cập nhật status nếu có
+        if (account.getStatus() != null && !account.getStatus().trim().isEmpty()) {
+            existingAccount.setStatus(account.getStatus());
+        }
+        
+        // Cập nhật role nếu có
+        if(roleId != null){
+            Role role = roleRepository.findById(roleId)
                     .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
             existingAccount.setRole(role);
         }
@@ -228,13 +285,27 @@ public class AccountService implements UserDetailsService {
     }
 
     public void hardDeleteAccount(Integer id) {
+    @Transactional
+    public void hardDeleteAccount(Integer id){
         Account account = getById(id);
+        
+        // Check if staff is assigned to any support requests
+        if (supportRequestRepository.existsByAssignedStaffId(id)) {
+            throw new RuntimeException("Không thể xóa tài khoản nhân viên này! Nhân viên đang được phân công xử lý yêu cầu hỗ trợ. Vui lòng chuyển giao yêu cầu hỗ trợ cho nhân viên khác trước khi xóa.");
+        }
+        
         accountRepository.delete(account);
     }
 
     /* =================================================
                         LOGIN / REGISTER
        ================================================= */
+    // Get support requests assigned to a specific staff (for reassignment)
+    public List<SupportRequest> getAssignedSupportRequests(Integer staffId) {
+        return supportRequestRepository.findByAssignedStaffId(staffId);
+    }
+
+    /*  LOGIN */
 
     public Account authenticate(String username, String password) {
         Account account = accountRepository.findByUsername(username)
@@ -393,6 +464,9 @@ public class AccountService implements UserDetailsService {
     }
 
     public Optional<Account> findByEmail(String email) {
+/*  FIND ACCOUNT */
+
+    public Optional<Account> findByEmail(String email){
         return accountRepository.findByEmail(email);
     }
 
@@ -403,6 +477,11 @@ public class AccountService implements UserDetailsService {
     /* =================================================
                         OAUTH LOGIN
        ================================================= */
+    public Customer findCustomerByEmail(String email) {
+        return customerRepository.findByAccountEmail(email).orElse(null);
+    }
+
+/*  GOOGLE OAUTH LOGIN*/
 
     @Transactional
     public Account processOAuthPostLogin(String email, String name) {

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,34 @@ public class InventoryService {
         logger.info("Getting all unique categories from database");
         
         List<String> categories = productVariantRepository.findAll().stream()
+    public Page<ProductVariant> getAllProductVariantsWithProductAndCategory(Pageable pageable) {
+        // Use JOIN FETCH to avoid lazy loading issues
+        List<ProductVariant> variants = productVariantRepository.findAllWithProductAndCategory();
+        
+        // If pageable is null, return all variants as a page
+        if (pageable == null) {
+            return new PageImpl<>(variants, PageRequest.of(0, variants.size()), variants.size());
+        }
+        
+        // Apply pagination manually since JOIN FETCH doesn't work with Pageable
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), variants.size());
+        List<ProductVariant> pageContent = start < variants.size() ? 
+            variants.subList(start, end) : Collections.emptyList();
+        
+        return new PageImpl<>(pageContent, pageable, variants.size());
+    }
+
+    // Helper method to get all variants with JOIN FETCH
+    public List<ProductVariant> getAllVariantsWithProductAndCategory() {
+        return productVariantRepository.findAllWithProductAndCategory();
+    }
+
+    public List<String> getAllCategories() {
+        logger.info("Getting all unique categories from database");
+        
+        // Use JOIN FETCH to avoid lazy loading issues
+        List<String> categories = productVariantRepository.findAllWithProductAndCategory().stream()
                 .filter(variant -> variant.getProduct() != null && 
                         variant.getProduct().getCategory() != null &&
                         variant.getProduct().getCategory().getCategoryName() != null)
@@ -98,6 +127,7 @@ public class InventoryService {
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
                             return variant.getStock() == 0;
+                            return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;
                     }
@@ -116,6 +146,7 @@ public class InventoryService {
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
                             return variant.getStock() == 0;
+                            return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;
                     }

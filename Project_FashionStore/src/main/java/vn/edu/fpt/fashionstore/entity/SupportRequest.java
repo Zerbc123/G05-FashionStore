@@ -49,6 +49,12 @@ public class SupportRequest {
     @Column(name = "assigned_staff_name", columnDefinition = "NVARCHAR(100)")
     private String assignedStaffName;
 
+    // FK relationship to Account
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_staff_id", referencedColumnName = "account_id", 
+               insertable = false, updatable = false)
+    private Account assignedStaff;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -128,5 +134,13 @@ public class SupportRequest {
 
     public void setAssignedStaffName(String assignedStaffName) {
         this.assignedStaffName = assignedStaffName;
+    }
+
+    public Account getAssignedStaff() {
+        return assignedStaff;
+    }
+
+    public void setAssignedStaff(Account assignedStaff) {
+        this.assignedStaff = assignedStaff;
     }
 }
