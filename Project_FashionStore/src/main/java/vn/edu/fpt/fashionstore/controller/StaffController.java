@@ -119,7 +119,7 @@ public class StaffController {
         
         // Fetch paginated data from database
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductVariant> productVariantPage = inventoryService.getAllProductVariants(pageable);
+        Page<ProductVariant> productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
         InventoryService.InventoryStats stats = inventoryService.getInventoryStats();
         
         // Get all categories for dropdown
@@ -177,8 +177,8 @@ public class StaffController {
         Page<ProductVariant> productVariantPage;
         
         try {
-            // Get all variants first
-            List<ProductVariant> allVariants = inventoryService.getAllProductVariants();
+            // Get all variants with JOIN FETCH to avoid lazy loading
+            List<ProductVariant> allVariants = inventoryService.getAllVariantsWithProductAndCategory();
             
             // Apply filters sequentially
             List<ProductVariant> filteredVariants = allVariants;
@@ -256,10 +256,19 @@ public class StaffController {
         model.addAttribute("search", search);
         model.addAttribute("category", category);
         model.addAttribute("stockStatus", stockStatus);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", productVariantPage.getTotalPages());
-        model.addAttribute("totalItems", productVariantPage.getTotalElements());
-        model.addAttribute("pageSize", size);
+        
+        // Only add pagination attributes if there are results
+        if (productVariantPage.getTotalElements() > 0) {
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", productVariantPage.getTotalPages());
+            model.addAttribute("totalItems", productVariantPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+        } else {
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalItems", 0);
+            model.addAttribute("pageSize", size);
+        }
         
         logger.info("Returning inventory view with {} items, total pages: {}", 
                    productVariantPage.getContent().size(), productVariantPage.getTotalPages());

@@ -573,7 +573,7 @@
         </div>
 
         <!-- Pagination -->
-        <nav th:if="${productVariantPage != null and productVariantPage.totalElements > 0}">
+        <nav th:if="${totalPages > 0}">
             <ul class="pagination">
                 <!-- Previous -->
                 <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">

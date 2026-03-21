@@ -200,7 +200,7 @@ public class AdminController {
         InventoryService.InventoryStats stats;
         
         try {
-            productVariantPage = inventoryService.getAllProductVariants(pageable);
+            productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
             stats = inventoryService.getInventoryStats();
             
             logger.info("Admin inventory - Total variants found: {}", productVariantPage.getTotalElements());
@@ -281,8 +281,8 @@ public class AdminController {
         Page<ProductVariant> productVariantPage;
         
         try {
-            // Get all variants first
-            List<ProductVariant> allVariants = inventoryService.getAllProductVariants();
+            // Get all variants with JOIN FETCH to avoid lazy loading
+            List<ProductVariant> allVariants = inventoryService.getAllVariantsWithProductAndCategory();
             
             // Apply filters sequentially
             List<ProductVariant> filteredVariants = allVariants;
@@ -347,8 +347,8 @@ public class AdminController {
             
         } catch (Exception e) {
             logger.error("Error in filterInventory: {}", e.getMessage(), e);
-            // Fallback to all products
-            productVariantPage = inventoryService.getAllProductVariants(pageable);
+            // Fallback to all products with JOIN FETCH
+            productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
         }
         
         InventoryService.InventoryStats stats = inventoryService.getInventoryStats();
@@ -364,10 +364,19 @@ public class AdminController {
         model.addAttribute("search", search);
         model.addAttribute("category", category);
         model.addAttribute("stockStatus", stockStatus);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", productVariantPage.getTotalPages());
-        model.addAttribute("totalItems", productVariantPage.getTotalElements());
-        model.addAttribute("pageSize", size);
+        
+        // Only add pagination attributes if there are results
+        if (productVariantPage.getTotalElements() > 0) {
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", productVariantPage.getTotalPages());
+            model.addAttribute("totalItems", productVariantPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+        } else {
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalItems", 0);
+            model.addAttribute("pageSize", size);
+        }
         
         logger.info("Returning admin inventory view with {} items, total pages: {}", 
                    productVariantPage.getContent().size(), productVariantPage.getTotalPages());
