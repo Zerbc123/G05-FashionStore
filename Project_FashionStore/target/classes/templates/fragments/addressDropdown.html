@@ -1,0 +1,179 @@
+<style>
+    .address-loading-spinner {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        border: 2px solid #ccc;
+        border-top-color: #FF6B9D;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 0.5em;
+        vertical-align: middle;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .address-loading-text {
+        display: inline-block;
+        color: #666;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+    }
+    .address-loading-container {
+        margin-top: 0.5rem;
+        min-height: 1.5rem;
+    }
+</style>
+
+<div th:fragment="addressSelect(address)">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
+            <select id="province" name="province" class="form-select" required>
+                <option value="">Đang tải tỉnh/thành...</option>
+            </select>
+            <div class="address-loading-container">
+                <div id="provinceLoadingIndicator" class="address-loading-spinner"></div>
+                <span class="address-loading-text">Vui lòng chờ tải danh sách...</span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Phường/Xã (Sau sáp nhập) <span class="text-danger">*</span></label>
+            <select id="ward" name="ward" class="form-select" required disabled>
+                <option value="">Chọn phường/xã</option>
+            </select>
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label">Số nhà & tên đường <span class="text-danger">*</span></label>
+            <input type="text" id="house" name="house" class="form-control" placeholder="Ví dụ: 123 Nguyễn Trãi" required />
+        </div>
+
+        <input type="hidden" id="address" name="address" th:value="${address}" />
+    </div>
+    <div id="addressError" class="text-danger small mt-2"></div>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+let provincesList = [];
+
+function hideLoadingSpinner() {
+    const spinner = document.getElementById('provinceLoadingIndicator');
+    const text = document.querySelector('.address-loading-text');
+    if (spinner) spinner.style.display = 'none';
+    if (text) text.style.display = 'none';
+}
+
+function showLoadingError(message) {
+    hideLoadingSpinner();
+    const errDiv = document.getElementById('addressError');
+    if (errDiv) {
+        errDiv.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>' + message;
+    }
+}
+
+// Hàm tải dữ liệu Tỉnh + Phường (depth=1 theo OpenAPI 2025)
+function loadProvinces() {
+    const provSelect = document.getElementById('province');
+    const errDiv = document.getElementById('addressError');
+
+    // Gọi API với depth=1 để lấy Tỉnh kèm theo danh sách Wards
+    fetch('/fashionstore/address-api?depth=1') 
+        .then(res => {
+            if (!res.ok) throw new Error('API failed');
+            return res.json();
+        })
+        .then(data => {
+            provincesList = data;
+            hideLoadingSpinner();
+            provSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
+            data.forEach(p => provSelect.add(new Option(p.name, p.name)));
+            
+            const existing = /*[[${address}]]*/ '';
+            if (existing) prefillAddress(existing);
+        })
+        .catch(err => {
+            console.error('Fetch failed', err);
+            showLoadingError('Không thể tải dữ liệu. Vui lòng kiểm tra kết nối.');
+        });
+}
+
+// Đổ dữ liệu Phường/Xã trực tiếp từ Tỉnh
+function populateWards(provinceName) {
+    const prov = provincesList.find(p => p.name === provinceName);
+    const wardSelect = document.getElementById('ward');
+    
+    wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+    wardSelect.disabled = true;
+
+    if (prov && prov.wards) {
+        prov.wards.forEach(w => {
+            wardSelect.add(new Option(w.name, w.name));
+        });
+        wardSelect.disabled = false;
+    }
+}
+
+// Gộp thành địa chỉ 2 cấp: "Số nhà, Phường, Tỉnh"
+function combineAddress() {
+    const house = document.getElementById('house').value.trim();
+    const ward = document.getElementById('ward').value;
+    const province = document.getElementById('province').value;
+    
+    if (house && ward && province) {
+        document.getElementById('address').value = house + ', ' + ward + ', ' + province;
+    }
+}
+
+// Xử lý dữ liệu cũ nếu có (Prefill)
+function prefillAddress(addr) {
+    if (!addr) return;
+    const parts = addr.split(',');
+    // Với 2 cấp: [Số nhà, Phường, Tỉnh] -> ít nhất 3 phần
+    if (parts.length >= 3) {
+        const province = parts.pop().trim();
+        const ward = parts.pop().trim();
+        const housePart = parts.join(',').trim();
+
+        document.getElementById('house').value = housePart;
+        
+        setTimeout(() => {
+            document.getElementById('province').value = province;
+            populateWards(province);
+            document.getElementById('ward').value = ward;
+            combineAddress();
+        }, 300);
+    }
+}
+
+function addressFragmentInit() {
+    const provElem = document.getElementById('province');
+    if (!provElem) return;
+
+    loadProvinces();
+
+    provElem.addEventListener('change', function () {
+        populateWards(this.value);
+        combineAddress();
+    });
+
+    const wardElem = document.getElementById('ward');
+    if (wardElem) {
+        wardElem.addEventListener('change', combineAddress);
+    }
+
+    const houseElem = document.getElementById('house');
+    if (houseElem) {
+        houseElem.addEventListener('input', combineAddress);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addressFragmentInit);
+} else {
+    addressFragmentInit();
+}
+/*]]>*/
+</script>

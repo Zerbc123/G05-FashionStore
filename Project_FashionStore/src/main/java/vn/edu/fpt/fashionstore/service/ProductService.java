@@ -6,7 +6,9 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,17 +49,40 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<Product> getAllProducts(Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
-            query.distinct(true);
+            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            
+            // Xử lý sắp xếp theo giá cho SQL Server khi dùng GROUP BY
+            Sort sort = pageable.getSort();
+            if (sort != null && sort.isSorted()) {
+                sort.forEach(order -> {
+                    if (order.getProperty().equals("variants.price")) {
+                        Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
+                        if (order.getDirection().isAscending()) {
+                            query.orderBy(cb.asc(cb.min(variants.get("price"))));
+                        } else {
+                            query.orderBy(cb.desc(cb.max(variants.get("price"))));
+                        }
+                    }
+                });
+            }
+            
             return cb.conjunction();
         };
+
+        // Nếu đã sắp xếp bằng Specification, gỡ Sort khỏi Pageable để tránh xung đột
+        Pageable p = pageable;
+        if (pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
+            p = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.unsorted());
+        }
         
         // Lấy kết quả trước, sau đó fetch variants và category
-        Page<Product> result = productRepository.findAll(spec, pageable);
+        Page<Product> result = productRepository.findAll(spec, p);
         
         // Force load variants và category sau khi query
         result.forEach(product -> {
             if (product.getVariants() != null) {
                 product.getVariants().size(); // Force load
+                product.getVariants().sort((v1, v2) -> v1.getPrice().compareTo(v2.getPrice()));
             }
             if (product.getCategory() != null) {
                 product.getCategory().getCategoryName(); // Force load
@@ -86,7 +111,7 @@ public class ProductService {
     }
 
     // Lọc sản phẩm theo nhiều tiêu chí
-    public Page<Product> filterProducts(Long categoryId, String size, Double minPrice, Double maxPrice,
+    public Page<Product> filterProducts(Integer categoryId, String size, Double minPrice, Double maxPrice,
             Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
@@ -121,11 +146,13 @@ public class ProductService {
     }
 
     // Tối ưu hàm Search và Filter để lấy thông tin từ bảng Variant (Price, Size, Color)
-    public Page<Product> searchAndFilterProducts(String keyword, Long categoryId, String size, String color,
+    @Transactional(readOnly = true)
+    public Page<Product> searchAndFilterProducts(String keyword, Integer categoryId, String size, String color,
                                                  Double minPrice, Double maxPrice, Pageable pageable) {
         
         Specification<Product> spec = (root, query, cb) -> {
-            query.distinct(true); // Tránh trùng lặp sản phẩm khi join nhiều variant
+            // Thay DISTINCT bằng GROUP BY để fix lỗi SQL Server
+            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Tìm theo tên sản phẩm
@@ -138,10 +165,12 @@ public class ProductService {
                 predicates.add(cb.equal(root.get("category").get("categoryId"), categoryId));
             }
 
-            // 3. Lọc theo variants - chỉ khi có variant filter
-            if (size != null && !size.isBlank() || color != null && !color.isBlank() || minPrice != null || maxPrice != null) {
-                // Dùng LEFT JOIN và thêm điều kiện vào WHERE clause
-                Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
+            // 3. Lọc theo variants
+            Join<Product, ProductVariant> variants = null;
+            if (size != null && !size.isBlank() || color != null && !color.isBlank() || minPrice != null || maxPrice != null || 
+                (pageable.getSort() != null && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price")))) {
+                
+                variants = root.join("variants", JoinType.LEFT);
                 
                 if (size != null && !size.isBlank()) {
                     predicates.add(cb.equal(variants.get("categorySize").get("sizeName"), size));
@@ -157,16 +186,37 @@ public class ProductService {
                 }
             }
 
+            // 4. Xử lý sắp xếp theo giá cho SQL Server khi dùng GROUP BY
+            if (variants != null && pageable.getSort() != null && pageable.getSort().isSorted()) {
+                final Join<Product, ProductVariant> finalVariants = variants;
+                pageable.getSort().forEach(order -> {
+                    if (order.getProperty().equals("variants.price")) {
+                        if (order.getDirection().isAscending()) {
+                            query.orderBy(cb.asc(cb.min(finalVariants.get("price"))));
+                        } else {
+                            query.orderBy(cb.desc(cb.max(finalVariants.get("price"))));
+                        }
+                    }
+                });
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+
+        // Nếu đã sắp xếp bằng Specification, gỡ Sort khỏi Pageable để tránh xung đột
+        Pageable p = pageable;
+        if (pageable.getSort() != null && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
+            p = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.unsorted());
+        }
         
-        // Lấy kết quả trước, sau đó fetch variants và category
-        Page<Product> result = productRepository.findAll(spec, pageable);
+        // Lấy kết quả trước
+        Page<Product> result = productRepository.findAll(spec, p);
         
         // Force load variants và category sau khi query
         result.forEach(product -> {
             if (product.getVariants() != null) {
                 product.getVariants().size(); // Force load
+                product.getVariants().sort((v1, v2) -> v1.getPrice().compareTo(v2.getPrice()));
             }
             if (product.getCategory() != null) {
                 product.getCategory().getCategoryName(); // Force load
@@ -177,11 +227,7 @@ public class ProductService {
     }
     
     // Method test cực đơn giản để debug từng bước
-    public Page<Product> debugFilter(Long categoryId, String color, String size, Pageable pageable) {
-        System.out.println("=== DEBUG FILTER STEP BY STEP ===");
-        System.out.println("categoryId: " + categoryId);
-        System.out.println("color: " + color);
-        System.out.println("size: " + size);
+    public Page<Product> debugFilter(Integer categoryId, String color, String size, Pageable pageable) {
         
         // Bước 1: Test chỉ category filter
         if (categoryId != null) {
@@ -193,7 +239,6 @@ public class ProductService {
                 return cb.equal(root.get("category").get("categoryId"), categoryId);
             };
             var catResult = productRepository.findAll(catSpec, pageable);
-            System.out.println("Category only result: " + catResult.getTotalElements() + " products");
         }
         
         // Bước 2: Test chỉ color filter
@@ -208,7 +253,6 @@ public class ProductService {
                 return cb.equal(variants.get("color").get("colorName"), color);
             };
             var colorResult = productRepository.findAll(colorSpec, pageable);
-            System.out.println("Color only result: " + colorResult.getTotalElements() + " products");
         }
         
         // Bước 3: Test chỉ size filter
@@ -223,7 +267,6 @@ public class ProductService {
                 return cb.equal(variants.get("categorySize").get("sizeName"), size);
             };
             var sizeResult = productRepository.findAll(sizeSpec, pageable);
-            System.out.println("Size only result: " + sizeResult.getTotalElements() + " products");
         }
         
         // Bước 4: Test kết hợp
@@ -254,8 +297,6 @@ public class ProductService {
         };
         
         var combinedResult = productRepository.findAll(combinedSpec, pageable);
-        System.out.println("Combined result: " + combinedResult.getTotalElements() + " products");
-        System.out.println("=== END DEBUG ===");
         
         return combinedResult;
     }
@@ -270,22 +311,45 @@ public class ProductService {
 
     // Sửa lỗi trong ảnh bạn gửi
     // Lọc sản phẩm theo tên danh mục
+    @Transactional(readOnly = true)
     public Page<Product> filterByCategoryName(String categoryName, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
-            query.distinct(true);
+            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            
+            // Xử lý sắp xếp theo giá cho SQL Server khi dùng GROUP BY
+            if (pageable.getSort() != null && pageable.getSort().isSorted()) {
+                pageable.getSort().forEach(order -> {
+                    if (order.getProperty().equals("variants.price")) {
+                        Join<Product, ProductVariant> variants = root.join("variants", JoinType.LEFT);
+                        if (order.getDirection().isAscending()) {
+                            query.orderBy(cb.asc(cb.min(variants.get("price"))));
+                        } else {
+                            query.orderBy(cb.desc(cb.max(variants.get("price"))));
+                        }
+                    }
+                });
+            }
+
             if (categoryName != null && !categoryName.isBlank()) {
                 return cb.equal(cb.lower(root.get("category").get("categoryName")), 
                               categoryName.toLowerCase());
             }
             return cb.conjunction();
         };
+
+        // Nếu đã sắp xếp bằng Specification, gỡ Sort khỏi Pageable để tránh xung đột
+        Pageable p = pageable;
+        if (pageable.getSort() != null && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
+            p = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.unsorted());
+        }
         
-        Page<Product> result = productRepository.findAll(spec, pageable);
+        Page<Product> result = productRepository.findAll(spec, p);
         
         // Force load variants và category sau khi query
         result.forEach(product -> {
             if (product.getVariants() != null) {
                 product.getVariants().size();
+                product.getVariants().sort((v1, v2) -> v1.getPrice().compareTo(v2.getPrice()));
             }
             if (product.getCategory() != null) {
                 product.getCategory().getCategoryName();

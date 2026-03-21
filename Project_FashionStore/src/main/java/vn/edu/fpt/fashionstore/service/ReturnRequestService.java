@@ -69,9 +69,6 @@ public class ReturnRequestService {
                 variant.setStock(variant.getStock() + orderItem.getQuantity());
                 productVariantRepository.save(variant);
                 
-                System.out.println("[RETURN REQUEST] Restored " + orderItem.getQuantity() + 
-                                 " units to product variant ID: " + variant.getVariantId() + 
-                                 " (New stock: " + variant.getStock() + ")");
             }
         }
     }

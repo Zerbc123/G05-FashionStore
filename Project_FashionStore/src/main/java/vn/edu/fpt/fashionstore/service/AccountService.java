@@ -19,10 +19,7 @@ import vn.edu.fpt.fashionstore.repository.RoleRepository;
 import vn.edu.fpt.fashionstore.repository.SupportRequestRepository;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -83,8 +80,6 @@ public class AccountService implements UserDetailsService {
         return roles;
     }
 
-    public void createStaff(Account account, Integer roleId) {
-        if (accountRepository.existsByUsername(account.getUsername()))
     public boolean existsByPhone(String phone) {
         return accountRepository.existsByPhone(phone);
     }
@@ -93,7 +88,7 @@ public class AccountService implements UserDetailsService {
         return accountRepository.existsByPhoneAndAccountIdNot(phone, accountId);
     }
 
-    public void createStaff(Account account,Integer roleId){
+    public void createStaff(Account account, Integer roleId) {
 
         if(accountRepository.existsByUsername(account.getUsername()))
             throw new RuntimeException("Username đã tồn tại");
@@ -138,14 +133,13 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(acc);
     }
 
-    public Account getById(Integer id) {
-    public void leaveAccount(Integer id){
+    public void leaveAccount(Integer id) {
         Account acc = getById(id);
         acc.setStatus("LEAVE");
         accountRepository.save(acc);
     }
 
-    public Account getById(Integer id){
+    public Account getById(Integer id) {
         return accountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
     }
@@ -157,20 +151,12 @@ public class AccountService implements UserDetailsService {
     }
 
     public void restoreAccount(Integer id) {
-        Account account = getById(id);
-        account.setStatus("ACTIVE");
-        accountRepository.save(account);
-    }
-
-    public void updateStaff(Account account) {
-        if (account == null || account.getAccountId() == null) {
-    public void restoreAccount(Integer id){
         Account acc = getById(id);
         acc.setStatus("ACTIVE");
         accountRepository.save(acc);
     }
 
-    public void updateStaffInfo(Account account, Integer roleId){
+    public void updateStaffInfo(Account account, Integer roleId) {
         if(account == null || account.getAccountId() == null){
             throw new RuntimeException("Account không hợp lệ");
         }
@@ -204,8 +190,6 @@ public class AccountService implements UserDetailsService {
         existingAccount.setEmail(account.getEmail());
         existingAccount.setFullName(account.getFullName());
         existingAccount.setPhone(account.getPhone());
-        if (account.getRole() != null && account.getRole().getRoleId() != null) {
-            Role role = roleRepository.findById(account.getRole().getRoleId())
         
         // Cập nhật status nếu có
         if (account.getStatus() != null && !account.getStatus().trim().isEmpty()) {
@@ -284,9 +268,8 @@ public class AccountService implements UserDetailsService {
         return accountRepository.searchDeleted(keyword.trim(), pageable);
     }
 
-    public void hardDeleteAccount(Integer id) {
     @Transactional
-    public void hardDeleteAccount(Integer id){
+    public void hardDeleteAccount(Integer id) {
         Account account = getById(id);
         
         // Check if staff is assigned to any support requests
@@ -311,28 +294,20 @@ public class AccountService implements UserDetailsService {
         Account account = accountRepository.findByUsername(username)
                 .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
         if (account == null || account.getPassword() == null) {
-            System.out.println("DEBUG: Account not found or password is null for username: " + username);
             return null;
         }
         boolean passwordValid;
         String storedPassword = account.getPassword();
-        System.out.println("DEBUG: Stored password format check for account: " + username);
         
         // Check if password is BCrypt encoded (starts with $2a$, $2b$, $2y$)
         if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
-            System.out.println("DEBUG: Password is BCrypt encoded, using passwordEncoder.matches()");
             passwordValid = passwordEncoder.matches(password, storedPassword);
-            System.out.println("DEBUG: passwordEncoder.matches() result: " + passwordValid);
         } else {
-            System.out.println("DEBUG: Password is plain text or other format, direct comparison");
             passwordValid = storedPassword.equals(password);
-            System.out.println("DEBUG: Direct comparison result: " + passwordValid);
         }
         if (!passwordValid || !"ACTIVE".equalsIgnoreCase(account.getStatus())) {
-            System.out.println("DEBUG: Authentication failed - passwordValid: " + passwordValid + ", status: " + account.getStatus());
             return null;
         }
-        System.out.println("DEBUG: Authentication successful for: " + username);
         return account;
     }
 
@@ -463,10 +438,8 @@ public class AccountService implements UserDetailsService {
         return accountRepository.findByEmail(email).orElse(null);
     }
 
+    /*  FIND ACCOUNT */
     public Optional<Account> findByEmail(String email) {
-/*  FIND ACCOUNT */
-
-    public Optional<Account> findByEmail(String email){
         return accountRepository.findByEmail(email);
     }
 

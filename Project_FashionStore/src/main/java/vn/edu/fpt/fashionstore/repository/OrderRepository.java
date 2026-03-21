@@ -39,8 +39,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        // Lấy tất cả đơn hàng theo trạng thái (cho admin/staff)
        List<Order> findByStatusOrderByOrderDateDesc(OrderStatus status);
 
-       // Lấy tất cả đơn hàng (cho admin/staff)
-       List<Order> findAll();
+    // Lấy tất cả đơn hàng (cho admin/staff)
+    List<Order> findAll();
+
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.customer ORDER BY o.orderDate DESC")
+    List<Order> findOrdersForAdmin();
 
        // Đếm số đơn hàng theo trạng thái
        long countByStatus(OrderStatus status);

@@ -14,6 +14,9 @@ public class SupportRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "customer_id", nullable = false)
+    private Integer customerId;
+
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(min = 5, max = 255, message = "Tiêu đề phải từ 5-255 ký tự")
@@ -58,6 +61,7 @@ public class SupportRequest {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         this.status = SupportStatus.OPEN;
     }
 
@@ -142,5 +146,13 @@ public class SupportRequest {
 
     public void setAssignedStaff(Account assignedStaff) {
         this.assignedStaff = assignedStaff;
+    }
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
     }
 }

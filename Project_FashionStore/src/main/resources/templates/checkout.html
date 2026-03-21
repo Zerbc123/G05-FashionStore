@@ -113,11 +113,31 @@
         .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(255, 107, 157, 0.25); }
 
         /* Custom Radio */
-        .custom-radio-card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 15px; }
-        .form-check-input:checked + .custom-radio-card { border-color: var(--primary-color); background-color: #fff0f5; box-shadow: 0 4px 10px rgba(255, 107, 157, 0.1); }
+        .shipping-payment-options label { width: 100%; cursor: pointer; margin-bottom: 0px; }
+        .custom-radio-card { 
+            border: 2px solid #eef0f2; 
+            border-radius: 15px; 
+            padding: 18px 20px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            width: 100%;
+            background-color: #fff;
+        }
+        .custom-radio-card:hover { border-color: #ffdce8; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .form-check-input:checked + .custom-radio-card { 
+            border-color: var(--primary-color); 
+            background-color: #fffafc; 
+            box-shadow: 0 8px 15px rgba(255, 107, 157, 0.12); 
+        }
         .form-check-input { display: none; }
-        .radio-circle { width: 20px; height: 20px; border: 2px solid #ccc; border-radius: 50%; display: inline-block; position: relative; }
-        .form-check-input:checked + .custom-radio-card .radio-circle::after { content: ''; width: 10px; height: 10px; background: var(--primary-color); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .radio-circle { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; display: inline-block; position: relative; flex-shrink: 0; transition: all 0.3s; }
+        .form-check-input:checked + .custom-radio-card .radio-circle { border-color: var(--primary-color); }
+        .form-check-input:checked + .custom-radio-card .radio-circle::after { 
+            content: ''; width: 12px; height: 12px; background: var(--primary-color); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        }
+        .custom-radio-card .content-wrapper { flex: 1; min-height: 48px; display: flex; flex-direction: column; justify-content: center; }
 
         .order-summary-box { position: sticky; top: 100px; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 15px; }
@@ -209,12 +229,13 @@
 
                 <div class="checkout-box">
                     <h4 class="section-title"><i class="bi bi-truck me-2"></i>Phương Thức Giao Hàng</h4>
-                    <div class="d-flex flex-column gap-3">
+                    <div class="d-flex flex-column gap-3 shipping-payment-options">
                         <label>
-                            <input type="radio" class="form-check-input" name="deliveryMethod" value="standard" checked onchange="updateTotal(30000)">
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="standard" 
+                                   th:checked="${selectedDeliveryMethod == 'standard'}" onchange="updateTotal(30000)">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
-                                <div class="flex-grow-1">
+                                <div class="content-wrapper">
                                     <div class="fw-bold">Giao hàng tiêu chuẩn - 30.000đ</div>
                                     <div class="text-muted small">Nhận hàng trong 3-5 ngày làm việc</div>
                                 </div>
@@ -222,10 +243,11 @@
                         </label>
 
                         <label>
-                            <input type="radio" class="form-check-input" name="deliveryMethod" value="express" onchange="updateTotal(50000)">
+                            <input type="radio" class="form-check-input" name="deliveryMethod" value="express" 
+                                   th:checked="${selectedDeliveryMethod == 'express'}" onchange="updateTotal(50000)">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
-                                <div class="flex-grow-1">
+                                <div class="content-wrapper">
                                     <div class="fw-bold">Giao hàng hỏa tốc - 50.000đ</div>
                                     <div class="text-muted small">Nhận hàng trong 1-2 ngày làm việc</div>
                                 </div>
@@ -236,12 +258,13 @@
 
                 <div class="checkout-box">
                     <h4 class="section-title"><i class="bi bi-wallet2 me-2"></i>Phương Thức Thanh Toán</h4>
-                    <div class="d-flex flex-column gap-3">
+                    <div class="d-flex flex-column gap-3 shipping-payment-options">
                         <label>
-                            <input type="radio" class="form-check-input" name="paymentMethod" value="COD" checked>
+                            <input type="radio" class="form-check-input" name="paymentMethod" value="COD" 
+                                   th:checked="${selectedPaymentMethod == 'COD'}">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
-                                <div>
+                                <div class="content-wrapper">
                                     <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
                                     <div class="text-muted small">Thanh toán bằng tiền mặt khi shipper giao tới</div>
                                 </div>
@@ -249,10 +272,11 @@
                         </label>
 
                         <label>
-                            <input type="radio" class="form-check-input" name="paymentMethod" value="MOMO">
+                            <input type="radio" class="form-check-input" name="paymentMethod" value="MOMO" 
+                                   th:checked="${selectedPaymentMethod == 'MOMO'}">
                             <div class="custom-radio-card">
                                 <div class="radio-circle"></div>
-                                <div>
+                                <div class="content-wrapper">
                                     <div class="fw-bold">Thanh toán qua Momo</div>
                                     <div class="text-muted small">Quét mã QR hoặc nhập thông tin tài khoản ngân hàng</div>
                                 </div>
@@ -261,7 +285,7 @@
                     </div>
                 </div>
 
-                <input type="hidden" name="totalAmount" id="hiddenTotalAmount" th:value="${finalTotal + 30000}">
+                <input type="hidden" name="totalAmount" id="hiddenTotalAmount" th:value="${totalWithShip}">
             </form>
         </div>
 
@@ -269,39 +293,74 @@
             <div class="checkout-box order-summary-box">
                 <h4 class="section-title">Chi Tiết Đơn Hàng</h4>
 
-                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-                    <div class="d-flex gap-3 mb-3" th:each="item : ${cartItems}">
-                        <img th:src="${item.productVariant.imageUrl}" class="product-mini-img" onerror="this.src='https://placehold.co/60'">
-                        <div class="flex-grow-1">
-                            <div class="fw-bold text-truncate" style="max-width: 180px;" th:text="${item.productVariant.product.productName}">Tên SP</div>
-                            <div class="text-muted small">
-                                Size: <span th:text="${item.productVariant.categorySize.sizeName}"></span> |
-                                Màu: <span th:text="${item.productVariant.color.colorName}"></span>
+                <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;" class="pe-2">
+                    <div class="d-flex gap-3 mb-3 pb-3" th:each="item, iter : ${cartItems}"
+                         th:classappend="${iter.last} ? '' : 'border-bottom'"
+                         th:if="${item.productVariant != null}">
+                        <div style="position: relative; width: 75px; height: 80px; flex-shrink: 0;">
+                            <img th:src="${item.productVariant.imageUrl}" class="product-mini-img w-100 h-100" 
+                                 onerror="this.src='https://placehold.co/100x100/eeeeee/999999?text=Product'"
+                                 style="object-fit: cover; border-radius: 12px; border: 1px solid #f0f0f0;">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark shadow-sm" 
+                                  th:text="${item.quantity}" 
+                                  style="font-size: 0.75rem; border: 2px solid white; padding: 4px 8px; z-index: 5;">1</span>
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-bold text-dark text-truncate mb-1" style="font-size: 0.95rem;" 
+                                 th:text="${item.productVariant.product != null ? item.productVariant.product.productName : 'Sản phẩm FashionStore'}">Tên SP</div>
+                            <div class="text-muted small mb-1">
+                                <span class="badge bg-light text-dark border fw-normal" th:text="'Size: ' + ${item.productVariant.categorySize != null ? item.productVariant.categorySize.sizeName : 'N/A'}">Size: M</span>
+                                <span class="badge bg-light text-dark border fw-normal" th:text="'Màu: ' + ${item.productVariant.color != null ? item.productVariant.color.colorName : 'N/A'}">Màu: Đen</span>
                             </div>
-                            <div class="d-flex justify-content-between mt-1">
-                                <span class="text-muted small" th:text="'x' + ${item.quantity}">x1</span>
-                                <span class="fw-bold text-primary" th:text="${#numbers.formatDecimal(item.productVariant.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
-                            </div>
+                            <div class="fw-bold text-primary" 
+                                 th:text="${#numbers.formatDecimal((item.productVariant.price != null ? item.productVariant.price : 0) * (item.quantity != null ? item.quantity : 1), 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</div>
                         </div>
                     </div>
                 </div>
 
-                <form th:action="@{/order/apply-voucher}" method="post" class="mb-4 mt-4">
-                    <label class="form-label fw-bold"><i class="bi bi-ticket-perforated me-2"></i>Mã Giảm Giá</label>
-                    <div class="d-flex gap-2">
-                        <select name="voucherCode" class="form-select">
-                            <option value="">-- Bỏ chọn mã --</option>
-                            <option th:each="voucher : ${validVouchers}"
-                                    th:value="${voucher.code}"
-                                    th:text="${voucher.code + ' - Giảm ' + #numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT') + 'đ'}"
-                                    th:selected="${appliedVoucher != null and appliedVoucher.code == voucher.code}">
-                            </option>
-                        </select>
-                        <button type="submit" class="btn btn-dark" style="white-space: nowrap;">Áp dụng</button>
-                    </div>
-                </form>
+                <!-- Voucher Section -->
+                <div class="voucher-container pt-3 border-top">
+                    <label class="form-label fw-bold small text-muted"><i class="bi bi-ticket-perforated me-2"></i>MÃ GIẢM GIÁ</label>
+                    <form th:action="@{/order/apply-voucher}" method="post" id="voucherForm">
+                        <input type="hidden" name="deliveryMethod" id="voucherDeliveryMethod">
+                        <input type="hidden" name="paymentMethod" id="voucherPaymentMethod">
+                        <div class="input-group mb-2 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                            <input list="voucherList" id="voucherInput" name="voucherCode" class="form-control border-0 py-2 px-3" 
+                                   th:value="${appliedVoucher != null ? appliedVoucher.code : ''}"
+                                   placeholder="Chọn mã từ danh sách hoặc nhập mã của bạn..." 
+                                   style="font-size: 0.9rem; background: #f8f9fa;">
+                            
+                            <!-- Danh sách gợi ý từ Database -->
+                            <datalist id="voucherList">
+                                <option th:each="voucher : ${validVouchers}"
+                                        th:value="${voucher.code}"
+                                        th:label="${'Giảm ' + #numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT') + 'đ'}">
+                                </option>
+                            </datalist>
 
-                <hr class="text-muted">
+                            <button type="submit" id="applyVoucherBtn" class="btn btn-dark px-4" 
+                                    style="font-weight: 600; border: none;">Áp dụng</button>
+                        </div>
+                        
+                        <!-- Hiển thị khi đã áp dụng thành công -->
+                        <div th:if="${appliedVoucher != null}" 
+                             class="d-flex align-items-center justify-content-between p-2 mt-2"
+                             style="background-color: #f0fff4; border: 1px solid #c6f6d5; border-radius: 8px;">
+                           <span class="small text-success fw-bold">
+                               <i class="bi bi-check-circle-fill me-1"></i> 
+                               Đã áp dụng: <span th:text="${appliedVoucher.code}"></span> 
+                               (-<span th:text="${#numbers.formatDecimal(appliedVoucher.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>)
+                           </span>
+                           <a th:href="@{/order/apply-voucher(voucherCode='')}" 
+                              class="text-danger small text-decoration-none fw-bold" 
+                              style="font-size: 0.8rem;">Gỡ bỏ</a>
+                        </div>
+                    </form>
+                </div>
+
+                <hr class="my-4 text-muted opacity-25">
+
+
 
                 <div class="summary-item">
                     <span class="text-muted">Tạm tính:</span>
@@ -310,20 +369,24 @@
 
                 <div class="summary-item">
                     <span class="text-muted">Phí vận chuyển:</span>
-                    <span class="fw-bold" id="displayShippingFee">30.000đ</span>
+                    <span class="fw-bold" id="displayShippingFee" th:text="${#numbers.formatDecimal(shippingFee, 0, 'COMMA', 0, 'POINT')} + 'đ'">30.000đ</span>
                 </div>
 
-                <div class="summary-item" th:if="${discountAmount != null and discountAmount > 0}">
-                    <span class="text-muted">Giảm giá (<span th:text="${appliedVoucher.code}"></span>):</span>
+                <div class="summary-item mb-2" th:if="${discountAmount != null and discountAmount > 0 and appliedVoucher != null}">
+                    <span class="text-muted">Giảm giá (<span th:text="${appliedVoucher != null ? appliedVoucher.code : 'Mã'}"></span>):</span>
                     <span class="fw-bold text-danger" th:text="'-' + ${#numbers.formatDecimal(discountAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">-0đ</span>
                 </div>
 
-                <div class="summary-total">
-                    <span>Tổng thanh toán:</span>
-                    <span id="displayTotalAmount" th:text="${#numbers.formatDecimal(finalTotal + 30000, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+                <div class="summary-total mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-dark fw-bold">Tổng thanh toán:</span>
+                    <span id="displayTotalAmount" style="font-size: 1.4rem; color: var(--primary-color); font-weight: 800;"
+                          th:text="${#numbers.formatDecimal(totalWithShip, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                 </div>
 
-                <button type="submit" form="checkoutForm" class="btn-checkout" id="submitBtn">ĐẶT HÀNG</button>
+                <button type="submit" form="checkoutForm" class="btn-checkout mt-4 shadow-sm" 
+                        style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; color: white;">
+                    ĐẶT HÀNG NGAY
+                </button>
                 <div class="text-center mt-3">
                     <a th:href="@{/cart}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Quay lại giỏ hàng</a>
                 </div>
@@ -357,6 +420,18 @@
 
 // Form validation before submit
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Sync voucher form with other selections
+    const voucherForm = document.getElementById('voucherForm');
+    if (voucherForm) {
+        voucherForm.addEventListener('submit', function() {
+            const currentDelivery = document.querySelector('input[name="deliveryMethod"]:checked');
+            const currentPayment = document.querySelector('input[name="paymentMethod"]:checked');
+            
+            if (currentDelivery) document.getElementById('voucherDeliveryMethod').value = currentDelivery.value;
+            if (currentPayment) document.getElementById('voucherPaymentMethod').value = currentPayment.value;
+        });
+    }
+
     const form = document.getElementById('checkoutForm');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -403,51 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Hàm áp dụng voucher
-function applyVoucher() {
-    const select = document.getElementById('voucherSelect');
-    const voucherCode = select.value;
-    const messageDiv = document.getElementById('voucherMessage');
 
-    if (!voucherCode) {
-        messageDiv.textContent = 'Vui lòng chọn mã voucher!';
-        messageDiv.className = 'text-warning';
-        return;
-    }
-
-    const selectedOption = select.options[select.selectedIndex];
-    const discountAmount = parseFloat(selectedOption.getAttribute('data-discount')) || 0;
-
-    // 1. Lưu thông tin voucher vào hidden
-    document.getElementById('hiddenVoucherCode').value = voucherCode;
-    document.getElementById('hiddenVoucherDiscount').value = discountAmount;
-
-    // 2. Cập nhật UI giảm giá
-    document.getElementById('discountRow').style.display = 'flex';
-    document.getElementById('discountAmount').textContent = '-' + discountAmount.toLocaleString('vi-VN') + 'đ';
-
-    // 3. Gọi hàm tính lại tổng cuối để cập nhật hiddenTotalAmount
-    calculateFinalTotal();
-
-    messageDiv.textContent = 'Áp dụng voucher thành công!';
-    messageDiv.className = 'text-success';
-}
-
-function calculateFinalTotal() {
-    // Lấy giá trị hiện tại từ các hidden inputs
-    const shippingFee = parseFloat(document.getElementById('hiddenShippingFee').value) || 0;
-    const discount = parseFloat(document.getElementById('hiddenVoucherDiscount').value) || 0;
-
-    // Tính toán
-    const finalTotal = subtotal + shippingFee - discount;
-    const safeTotal = Math.max(0, finalTotal); // Không để tổng âm
-
-    // Cập nhật hiển thị (UI)
-    document.getElementById('totalAmount').textContent = safeTotal.toLocaleString('vi-VN') + 'đ';
-
-    // CẬP NHẬT DỮ LIỆU GỬI ĐI (Server)
-    document.getElementById('hiddenTotalAmount').value = safeTotal;
-}
 
 </script>
 

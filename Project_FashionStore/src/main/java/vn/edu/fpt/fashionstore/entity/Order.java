@@ -131,7 +131,6 @@ public class Order {
         this.status = OrderStatus.CONFIRMED;
         this.confirmedBy = confirmedBy;
         this.confirmedDate = java.time.LocalDateTime.now();
-        System.out.println("Order #" + orderId + " confirmed by: " + confirmedBy);
     }
 
     public void cancel(String cancelledBy, String reason) {
@@ -142,8 +141,8 @@ public class Order {
         this.cancelledBy = cancelledBy;
         this.cancelledDate = java.time.LocalDateTime.now();
         this.cancellationReason = reason;
-        System.out.println("Order #" + orderId + " cancelled by: " + cancelledBy + ", reason: " + reason);
     }
+
 
     public String getOrderCode() {
         return "#" + String.format("%06d", orderId);

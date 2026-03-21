@@ -237,7 +237,6 @@ public class OrderService {
         order.confirm(confirmedBy);
         order = orderRepository.save(order);
         
-        System.out.println("[ORDER SERVICE] Order " + order.getOrderCode() + " confirmed by: " + confirmedBy);
         return order;
     }
 
@@ -258,12 +257,8 @@ public class OrderService {
             variant.setStock(variant.getStock() + orderItem.getQuantity());
             productVariantRepository.save(variant);
             
-            System.out.println("[ORDER SERVICE] Restored " + orderItem.getQuantity() + 
-                             " units to product variant ID: " + variant.getVariantId() + 
-                             " (New stock: " + variant.getStock() + ")");
         }
         
-        System.out.println("[ORDER SERVICE] Order " + order.getOrderCode() + " cancelled by: " + cancelledBy + ", reason: " + reason);
         return order;
     }
 
@@ -316,9 +311,7 @@ public class OrderService {
     // Lấy OrderItems từ database
     @Transactional(readOnly = true)
     public List<OrderItem> getOrderItemsByOrder(Order order) {
-        System.out.println("[ORDER SERVICE] getOrderItemsByOrder called for Order ID: " + order.getOrderId());
         List<OrderItem> orderItems = orderItemRepository.findByOrderOrderByOrderItemIdAsc(order);
-        System.out.println("[ORDER SERVICE] Found " + orderItems.size() + " OrderItems");
         return orderItems;
     }
 
@@ -350,33 +343,24 @@ public class OrderService {
         try {
             String email = (String) session.getAttribute("user");
             if (email == null) {
-                System.out.println("No user in session");
                 throw new RuntimeException("Bạn chưa đăng nhập!");
             }
             
-            System.out.println("Finding customer for email in OrderService: " + email);
-            
             Optional<Account> accountOpt = accountRepository.findByEmail(email);
             if (accountOpt.isEmpty()) {
-                System.out.println("Account not found for email: " + email);
                 throw new RuntimeException("Không tìm thấy tài khoản!");
             }
             
             Account account = accountOpt.get();
-            System.out.println("Found account: " + account.getAccountId());
             
             if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
-                System.out.println("No customers found for account: " + account.getAccountId());
                 throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
             }
             
             Customer customer = account.getCustomers().get(0);
-            System.out.println("Found customer: " + customer.getCustomerId());
             
             return customer;
         } catch (Exception e) {
-            System.err.println("Error in OrderService.getCurrentCustomer: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Lỗi khi lấy thông tin khách hàng: " + e.getMessage(), e);
         }
     }
@@ -389,7 +373,6 @@ public class OrderService {
         Boolean isBuyNow = (Boolean) session.getAttribute("isBuyNow");
         if (isBuyNow != null && isBuyNow) {
             // MUA NGAY - chỉ lấy sản phẩm được chọn
-            System.out.println("BUY NOW MODE - getting selected product only");
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> buyNowItems = (List<Map<String, Object>>) session.getAttribute("buyNowItems");
             
@@ -421,7 +404,6 @@ public class OrderService {
             
         } else {
             // CHECKOUT THƯỜNG - lấy toàn bộ giỏ hàng
-            System.out.println("NORMAL CHECKOUT - getting all cart items");
             cartItems = cartService.getCartItems(currentCustomer);
         }
         

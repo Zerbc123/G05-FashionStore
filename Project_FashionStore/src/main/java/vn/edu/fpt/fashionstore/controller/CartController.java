@@ -32,15 +32,12 @@ public class CartController {
     private AccountRepository accountRepository;
 
     // Lấy customer từ session
-    @Transactional(readOnly = true)
     protected Customer getCurrentCustomer(HttpSession session) {
         try {
             String email = (String) session.getAttribute("user");
             if (email == null) {
                 throw new RuntimeException("Bạn chưa đăng nhập!");
             }
-            
-            System.out.println("Finding customer for email: " + email);
             
             // Use findByEmailWithCustomers to fetch Account with Customers eagerly
             Optional<Account> accountOpt = accountRepository.findByEmailWithCustomers(email);
@@ -49,19 +46,13 @@ public class CartController {
             }
             
             Account account = accountOpt.get();
-            System.out.println("Found account: " + account.getAccountId() + ", Role: " + account.getRole().getRoleName());
             
             if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
                 throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
             }
             
-            Customer customer = account.getCustomers().get(0);
-            System.out.println("Found customer: " + customer.getCustomerId());
-            
-            return customer;
+            return account.getCustomers().get(0);
         } catch (Exception e) {
-            System.err.println("Error getting current customer: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Lỗi khi lấy thông tin khách hàng: " + e.getMessage(), e);
         }
     }

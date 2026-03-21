@@ -842,7 +842,7 @@
 
                                     <h6 th:text="${customer.fullName}">John Doe</h6>
 
-                                    <p th:text="'Member since ' + ${#dates.format(customer.createdDate, 'MMM yyyy')}">Member since Jan 2024</p>
+                                    <p th:text="${customer.createdDate != null ? 'Member since ' + #temporals.format(customer.createdDate, 'MMM yyyy') : 'N/A'}">Member since Jan 2024</p>
 
                                 </div>
 
@@ -858,9 +858,9 @@
 
                             <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
 
-                                  th:text="${customerDetails[customer.customerId].totalOrders}">24</span>
+                                  th:text="${customerDetails[customer.customerId]['totalOrders']}">0</span>
 
-                            <span th:unless="true">0</span>
+                            <span th:unless="${customerDetails != null and customerDetails[customer.customerId] != null}">0</span>
 
                         </td>
 
@@ -868,9 +868,9 @@
 
                             <span th:if="${customerDetails != null and customerDetails[customer.customerId] != null}"
 
-                                  th:class="'badge ' + ${customerDetails[customer.customerId].status.toLowerCase()}"
+                                  th:class="'badge ' + ${customerDetails[customer.customerId]['status'].toLowerCase()}"
 
-                                  th:text="${customerDetails[customer.customerId].status}">VIP</span>
+                                  th:text="${customerDetails[customer.customerId]['status']}">Active</span>
 
                             <span th:unless="${customerDetails != null and customerDetails[customer.customerId] != null}" class="badge inactive">Inactive</span>
 

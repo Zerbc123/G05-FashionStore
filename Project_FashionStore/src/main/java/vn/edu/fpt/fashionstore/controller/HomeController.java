@@ -26,6 +26,7 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.WishlistService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.edu.fpt.fashionstore.util.PhoneUtils;
 import vn.edu.fpt.fashionstore.util.DateUtils;
@@ -55,6 +56,9 @@ public class HomeController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private WishlistService wishlistService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -170,6 +174,13 @@ public class HomeController {
                 cus = new Customer();
             }
             model.addAttribute("customer", cus);
+            
+            // Lấy số lượng wishlist cho customer
+            long wishlistCount = 0;
+            if (cus.getCustomerId() != null) {
+                wishlistCount = wishlistService.getWishlistCount(cus);
+            }
+            model.addAttribute("wishlistCount", wishlistCount);
 
             return "profile";
         }
@@ -241,23 +252,16 @@ public class HomeController {
                               HttpSession session,
                               RedirectAttributes ra) {
 
-        System.out.println("DEBUG: Login attempt for username: " + username);
-        System.out.println("DEBUG: Password length: " + (password != null ? password.length() : "null"));
-
-        // validate password format (exactly 6 alphanumeric characters)
+        // Validate password format for existing users login (as requested)
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            System.out.println("DEBUG: Password validation failed");
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số!");
             return "redirect:/login";
         }
 
-        System.out.println("DEBUG: Password validation passed, calling authenticate");
         Account account = accountService.authenticate(username, password);
-        System.out.println("DEBUG: Authenticate result: " + (account != null ? "SUCCESS" : "FAILED"));
 
         if (account != null) {
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
-            System.out.println("DEBUG: Role name: " + roleName);
 
             session.setAttribute("user", account.getEmail());
             session.setAttribute("userRole", roleName);
@@ -266,7 +270,6 @@ public class HomeController {
             updateCartCountForCustomer(session, account);
 
             if ("Admin".equalsIgnoreCase(roleName)) {
-                System.out.println("DEBUG: Redirecting to /admin");
                 return "redirect:/admin";
             }
 
@@ -274,11 +277,9 @@ public class HomeController {
                 "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
                 "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
                 "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
-                System.out.println("DEBUG: Redirecting to /staff");
                 return "redirect:/staff";
             }
 
-            System.out.println("DEBUG: Redirecting to /home (default for customer)");
             return "redirect:/home";
         }
 
@@ -314,8 +315,14 @@ public class HomeController {
                                  @RequestParam String phone,
                                  @RequestParam String password,
                                  @RequestParam String confirmPassword,
-                                 HttpSession session,
+                                 jakarta.servlet.http.HttpSession session,
                                  RedirectAttributes ra) {
+
+        // Luôn trả lại các giá trị đã nhập vào form nếu có lỗi (ngoại trừ mật khẩu)
+        ra.addFlashAttribute("enteredFirstName", firstName);
+        ra.addFlashAttribute("enteredLastName", lastName);
+        ra.addFlashAttribute("enteredEmail", email);
+        ra.addFlashAttribute("enteredPhone", phone);
 
         if (!password.equals(confirmPassword)) {
             ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp!");
@@ -676,22 +683,14 @@ public class HomeController {
 
     private void updateCartCountForCustomer(HttpSession session, Account account) {
         try {
-            System.out.println("DEBUG: Updating cart count for account: " + account.getEmail());
-            System.out.println("DEBUG: Customers list: " + (account.getCustomers() != null ? account.getCustomers().size() : "null"));
-            
             if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
                 Customer customer = account.getCustomers().get(0);
-                System.out.println("DEBUG: Found customer: " + customer.getCustomerId());
                 List<CartItem> cartItems = cartService.getCartItems(customer);
-                System.out.println("DEBUG: Cart items count: " + cartItems.size());
                 session.setAttribute("cartCount", cartItems.size());
             } else {
-                System.out.println("DEBUG: No customers found, setting cart count to 0");
                 session.setAttribute("cartCount", 0);
             }
         } catch (Exception e) {
-            System.out.println("DEBUG: Error in updateCartCountForCustomer: " + e.getMessage());
-            e.printStackTrace();
             session.setAttribute("cartCount", 0);
         }
     }

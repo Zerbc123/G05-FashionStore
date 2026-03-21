@@ -262,8 +262,18 @@
                         </button>
                     </div>
 
-                    <div class="alert alert-light border mb-4 text-center shadow-sm" th:unless="${canReview}">
-                        <i class="bi bi-info-circle-fill text-primary"></i> Bạn cần đặt mua và nhận sản phẩm này thành công để có thể viết đánh giá.
+                    <!-- Case 1: Đã đánh giá hết lượt - hiện thông báo "đã đánh giá" -->
+                    <div class="alert alert-success border mb-4 text-center shadow-sm"
+                         th:if="${!canReview and hasReviewed}">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        Bạn đã đánh giá sản phẩm này. Cảm ơn bạn đã chia sẻ cảm nhận!
+                    </div>
+
+                    <!-- Case 2: Chưa mua hoặc chưa nhận hàng -->
+                    <div class="alert alert-light border mb-4 text-center shadow-sm"
+                         th:if="${!canReview and !hasReviewed}">
+                        <i class="bi bi-info-circle-fill text-primary"></i>
+                        Bạn cần đặt mua và nhận sản phẩm này thành công để có thể viết đánh giá.
                     </div>
 
                     <div class="collapse mb-5" id="reviewFormCollapse" th:if="${canReview}">

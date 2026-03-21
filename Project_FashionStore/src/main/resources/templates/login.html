@@ -111,12 +111,8 @@
             <i class="bi bi-exclamation-circle"></i> <span id="passwordErrorMessage"></span>
         </div>
 
-        <div class="alert alert-success" th:if="${param.logout}">
-            <i class="bi bi-check-circle"></i> Bạn đã đăng xuất thành công!
-        </div>
-
-        <div class="alert alert-danger" th:if="${param.account_disabled}">
-            <i class="bi bi-exclamation-circle"></i> Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!
+        <div class="alert alert-danger" th:if="${error}">
+            <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
         </div>
 
         <div class="alert alert-success" th:if="${param.logout}">
@@ -178,13 +174,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (passwordInput && passwordAlert && passwordErrorMessage && loginForm) {
         passwordInput.addEventListener('input', function() {
-            // Hide alert when user starts typing
             passwordAlert.style.display = 'none';
         });
         
-        // Add form submit validation
         loginForm.addEventListener('submit', function(e) {
-            // Validate password before submitting
             if (!validatePassword()) {
                 e.preventDefault();
                 return false;
@@ -209,22 +202,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
-            if (!/[A-Z]/.test(password)) {
-                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasDigit = /\d/.test(password);
+            
+            if (!hasUpper || !hasLower || !hasDigit) {
+                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số!');
                 return false;
             }
             
-            if (!/[a-z]/.test(password)) {
-                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
-                return false;
-            }
-            
-            if (!/\d/.test(password)) {
-                showError('Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!');
-                return false;
-            }
-            
-            // Password is valid
             passwordAlert.style.display = 'none';
             return true;
         }

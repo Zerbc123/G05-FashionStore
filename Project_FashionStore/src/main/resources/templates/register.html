@@ -319,29 +319,29 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="firstName"><i class="bi bi-person"></i> First Name</label>
-                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="John" required>
+                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="John" th:value="${enteredFirstName}" required>
                 </div>
                 <div class="form-group">
                     <label for="lastName"><i class="bi bi-person"></i> Last Name</label>
-                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Doe" required>
+                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Doe" th:value="${enteredLastName}" required>
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="email"><i class="bi bi-envelope"></i> Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="john.doe@example.com" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="john.doe@example.com" th:value="${enteredEmail}" required>
             </div>
 
             <div class="form-group">
                 <label for="phone"><i class="bi bi-telephone"></i> Phone Number</label>
-                <input type="tel" class="form-control" id="phone" name="phone" placeholder="0123 456 789" required>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="0123 456 789" th:value="${enteredPhone}" required>
             </div>
 
             <div class="form-group">
                 <label for="password"><i class="bi bi-lock"></i> Password</label>
                 <div class="password-toggle">
                     <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required
-                           pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\",./<>?]{8,12}$" 
+                           pattern='^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};&apos;:&quot;,./<>?]{8,12}$' 
                            minlength="8" maxlength="12">
                 </div>
             </div>
@@ -350,8 +350,11 @@
                 <label for="confirmPassword"><i class="bi bi-lock-fill"></i> Confirm Password</label>
                 <div class="password-toggle">
                     <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" required
-                           pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\",./<>?]{8,12}$" 
+                           pattern='^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};&apos;:&quot;,./<>?]{8,12}$' 
                            minlength="8" maxlength="12">
+                </div>
+            </div>
+
             <div class="terms">
                 <input type="checkbox" id="terms" name="terms" required>
                 <label for="terms">

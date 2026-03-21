@@ -36,8 +36,6 @@ public class CartService {
     @Transactional
     public void addToCart(Customer customer, Integer variantId, int quantity) {
         try {
-            System.out.println("Adding to cart - Customer: " + customer.getCustomerId() + ", Variant: " + variantId + ", Quantity: " + quantity);
-            
             // Tìm ProductVariant từ ID
             ProductVariant productVariant = productVariantRepository.findById(variantId)
                     .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));

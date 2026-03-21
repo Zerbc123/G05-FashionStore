@@ -31,10 +31,6 @@ public class InventoryService {
         return productVariantRepository.findAll(pageable);
     }
 
-    public List<String> getAllCategories() {
-        logger.info("Getting all unique categories from database");
-        
-        List<String> categories = productVariantRepository.findAll().stream()
     public Page<ProductVariant> getAllProductVariantsWithProductAndCategory(Pageable pageable) {
         // Use JOIN FETCH to avoid lazy loading issues
         List<ProductVariant> variants = productVariantRepository.findAllWithProductAndCategory();
@@ -126,7 +122,6 @@ public class InventoryService {
                         case "low-stock":
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
-                            return variant.getStock() == 0;
                             return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;
@@ -145,7 +140,6 @@ public class InventoryService {
                         case "low-stock":
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
-                            return variant.getStock() == 0;
                             return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;

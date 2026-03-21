@@ -80,6 +80,7 @@ public class CustomerSupportController {
 
             // Tạo support request mới
             SupportRequest supportRequest = new SupportRequest();
+            supportRequest.setCustomerId(customer.getCustomerId().intValue());
             supportRequest.setTitle(title);
             supportRequest.setDescription(description);
             supportRequest.setCustomerName(customer.getFullName());

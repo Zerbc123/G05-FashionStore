@@ -62,19 +62,14 @@ public class OrderController {
     @Transactional(readOnly = true)
     public String checkoutPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
-            System.out.println("=== CHECKOUT PAGE START ===");
             Customer currentCustomer = getCurrentCustomer(session);
             if (currentCustomer == null) {
-                System.out.println("No customer found, redirecting to login");
                 return "redirect:/login";
             }
             
             List<CartItem> cartItems = orderService.getCartItemsForCheckout(session, currentCustomer);
-            
-            System.out.println("Found cart items: " + (cartItems != null ? cartItems.size() : 0));
 
             if (cartItems == null || cartItems.isEmpty()) {
-                System.out.println("Cart is empty, redirecting to cart");
                 redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng của bạn đang trống!");
                 return "redirect:/cart";
             }
@@ -97,7 +92,6 @@ public class OrderController {
                     model.addAttribute("appliedVoucher", appliedVoucher);
                 }
             }
-            System.out.println("Cart total: " + total);
 
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
@@ -117,7 +111,20 @@ public class OrderController {
             String deliveryAddress = orderService.getDeliveryAddressFromSession(session, currentCustomer);
             model.addAttribute("address", deliveryAddress);
 
-            System.out.println("=== CHECKOUT PAGE SUCCESS ===");
+            // Lấy lại các lựa chọn Shipping và Payment từ session nếu có
+            String selectedDeliveryMethod = (String) session.getAttribute("selectedDeliveryMethod");
+            if (selectedDeliveryMethod == null) selectedDeliveryMethod = "standard";
+            model.addAttribute("selectedDeliveryMethod", selectedDeliveryMethod);
+
+            String selectedPaymentMethod = (String) session.getAttribute("selectedPaymentMethod");
+            if (selectedPaymentMethod == null) selectedPaymentMethod = "COD";
+            model.addAttribute("selectedPaymentMethod", selectedPaymentMethod);
+
+            // Tính phí ship dựa trên lựa chọn
+            double shippingFee = "express".equals(selectedDeliveryMethod) ? 50000.0 : 30000.0;
+            model.addAttribute("shippingFee", shippingFee);
+            model.addAttribute("totalWithShip", finalTotal + shippingFee);
+
             return "checkout";
         } catch (RuntimeException e) {
             System.err.println("Error in checkoutPage: " + e.getMessage());
@@ -135,12 +142,17 @@ public class OrderController {
     // =======================================================
     // HÀM MỚI: XỬ LÝ ÁP DỤNG VOUCHER TỪ TRANG CHECKOUT
     // =======================================================
-    @PostMapping("/apply-voucher")
+    @RequestMapping(value = "/apply-voucher", method = {RequestMethod.GET, RequestMethod.POST})
     public String applyVoucher(
             @RequestParam("voucherCode") String voucherCode,
+            @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         try {
+            // Lưu lại các lựa chọn hiện tại vào session
+            if (deliveryMethod != null) session.setAttribute("selectedDeliveryMethod", deliveryMethod);
+            if (paymentMethod != null) session.setAttribute("selectedPaymentMethod", paymentMethod);
             Customer currentCustomer = getCurrentCustomer(session);
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
             double cartTotal = cartService.getCartTotal(cartItems);
@@ -200,10 +212,22 @@ public class OrderController {
             try {
                 List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
                 double subtotal = orderService.calculateCartTotal(cartItems);
+                
+                // KIỂM TRA VÀ NẠP LẠI VOUCHER/THÀNH TIỀN
+                double discountAmount = 0.0;
+                double finalTotal = subtotal;
+                Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+                if (appliedVoucher != null) {
+                    discountAmount = appliedVoucher.getDiscountValue();
+                    finalTotal = Math.max(0, subtotal - discountAmount);
+                    model.addAttribute("appliedVoucher", appliedVoucher);
+                }
 
                 // Gửi lại data giỏ hàng
                 model.addAttribute("cartItems", cartItems);
                 model.addAttribute("total", subtotal);
+                model.addAttribute("discountAmount", discountAmount);
+                model.addAttribute("finalTotal", finalTotal);
                 
                 // Lấy danh sách voucher hợp lệ từ database
                 List<Voucher> validVouchers = orderService.getValidVouchers();
@@ -236,8 +260,21 @@ public class OrderController {
             try {
                 List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
                 double subtotal = orderService.calculateCartTotal(cartItems);
+                
+                // KIỂM TRA VÀ NẠP LẠI VOUCHER/THÀNH TIỀN
+                double discountAmount = 0.0;
+                double finalTotal = subtotal;
+                Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+                if (appliedVoucher != null) {
+                    discountAmount = appliedVoucher.getDiscountValue();
+                    finalTotal = Math.max(0, subtotal - discountAmount);
+                    model.addAttribute("appliedVoucher", appliedVoucher);
+                }
+
                 model.addAttribute("cartItems", cartItems);
                 model.addAttribute("total", subtotal);
+                model.addAttribute("discountAmount", discountAmount);
+                model.addAttribute("finalTotal", finalTotal);
                 model.addAttribute("fullName", fullName);
                 model.addAttribute("phone", phone);
                 model.addAttribute("address", deliveryAddress);
@@ -251,14 +288,8 @@ public class OrderController {
 
         try {
             if ("MOMO".equals(paymentMethod)) {
-                System.out.println("=== MOMO PAYMENT SELECTED ===");
-                System.out.println("Delivery Address: " + deliveryAddress);
-                System.out.println("Total Amount: " + totalAmount);
-                
                 session.setAttribute("momo_deliveryAddress", deliveryAddress);
                 session.setAttribute("momo_totalAmount", totalAmount);
-                
-                System.out.println("Session attributes set successfully");
 
                 String orderIdStr = "ORD-" + System.currentTimeMillis();
                 String orderInfo = "Thanh toan don hang " + fullName;
@@ -325,35 +356,23 @@ public class OrderController {
                               @RequestParam(value = "transId", required = false) String transId,
                               HttpSession session,
                               RedirectAttributes redirectAttributes) {
-        System.out.println("=== MOMO SUCCESS CALLBACK ===");
-        System.out.println("MomoOrderId: " + momoOrderId);
-        System.out.println("TransId: " + transId);
-        
         Customer currentCustomer;
         try {
             currentCustomer = getCurrentCustomer(session);
-            System.out.println("Customer found: " + currentCustomer.getCustomerId());
         } catch (Exception e) {
-            System.err.println("Error getting customer: " + e.getMessage());
             return "redirect:/login";
         }
 
         String deliveryAddress = (String) session.getAttribute("momo_deliveryAddress");
         Double totalAmount = (Double) session.getAttribute("momo_totalAmount");
-        
-        System.out.println("Delivery Address: " + deliveryAddress);
-        System.out.println("Total Amount: " + totalAmount);
 
         if (deliveryAddress == null || totalAmount == null) {
-            System.err.println("Missing delivery address or total amount!");
             return "redirect:/order/confirmation";
         }
 
         try {
-            System.out.println("Creating order from session data...");
             // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
             Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
-            System.out.println("Order created successfully: " + order.getOrderId());
             order.setTotalAmount(totalAmount);
             order.setStatus(OrderStatus.CONFIRMED);
             order.setPaymentMethod("MOMO");
@@ -374,13 +393,9 @@ public class OrderController {
             session.removeAttribute("buyNowItems");
 
             redirectAttributes.addFlashAttribute("successMessage", "Thanh toán MOMO thành công! Mã đơn hàng: #" + order.getOrderId());
-            
-            System.out.println("Redirecting to confirmation page with orderId: " + order.getOrderId());
             return "redirect:/order/confirmation?orderId=" + order.getOrderId();
 
         } catch (RuntimeException e) {
-            System.err.println("ERROR in momoSuccess: " + e.getMessage());
-            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
             return "redirect:/order/checkout";
         }

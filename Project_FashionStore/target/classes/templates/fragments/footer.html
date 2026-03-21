@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- Footer Fragment -->
+<footer class="footer" id="contact" th:fragment="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <h3 class="footer-title">FashionStore</h3>
+                <p>Thời trang trẻ trung, năng động dành cho giới trẻ. Chất lượng - Uy tín - Giá tốt.</p>
+                <div class="social-icons">
+                    <div class="social-icon"><i class="bi bi-facebook"></i></div>
+                    <div class="social-icon"><i class="bi bi-instagram"></i></div>
+                    <div class="social-icon"><i class="bi bi-tiktok"></i></div>
+                    <div class="social-icon"><i class="bi bi-youtube"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h4 class="footer-title">Liên Kết</h4>
+                <ul class="footer-links">
+                    <li><a th:href="@{/home}">Trang chủ</a></li>
+                    <li><a th:href="@{/products}">Sản phẩm</a></li>
+                    <li><a href="#promo">Khuyến mãi</a></li>
+                    <li><a href="#about">Giới thiệu</a></li>
+                    <li><a href="#contact">Liên hệ</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h4 class="footer-title">Hỗ Trợ</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Chính sách đổi trả</a></li>
+                    <li><a href="#">Hướng dẫn mua hàng</a></li>
+                    <li><a href="#">Thanh toán</a></li>
+                    <li><a href="#">Vận chuyển</a></li>
+                    <li><a href="#">FAQs</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <h4 class="footer-title">Đăng Ký Nhận Tin</h4>
+                <p>Nhận thông tin về sản phẩm mới và ưu đãi đặc biệt</p>
+                <form class="newsletter-form">
+                    <input type="email" class="newsletter-input" placeholder="Email của bạn">
+                    <button type="submit" class="newsletter-btn">Đăng ký</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 FashionStore. All rights reserved. Designed with <i class="bi bi-heart-fill" style="color: var(--primary-color);"></i> for Gen Z</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

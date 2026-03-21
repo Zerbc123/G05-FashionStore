@@ -39,12 +39,11 @@ public class WishlistController {
             return "redirect:/login";
         }
         
-        Optional<Account> accountOpt = accountService.findByEmail(email);
-        if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) {
+        Customer customer = accountService.findCustomerByEmail(email);
+        if (customer == null) {
             return "redirect:/login";
         }
         
-        Customer customer = accountOpt.get().getCustomers().get(0);
         List<Wishlist> wishlistItems = wishlistService.getWishlistByCustomer(customer);
         
         model.addAttribute("wishlistItems", wishlistItems);
@@ -61,13 +60,12 @@ public class WishlistController {
             return "redirect:/login";
         }
         
-        Optional<Account> accountOpt = accountService.findByEmail(email);
-        if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Bạn cần đăng nhập để thêm vào yêu thích");
+        Customer customer = accountService.findCustomerByEmail(email);
+        if (customer == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin khách hàng");
             return "redirect:/login";
         }
         
-        Customer customer = accountOpt.get().getCustomers().get(0);
         Optional<Product> productOpt = productRepository.findById(productId);
         
         boolean added = wishlistService.addToWishlist(customer, productOpt.get());
@@ -90,13 +88,12 @@ public class WishlistController {
             return "redirect:/login";
         }
         
-        Optional<Account> accountOpt = accountService.findByEmail(email);
-        if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) {
+        Customer customer = accountService.findCustomerByEmail(email);
+        if (customer == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin khách hàng");
             return "redirect:/wishlist";
         }
         
-        Customer customer = accountOpt.get().getCustomers().get(0);
         Optional<Product> productOpt = productRepository.findById(productId);
         
         if (productOpt.isEmpty()) {

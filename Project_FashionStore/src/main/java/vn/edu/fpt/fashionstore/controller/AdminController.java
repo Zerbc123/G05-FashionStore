@@ -16,13 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.service.ProductService;
-import vn.edu.fpt.fashionstore.service.ProductVariantService;
 import vn.edu.fpt.fashionstore.service.ReportService;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
@@ -30,12 +27,12 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.InventoryService;
-
-import java.util.List;
+import vn.edu.fpt.fashionstore.repository.CategorySizeRepository;
+import vn.edu.fpt.fashionstore.repository.ColorRepository;
+import vn.edu.fpt.fashionstore.service.CategoryService;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageImpl;
@@ -46,7 +43,6 @@ import org.springframework.data.domain.PageImpl;
 public class AdminController {
 
     private final ProductService productService;
-    private final ProductVariantService productVariantService;
     private final OrderRepository orderRepository;
     private final ReportService reportService;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
@@ -56,6 +52,18 @@ public class AdminController {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private ColorRepository colorRepository;
+
+    @Autowired
+    private CategorySizeRepository categorySizeRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Kiểm tra quyền truy cập ADMIN
     private boolean isAdmin(HttpSession session) {
@@ -83,7 +91,7 @@ public class AdminController {
         
         // Lấy dữ liệu từ database
         List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
-        List<vn.edu.fpt.fashionstore.entity.Order> orders = orderRepository.findAll();
+        List<vn.edu.fpt.fashionstore.entity.Order> orders = orderRepository.findOrdersForAdmin();
         
         // Tính toán thống kê
         long totalProducts = products.size();
@@ -217,101 +225,6 @@ public class AdminController {
         return "admin/adminproduct";
     }
 
-    // Quản lý kho hàng
-    @GetMapping("/inventory")
-    @Transactional(readOnly = true)
-    public String inventory(HttpSession session, Model model,
-                          @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "10") int size) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-        
-        // Get product variants with pagination
-        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
-        
-        // Flatten all variants and create a simple page
-        List<vn.edu.fpt.fashionstore.entity.ProductVariant> allVariants = products.stream()
-            .flatMap(p -> p.getVariants() != null ? p.getVariants().stream() : java.util.stream.Stream.empty())
-            .collect(java.util.stream.Collectors.toList());
-        
-        // Calculate pagination manually
-        int start = page * size;
-        int end = Math.min(start + size, allVariants.size());
-        List<vn.edu.fpt.fashionstore.entity.ProductVariant> pageVariants = 
-            start < allVariants.size() ? allVariants.subList(start, end) : java.util.Collections.emptyList();
-        
-        // Calculate statistics
-        long totalProducts = allVariants.size();
-        long inStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 20).count();
-        long lowStockCount = allVariants.stream().filter(v -> v.getStock() != null && v.getStock() > 0 && v.getStock() <= 20).count();
-        long outOfStockCount = allVariants.stream().filter(v -> v.getStock() == null || v.getStock() == 0).count();
-        
-        // Create stats object
-        java.util.Map<String, Object> stats = new java.util.HashMap<>();
-        stats.put("totalProducts", totalProducts);
-        stats.put("inStockCount", inStockCount);
-        stats.put("lowStockCount", lowStockCount);
-        stats.put("outOfStockCount", outOfStockCount);
-        
-        // Create a simple page object for the template
-        java.util.Map<String, Object> productVariantPage = new java.util.HashMap<>();
-        productVariantPage.put("totalElements", totalProducts);
-        productVariantPage.put("totalPages", (int) Math.ceil((double) totalProducts / size));
-        productVariantPage.put("currentPage", page);
-        productVariantPage.put("size", size);
-        
-        model.addAttribute("title", "Inventory Management");
-        model.addAttribute("stats", stats);
-        model.addAttribute("productVariants", pageVariants);
-        model.addAttribute("productVariantPage", productVariantPage);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", (int) Math.ceil((double) totalProducts / size));
-        model.addAttribute("size", size);
-        
-        return "admin/admininventory";
-    }
-
-    // Cập nhật số lượng tồn kho
-    @PostMapping("/inventory/update-stock")
-    public String updateStock(@RequestParam("variantId") Integer variantId,
-                            @RequestParam("newStock") Integer newStock,
-                            HttpSession session,
-                            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        try {
-            // Validate input
-            if (newStock < 0) {
-                redirectAttributes.addFlashAttribute("error", "Số lượng tồn kho không thể âm!");
-                return "redirect:/admin/inventory";
-            }
-
-            // Get existing variant
-            java.util.Optional<vn.edu.fpt.fashionstore.entity.ProductVariant> variantOpt = 
-                productVariantService.getVariantById(variantId);
-            
-            if (!variantOpt.isPresent()) {
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
-                return "redirect:/admin/inventory";
-            }
-
-            // Update stock
-            vn.edu.fpt.fashionstore.entity.ProductVariant variant = variantOpt.get();
-            variant.setStock(newStock);
-            productVariantService.updateVariant(variantId, variant);
-
-            redirectAttributes.addFlashAttribute("success", "Cập nhật số lượng tồn kho thành công!");
-            
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật: " + e.getMessage());
-        }
-
-        return "redirect:/admin/inventory";
-    }
-
     // Thêm sản phẩm mới
     @GetMapping("/products/add")
     public String addProduct(HttpSession session, Model model) {
@@ -319,6 +232,9 @@ public class AdminController {
             return "redirect:/login";
         }
         model.addAttribute("title", "Add New Product");
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("colors", colorRepository.findAll());
+        model.addAttribute("sizes", categorySizeRepository.findAll());
         return "admin/addproduct";
     }
 
@@ -387,14 +303,6 @@ public class AdminController {
         return "admin/reports";
     }
 
-    // Revenue Report
-    @GetMapping("/reports/revenue")
-    public String revenueReport(HttpSession session, Model model,
-                               @RequestParam(required = false) String startDate,
-                               @RequestParam(required = false) String endDate) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
     // Quản lý kho
     @GetMapping("/inventory")
     public String inventory(@RequestParam(defaultValue = "0") int page,
@@ -594,7 +502,14 @@ public class AdminController {
         return "admin/admininventory";
     }
 
-}
+    // Revenue Report
+    @GetMapping("/reports/revenue")
+    public String revenueReport(HttpSession session, Model model,
+                               @RequestParam(required = false) String startDate,
+                               @RequestParam(required = false) String endDate) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
 
         try {
             java.time.LocalDate start = startDate != null ? 

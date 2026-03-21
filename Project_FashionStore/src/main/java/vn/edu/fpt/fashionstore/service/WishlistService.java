@@ -16,6 +16,7 @@ public class WishlistService {
     @Autowired
     private WishlistRepository wishlistRepository;
     
+    @Transactional(readOnly = true)
     public List<Wishlist> getWishlistByCustomer(Customer customer) {
         List<Wishlist> wishlists = wishlistRepository.findByCustomer(customer);
         // Eagerly fetch variants to avoid lazy loading issues

@@ -38,6 +38,9 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private AccountService accountService;
+
     // Thêm các repository còn thiếu
     @Autowired
     private CategoryRepository categoryRepository;
@@ -70,7 +73,7 @@ public class ProductController {
     @GetMapping
     public String showProducts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) String size,
             @RequestParam(required = false) String color,
@@ -99,9 +102,14 @@ public class ProductController {
             }
         }
 
-        // 1. Xử lý sắp xếp
+        // 1. Xử lý sắp xếp (Mapping từ tên trên UI sang tên field trong Entity)
+        String sortField = sort;
+        if (sort.equals("name") || sort.equals("productName")) sortField = "productName";
+        if (sort.equals("price") || sort.equals("variants.price")) sortField = "variants.price";
+        if (sort.isEmpty() || sort.equals("id")) sortField = "productId";
+
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sortDirection, sortField));
 
         // 2. Gọi Service lấy dữ liệu
         Page<Product> productPage;
@@ -122,7 +130,6 @@ public class ProductController {
                 productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
             }
         } else {
-            System.out.println("Calling getAllProducts...");
             productPage = productService.getAllProducts(pageable);
         }
 
@@ -183,6 +190,7 @@ public class ProductController {
     // URL: /products/detail/{id}
     // ========================================================================
     @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
     public String productDetails(
             @PathVariable("id") Long id,
             @RequestParam(name = "colorId", required = false) Integer colorId,
@@ -248,20 +256,20 @@ public class ProductController {
         model.addAttribute("averageRating", averageRating);
 
         // 3. Kiểm tra quyền được đánh giá (đã mua và nhận hàng chưa)
-        // Kiểm tra quyền đánh giá mới
-        Customer currentCustomer = getCurrentCustomer(session); // Hàm này bạn tự tùy chỉnh theo code hiện tại của file
+        Customer currentCustomer = getCurrentCustomer(session);
         if (currentCustomer != null) {
-            // Gọi 2 hàm đếm ra
-            // TODO: Fix countSuccessfulPurchases method
-            long purchaseCount = 0; // orderService.countSuccessfulPurchases(currentCustomer, id);
+            long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, id);
             long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, id);
 
-            // Nút "Viết đánh giá" chỉ hiện lên khi số lần mua thành công LỚN HƠN số lần đã review
+            // Nút "Viết đánh giá" chỉ hiện khi số lần mua NHIỀU HƠN số lần đã review
             model.addAttribute("canReview", purchaseCount > reviewCount);
+            // Đã review ít nhất 1 lần (dùng để hiện thông báo "đã đánh giá" thay vì "cần mua")
+            model.addAttribute("hasReviewed", reviewCount > 0);
         } else {
-            // Khách chưa đăng nhập thì mặc định ẩn nút
             model.addAttribute("canReview", false);
+            model.addAttribute("hasReviewed", false);
         }
+
 
         return "productdetails";
     }
@@ -328,7 +336,7 @@ public class ProductController {
     @GetMapping("/debug")
     @ResponseBody
     public String debugFilter(
-            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String size,
             @RequestParam(defaultValue = "0") int page) {
@@ -349,7 +357,7 @@ public class ProductController {
     // ========================================================================
     // 3. HELPER METHODS
     // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String size,
+    private boolean hasFilter(String keyword, Integer categoryId, String size,
             Double minPrice, Double maxPrice) {
 
         return (keyword != null && !keyword.isBlank())
@@ -857,8 +865,6 @@ public class ProductController {
     private vn.edu.fpt.fashionstore.entity.Customer getCurrentCustomer(jakarta.servlet.http.HttpSession session) {
         String email = (String) session.getAttribute("user");
         if (email == null) return null;
-        java.util.Optional<vn.edu.fpt.fashionstore.entity.Account> accountOpt = accountRepository.findByEmail(email);
-        if (accountOpt.isEmpty() || accountOpt.get().getCustomers().isEmpty()) return null;
-        return accountOpt.get().getCustomers().get(0);
+        return accountService.findCustomerByEmail(email);
     }
 }

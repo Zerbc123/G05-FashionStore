@@ -80,26 +80,11 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     List<Account> findByRole_RoleName(String roleName);
 
 
-
     /* =================================================
                 STAFF MANAGEMENT (ADMIN)
        ================================================= */
 
     // LẤY DANH SÁCH NHÂN VIÊN (SALE, STOCK, SUPPORT, MANAGER)
-    @Query("SELECT a FROM Account a " +
-        "WHERE a.status IN ('ACTIVE','LOCKED') " +
-        "AND a.role.roleId IN (3,4,5,6)")
-    Page<Account> findStaffAccounts(Pageable pageable);
-
-    // SEARCH NHÂN VIÊN - Fixed Text Block issue
-    @Query("SELECT a FROM Account a " +
-        "WHERE a.status IN ('ACTIVE','LOCKED') " +
-        "AND a.role.roleId IN (3,4,5,6) " +
-        "AND (" +
-        "LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        "OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        "OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        ")")
     @Query("""
         SELECT a FROM Account a
         WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')

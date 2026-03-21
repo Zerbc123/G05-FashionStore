@@ -102,6 +102,41 @@
                         <span class="info-value" th:text="${#temporals.format(supportRequest.updatedAt, 'HH:mm dd/MM/yyyy')}">16:45 11/03/2026</span>
                     </div>
                 </div>
+
+                <!-- Chat Messages Section -->
+                <div class="detail-card">
+                    <h3><i class="bi bi-chat-dots"></i> Cuộc trò chuyện</h3>
+                    <div class="chat-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; background: #f8f9fa;">
+                        <div th:if="${chatMessages != null and !chatMessages.empty}">
+                            <div th:each="message : ${chatMessages}" class="message-item mb-3"
+                                 th:classappend="${message.senderType.name() == 'CUSTOMER'} ? 'customer-message' : 'staff-message'">
+                                <div class="d-flex mb-2"
+                                     th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'justify-content: flex-start' : 'justify-content: flex-end'">
+                                    <div class="message-bubble p-3 rounded-3"
+                                         th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 
+                                             'background: #e3f2fd; color: #1976d2; max-width: 70%;' : 
+                                             'background: #11998e; color: white; max-width: 70%;'">
+                                        <div class="message-header d-flex justify-content-between align-items-center mb-1">
+                                            <small th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'color: #1976d2;' : 'color: white;'">
+                                                <i th:class="${message.senderType.name() == 'CUSTOMER'} ? 'bi bi-person-circle' : 'bi bi-headset'"></i>
+                                                <span th:text="${message.senderName}"></span>
+                                            </small>
+                                            <small th:styleappend="${message.senderType.name() == 'CUSTOMER'} ? 'color: #1976d2;' : 'color: white;'">
+                                                <span th:text="${#temporals.format(message.sentAt, 'HH:mm')}"></span>
+                                                <span th:if="${!message.isRead}" class="ms-1">●</span>
+                                            </small>
+                                        </div>
+                                        <div class="message-content" th:text="${message.messageContent}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${chatMessages == null or chatMessages.empty}" class="text-center text-muted py-3">
+                            <i class="bi bi-chat-dots display-4"></i>
+                            <p class="mt-2">Chưa có tin nhắn nào. Bắt đầu cuộc trò chuyện!</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="col-lg-4">
@@ -124,38 +159,232 @@
                     <hr>
 
                     <h5 class="mb-3">Gửi phản hồi cho khách hàng</h5>
-                    <form>
+                    <form th:action="@{/staff/support/send-message/{id}(id=${supportRequest.id})}" method="post">
                         <div class="mb-3">
-                            <label for="response" class="form-label">Nội dung phản hồi:</label>
-                            <textarea class="form-control" id="response" rows="4" placeholder="Nhập nội dung phản hồi..."></textarea>
+                            <label for="messageContent" class="form-label">Nội dung phản hồi:</label>
+                            <textarea class="form-control" id="messageContent" name="messageContent" rows="4" placeholder="Nhập nội dung phản hồi..." required></textarea>
                         </div>
-                        <button type="button" class="btn btn-success w-100">
+                        <button type="submit" class="btn btn-success w-100">
                             <i class="bi bi-send"></i> Gửi phản hồi
                         </button>
                     </form>
                 </div>
 
-                <div class="detail-card">
-                    <h3>Lịch sử thay đổi</h3>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <small class="text-muted">11/03/2026 14:30</small>
-                            <p class="mb-0">Yêu cầu được tạo bởi khách hàng</p>
-                        </div>
-                        <div class="timeline-item" th:if="${supportRequest.assignedStaffName != null}">
-                            <small class="text-muted" th:text="${#temporals.format(supportRequest.createdAt, 'dd/MM/yyyy HH:mm')}">11/03/2026 15:00</small>
-                            <p class="mb-0" th:text="'Phân công cho: ' + ${supportRequest.assignedStaffName}">Phân công cho: Nhân viên A</p>
-                        </div>
-                        <div class="timeline-item" th:if="${supportRequest.updatedAt != null}">
-                            <small class="text-muted" th:text="${#temporals.format(supportRequest.updatedAt, 'dd/MM/yyyy HH:mm')}">11/03/2026 16:45</small>
-                            <p class="mb-0">Trạng thái được cập nhật</p>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Chat Realtime với WebSocket
+class ChatRealtime {
+    constructor(supportRequestId) {
+        this.supportRequestId = supportRequestId;
+        this.socket = null;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 3000;
+        this.init();
+    }
+
+    init() {
+        try {
+            // Lấy supportRequestId từ URL
+            const pathParts = window.location.pathname.split('/');
+            const supportRequestId = pathParts[pathParts.length - 1];
+            console.log('Staff - Support Request ID:', supportRequestId);
+            
+            // Kết nối đến WebSocket endpoint
+            const wsUrl = `ws://localhost:8080/fashionstore/ws/chat`;
+            this.socket = new SockJS('/fashionstore/ws/chat');
+            this.stompClient = Stomp.over(this.socket);
+            
+            // Connect to WebSocket
+            this.stompClient.connect({}, (frame) => {
+                console.log('WebSocket Connected:', frame);
+                this.reconnectAttempts = 0;
+                
+                // Subscribe to chat topic
+                this.subscription = this.stompClient.subscribe(`/topic/chat/${supportRequestId}`, (message) => {
+                    const chatMessage = JSON.parse(message.body);
+                    console.log('Received WebSocket message:', chatMessage);
+                    this.handleMessage(chatMessage);
+                });
+                
+                console.log('Subscribed to topic /topic/chat/' + supportRequestId);
+            }, (error) => {
+                console.error('WebSocket connection error:', error);
+                this.handleReconnect();
+            });
+            
+        } catch (error) {
+            console.error('Error initializing WebSocket:', error);
+        }
+    }
+    
+    handleMessage(message) {
+        switch (message.type) {
+            case 'MESSAGE':
+                this.addNewMessageToUI(message);
+                break;
+            case 'TYPING':
+                this.handleTypingIndicator(message);
+                break;
+            case 'READ_STATUS':
+                this.handleReadStatus(message);
+                break;
+            case 'ERROR':
+                console.error('Server error:', message.messageContent);
+                break;
+            default:
+                console.log('Unknown message type:', message.type);
+        }
+    }
+    
+    handleReconnect() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+            
+            setTimeout(() => {
+                this.init();
+            }, this.reconnectDelay);
+        } else {
+            console.error('Max reconnect attempts reached');
+        }
+    }
+    
+    disconnect() {
+        if (this.stompClient && this.stompClient.connected) {
+            if (this.subscription) {
+                this.subscription.unsubscribe();
+            }
+            this.stompClient.disconnect();
+            console.log('WebSocket disconnected');
+        }
+    }
+
+    addNewMessageToUI(message) {
+        const chatContainer = document.querySelector('.chat-container');
+        if (!chatContainer) return;
+
+        // Xóa thông báo "chưa có tin nhắn" nếu có
+        const emptyMessage = chatContainer.querySelector('.text-center.text-muted');
+        if (emptyMessage) {
+            emptyMessage.remove();
+        }
+
+        // Debug log
+        console.log('Adding message:', message);
+
+        // Tạo HTML cho tin nhắn mới
+        const messageHtml = `
+            <div class="message-item mb-3">
+                <div class="d-flex mb-2 ${message.senderType === 'CUSTOMER' ? 'justify-content: flex-start' : 'justify-content: flex-end'}">
+                    <div class="message-bubble p-3 rounded-3" 
+                         style="${message.senderType === 'CUSTOMER' ? 
+                             'background: #e3f2fd; color: #1976d2; max-width: 70%;' : 
+                             'background: #11998e; color: white; max-width: 70%;'}">
+                        <div class="message-header d-flex justify-content-between align-items-center mb-1">
+                            <small style="${message.senderType === 'CUSTOMER' ? 'color: #1976d2;' : 'color: white;'}">
+                                <i class="bi ${message.senderType === 'CUSTOMER' ? 'bi-person-circle' : 'bi-headset'}"></i>
+                                <span>${message.senderName}</span>
+                            </small>
+                            <small style="${message.senderType === 'CUSTOMER' ? 'color: #1976d2;' : 'color: white;'}">
+                                <span>${new Date(message.sentAt).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
+                                ${!message.isRead ? '<span class="ms-1">●</span>' : ''}
+                            </small>
+                        </div>
+                        <div class="message-content">${message.messageContent}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Thêm tin nhắn mới vào chat container
+        chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        
+        // Scroll xuống dưới cùng
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // Hiển thị thông báo nếu là tin nhắn từ customer
+        if (message.senderType === 'CUSTOMER') {
+            this.showNotification('Tin nhắn mới từ khách hàng', message.messageContent);
+        }
+    }
+
+    handleTypingIndicator(message) {
+        console.log('Typing indicator:', message.senderName, message.messageContent === 'true');
+        // TODO: Implement typing indicator UI
+    }
+    
+    handleReadStatus(message) {
+        console.log('Read status update:', message.senderType);
+        this.updateReadStatus(message);
+    }
+
+    updateReadStatus(data) {
+        // Cập nhật trạng thái đã đọc trong UI
+        const unreadIndicators = document.querySelectorAll('.message-item .ms-1');
+        unreadIndicators.forEach(indicator => indicator.remove());
+    }
+
+    showNotification(title, message) {
+        // Hiển thị browser notification
+        if (Notification.permission === 'granted') {
+            new Notification(title, {
+                body: message,
+                icon: '/favicon.ico'
+            });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification(title, {
+                        body: message,
+                        icon: '/favicon.ico'
+                    });
+                }
+            });
+        }
+    }
+}
+
+// Khởi tạo chat realtime khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy supportRequestId từ URL
+    const pathParts = window.location.pathname.split('/');
+    const supportRequestId = pathParts[pathParts.length - 1];
+    console.log('Staff - Support Request ID:', supportRequestId);
+    
+    if (supportRequestId && !isNaN(supportRequestId)) {
+        window.chatRealtime = new ChatRealtime(parseInt(supportRequestId));
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        
+        // Test connection status sau 2 giây
+        setTimeout(() => {
+            if (window.chatRealtime && window.chatRealtime.stompClient) {
+                console.log('Staff - WebSocket connection status:', 
+                    window.chatRealtime.stompClient.connected ? 'CONNECTED' : 'DISCONNECTED');
+            }
+        }, 2000);
+    }
+    
+    // Cleanup khi đóng trang
+    window.addEventListener('beforeunload', function() {
+        if (window.chatRealtime) {
+            window.chatRealtime.disconnect();
+        }
+    });
+});
+</script>
+
+<!-- Add STOMP.js for WebSocket support -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </body>
 </html>

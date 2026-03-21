@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="common-header">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Success - Fashion Store</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .success-container { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 600px; width: 90%; padding: 50px 40px; text-align: center; }
+        .success-icon { width: 100px; height: 100px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; animation: scaleIn 0.5s ease-out; }
+        .success-icon i { font-size: 3rem; color: white; }
+        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+        h1 { font-family: 'Playfair Display', serif; color: #2d3436; font-size: 2rem; margin-bottom: 15px; }
+        .success-message { color: #636e72; margin-bottom: 30px; font-size: 1.1rem; }
+        .order-info { background: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left; }
+        .order-info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+        .order-info-item:last-child { border-bottom: none; }
+        .order-info-label { font-weight: 600; color: #2d3436; }
+        .order-info-value { color: #636e72; }
+        .order-total { font-size: 1.3rem; color: #667eea; font-weight: 700; }
+        .action-buttons { display: flex; gap: 15px; flex-wrap: wrap; }
+        .btn-primary { flex: 1; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); color: white; }
+        .btn-secondary { flex: 1; padding: 15px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+        .btn-secondary:hover { background: #667eea; color: white; }
+        .tracking-info { background: #fff3cd; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+        .tracking-info i { color: #856404; margin-right: 10px; }
+        @media (max-width: 576px) { .success-container { padding: 30px 20px; } .action-buttons { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<div class="success-container">
+    <div class="success-icon">
+        <i class="bi bi-check-lg"></i>
+    </div>
+
+    <h1>Order Placed Successfully!</h1>
+    <p class="success-message">Thank you for your purchase. Your order has been received and is being processed.</p>
+
+    <div class="tracking-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <strong>We'll send you a confirmation email with tracking details shortly.</strong>
+    </div>
+
+    <div class="order-info">
+        <div class="order-info-item">
+            <span class="order-info-label">Order Number:</span>
+            <span class="order-info-value">#ORD-2024-${param.orderId != null ? param.orderId : '001'}</span>
+        </div>
+        <div class="order-info-item">
+            <span class="order-info-label">Order Date:</span>
+            <span class="order-info-value" th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy HH:mm')}"></span>
+        </div>
+        <div class="order-info-item">
+            <span class="order-info-label">Payment Method:</span>
+            <span class="order-info-value">Cash on Delivery</span>
+        </div>
+        <div class="order-info-item">
+            <span class="order-info-label">Estimated Delivery:</span>
+            <span class="order-info-value">3-5 Business Days</span>
+        </div>
+        <div class="order-info-item">
+            <span class="order-info-label">Order Total:</span>
+            <span class="order-total">$${param.total != null ? param.total : '139.97'}</span>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a th:href="@{/order-history}" class="btn-primary">
+            <i class="bi bi-clock-history"></i> View Order History
+        </a>
+        <a th:href="@{/page}" class="btn-secondary">
+            <i class="bi bi-house"></i> Back to Home
+        </a>
+    </div>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+        <p style="color: #636e72; font-size: 0.9rem; margin: 0;">
+            <i class="bi bi-envelope"></i> Questions? Contact us at <strong>support@fashionstore.com</strong>
+        </p>
+    </div>
+</div>
+
+<!-- Bootstrap JS (required for responsive navigation) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

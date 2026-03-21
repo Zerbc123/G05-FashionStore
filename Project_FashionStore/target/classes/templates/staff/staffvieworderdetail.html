@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:temp="http://www.thymeleaf.org/extras/temporal">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết đơn hàng - Staff</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+        
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #FFF9F9;
+        }
+        .main-content {
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border: none;
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.2rem;
+        }
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div th:replace="~{fragments/header :: staffheader}"></div>
+
+    <div class="main-content">
+        <div class="container pb-5">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Chi tiết đơn hàng #DH[[${order.orderId}]]</h2>
+            <a th:href="@{/staff/orders}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+            </a>
+        </div>
+
+        <!-- Thông tin chung -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Thông tin khách hàng & Giao hàng</h5>
+                <span class="badge bg-primary" th:text="${order.status}">PENDING</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <p><strong><i class="bi bi-person me-2"></i>Khách hàng:</strong>
+                            <span th:text="${order.customer != null ? order.customer.fullName : 'N/A'}"></span>
+                        </p>
+                        <p><strong><i class="bi bi-telephone me-2"></i>Số điện thoại:</strong>
+                            <span th:text="${order.customer != null ? order.customer.phone : 'N/A'}"></span>
+                        </p>
+                        <p><strong><i class="bi bi-envelope me-2"></i>Email:</strong>
+                            <span th:text="${order.customer != null ? order.customer.email : 'N/A'}"></span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="bi bi-calendar-event me-2"></i>Ngày đặt:</strong>
+                            <span th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></span>
+                        </p>
+                        <p><strong><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng:</strong>
+                            <span th:text="${order.shippingAddress}"></span>
+                        </p>
+                        <p><strong><i class="bi bi-credit-card me-2"></i>Phương thức TT:</strong>
+                            <span th:text="${order.paymentMethod != null ? order.paymentMethod : 'N/A'}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="card border-0">
+            <div class="card-header">
+                <h5 class="mb-0">Sản phẩm trong đơn hàng</h5>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Sản phẩm</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr th:each="item : ${order.orderItems}">
+                                <td>
+                                    <img th:src="@{${item.productVariant != null && item.productVariant.imageUrl != null ? item.productVariant.imageUrl : '/images/no-image.jpg'}}" 
+                                         width="60" height="60" class="rounded shadow-sm" style="object-fit:cover;">
+                                </td>
+                                <td>
+                                    <div th:text="${item.productVariant != null && item.productVariant.product != null ? item.productVariant.product.productName : 'Sản phẩm không xác định'}" class="fw-bold"></div>
+                                    <small class="text-muted" th:if="${item.productVariant != null}">
+                                        Size: [[${item.productVariant.categorySize != null ? item.productVariant.categorySize.sizeName : 'N/A'}]], 
+                                        Màu: [[${item.productVariant.color != null ? item.productVariant.color.colorName : 'N/A'}]]
+                                    </small>
+                                </td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(item.productVariant != null ? item.productVariant.price : 0,0,'COMMA',0,'POINT')} + ' đ'"></td>
+                                <td class="text-center" th:text="${item.quantity}"></td>
+                                <td class="text-end fw-bold text-primary" th:text="${#numbers.formatDecimal(item.getTotalPrice(),0,'COMMA',0,'POINT')} + ' đ'"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Tổng tiền hàng:</td>
+                                <td class="text-end fw-bold text-danger fs-5" th:text="${#numbers.formatDecimal(order.totalAmount,0,'COMMA',0,'POINT')} + ' đ'"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a th:href="@{/admin/orders/orderdetails/{id}/pdf(id=${order.orderId})}" class="btn btn-danger px-4">
+                <i class="bi bi-file-pdf me-2"></i>In Đơn Hàng (PDF)
+            </a>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

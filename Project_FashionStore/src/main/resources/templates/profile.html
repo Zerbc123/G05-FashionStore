@@ -99,7 +99,7 @@
                         </a>
                         <a th:href="@{/wishlist}" class="profile-action-btn">
                             <span><i class="bi bi-heart"></i> Wishlist</span>
-                            <span class="badge">12</span>
+                            <span class="badge" th:text="${wishlistCount}">0</span>
                         </a>
                         <a th:href="@{/customer/support}" class="profile-action-btn">
                             <span><i class="bi bi-headset"></i> Hỗ trợ khách hàng</span>

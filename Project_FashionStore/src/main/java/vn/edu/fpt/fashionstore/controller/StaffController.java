@@ -23,21 +23,14 @@ import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import vn.edu.fpt.fashionstore.entity.Color;
 import vn.edu.fpt.fashionstore.entity.CategorySize;
 import vn.edu.fpt.fashionstore.service.ProductVariantService;
+import vn.edu.fpt.fashionstore.repository.AccountRepository;
+import vn.edu.fpt.fashionstore.service.InventoryService;
+import vn.edu.fpt.fashionstore.util.RoleUtils;
+import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.List;
 import java.util.Objects;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.edu.fpt.fashionstore.entity.ProductVariant;
-import vn.edu.fpt.fashionstore.repository.AccountRepository;
-import vn.edu.fpt.fashionstore.service.AccountService;
-import vn.edu.fpt.fashionstore.service.InventoryService;
-import vn.edu.fpt.fashionstore.util.RoleUtils;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/staff")
@@ -52,13 +45,13 @@ public class StaffController {
     private static final Logger logger = LoggerFactory.getLogger(StaffController.class);
 
     @Autowired
-    private AccountService accountService;
-
-    @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private vn.edu.fpt.fashionstore.repository.OrderRepository orderRepository;
 
     private boolean isStaff(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
@@ -115,17 +108,79 @@ public class StaffController {
 
     // Quản lý đơn hàng (Confirm Orders)
     @GetMapping("/orders")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String orders(HttpSession session, Model model) {
         if (!RoleUtils.canViewOrders(session)) {
             return "redirect:/login";
         }
 
-        // Check if user can manage orders (Admin, Sale, Manager)
-        boolean canManage = RoleUtils.canManageOrders(session);
-        model.addAttribute("canManageOrders", canManage);
+        // Sử dụng query có FETCH để lấy luôn Customer, tránh lỗi Lazy loading trong view
+        List<Order> orders = orderRepository.findOrdersForAdmin();
 
-        model.addAttribute("title", "Order Management");
-        return "admin/adminorder";
+        // Thống kê cho dashboard mini trên trang orders
+        long pending = orders.stream()
+                .filter(o -> o.getStatus() != null && "PENDING".equalsIgnoreCase(o.getStatus().name()))
+                .count();
+
+        long shipping = orders.stream()
+                .filter(o -> o.getStatus() != null && "SHIPPING".equalsIgnoreCase(o.getStatus().name()))
+                .count();
+
+        long completed = orders.stream()
+                .filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+                .count();
+
+        double revenue = orders.stream()
+                .filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        model.addAttribute("orders", orders);
+        model.addAttribute("pendingCount", pending);
+        model.addAttribute("shippingCount", shipping);
+        model.addAttribute("completedCount", completed);
+        model.addAttribute("totalRevenue", revenue);
+
+        return "staff/stafforder";
+    }
+
+    @GetMapping("/orders/orderdetails/{id}")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public String viewOrderDetails(@PathVariable Long id, HttpSession session, Model model) {
+        if (!RoleUtils.canViewOrders(session)) {
+            return "redirect:/login";
+        }
+
+        Order order = orderRepository.findOrderWithItems(id);
+        model.addAttribute("order", order);
+
+        return "staff/staffvieworderdetail";
+    }
+
+    @PostMapping("/orders/update-status/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public String updateStatus(@PathVariable Long id,
+                               @RequestParam String status,
+                               HttpSession session,
+                               RedirectAttributes ra) {
+
+        if (!RoleUtils.canManageOrders(session)) {
+            ra.addFlashAttribute("error", "Bạn không có quyền cập nhật đơn hàng!");
+            return "redirect:/staff/orders";
+        }
+
+        orderRepository.findById(id).ifPresent(order -> {
+            try {
+                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+                order.setStatus(newStatus);
+                orderRepository.save(order);
+                ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");
+            } catch (IllegalArgumentException e) {
+                ra.addFlashAttribute("error", "Trạng thái không hợp lệ: " + status);
+            }
+        });
+
+        return "redirect:/staff/orders";
     }
 
     @GetMapping("/inventory")
@@ -324,6 +379,7 @@ public class StaffController {
     // ======== STAFF PRODUCT MANAGEMENT ========
 
     @GetMapping("/products")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String products(HttpSession session, Model model,
                           @RequestParam(required = false) String search,
                           @RequestParam(required = false) String category) {
@@ -331,10 +387,25 @@ public class StaffController {
             return "redirect:/login";
         }
 
-        // Lấy danh sách sản phẩm từ database
-        List<vn.edu.fpt.fashionstore.entity.Product> products = productVariantService.getAllProducts();
+        // Lấy danh sách sản phẩm từ database với variants
+        List<vn.edu.fpt.fashionstore.entity.Product> allProducts = productService.getAllProductsWithVariants();
+        
+        // Filter theo search và category
+        List<vn.edu.fpt.fashionstore.entity.Product> products = allProducts;
+        
+        if (search != null && !search.trim().isEmpty()) {
+            products = products.stream()
+                .filter(p -> p.getProductName().toLowerCase().contains(search.toLowerCase()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        if (category != null && !category.isEmpty() && !"Tất cả".equals(category)) {
+            products = products.stream()
+                .filter(p -> p.getCategory() != null && p.getCategory().getCategoryName().equals(category))
+                .collect(java.util.stream.Collectors.toList());
+        }
 
-        // Tính toán thống kê
+        // Tính toán thống kê (dựa trên allProducts, không phải filtered)
         long totalProducts = products.size();
         long inStockCount = 0;
         long lowStockCount = 0;
@@ -365,6 +436,10 @@ public class StaffController {
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
         model.addAttribute("title", "Product Management");
         
+        // Thêm userRole để check quyền Admin (cho button Sửa)
+        String userRole = (String) session.getAttribute("userRole");
+        model.addAttribute("isAdmin", "Admin".equalsIgnoreCase(userRole));
+        
         return "staff/staffproduct";
     }
 
@@ -389,6 +464,7 @@ public class StaffController {
     // ======== STAFF PRODUCT VARIANT MANAGEMENT ========
 
     @GetMapping("/products/staff/variants")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String viewProductVariants(
             @RequestParam("productId") Long productId,
             HttpSession session, Model model) {
@@ -403,6 +479,7 @@ public class StaffController {
         }
 
         List<ProductVariant> variants = productVariantService.getVariantsByProductId(productId);
+        logger.info("Found {} variants for product ID: {}", variants.size(), productId);
         
         // Calculate statistics
         long totalVariants = variants.size();
@@ -416,6 +493,10 @@ public class StaffController {
         model.addAttribute("inStockCount", inStockCount);
         model.addAttribute("lowStockCount", lowStockCount);
         model.addAttribute("outOfStockCount", outOfStockCount);
+        
+        // Thêm userRole để check quyền Admin
+        String userRole = (String) session.getAttribute("userRole");
+        model.addAttribute("isAdmin", "Admin".equalsIgnoreCase(userRole));
 
         return "staff/productvariants";
     }
@@ -696,5 +777,4 @@ public class StaffController {
 
         return "staff/category-list";
     }
-}
 }
