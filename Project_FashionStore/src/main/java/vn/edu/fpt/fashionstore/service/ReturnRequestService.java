@@ -2,11 +2,9 @@ package vn.edu.fpt.fashionstore.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import vn.edu.fpt.fashionstore.entity.Customer;
-import vn.edu.fpt.fashionstore.entity.Order;
-import vn.edu.fpt.fashionstore.entity.ReturnRequest;
-import vn.edu.fpt.fashionstore.entity.ReturnStatus;
+import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.repository.ReturnRequestRepository;
+import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
 import java.util.Date;
 import java.util.List;
@@ -16,6 +14,9 @@ public class ReturnRequestService {
 
     @Autowired
     private ReturnRequestRepository returnRequestRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     // Kiểm tra xem đơn hàng này đã từng bị yêu cầu trả hàng chưa
     public boolean hasReturnRequest(Order order) {
@@ -52,10 +53,26 @@ public class ReturnRequestService {
     public void updateReturnStatus(Long returnId, ReturnStatus newStatus, String adminNote) {
         ReturnRequest request = returnRequestRepository.findById(returnId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu đổi trả!"));
+        
+        ReturnStatus oldStatus = request.getStatus();
         request.setStatus(newStatus);
         if (adminNote != null && !adminNote.trim().isEmpty()) {
             request.setAdminNote(adminNote);
         }
         returnRequestRepository.save(request);
+        
+        // Nếu trả hàng được chấp thuận, hoàn lại stock
+        if (oldStatus != ReturnStatus.APPROVED && newStatus == ReturnStatus.APPROVED) {
+            Order order = request.getOrder();
+            for (OrderItem orderItem : order.getOrderItems()) {
+                ProductVariant variant = orderItem.getProductVariant();
+                variant.setStock(variant.getStock() + orderItem.getQuantity());
+                productVariantRepository.save(variant);
+                
+                System.out.println("[RETURN REQUEST] Restored " + orderItem.getQuantity() + 
+                                 " units to product variant ID: " + variant.getVariantId() + 
+                                 " (New stock: " + variant.getStock() + ")");
+            }
+        }
     }
 }

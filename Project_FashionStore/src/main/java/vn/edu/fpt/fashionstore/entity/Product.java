@@ -1,6 +1,7 @@
 package vn.edu.fpt.fashionstore.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
@@ -12,12 +13,17 @@ public class Product {
     @Column(name = "product_id")
     private Long productId;
 
+    @NotBlank(message = "Product name is required")
+    @Size(min = 3, max = 255, message = "Product name must be between 3 and 255 characters")
+    @Pattern(regexp = "^[^0-9]*$", message = "Product name cannot contain numbers")
     @Column(name = "product_name", nullable = false)
     private String productName;
 
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
+    @NotNull(message = "Category is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -51,7 +57,7 @@ public class Product {
     }
 
     public Product(Long productId, String productName, String description,
-                   Category category, Long accountId) {
+            Category category, Long accountId) {
         this.productId = productId;
         this.productName = productName;
         this.description = description;

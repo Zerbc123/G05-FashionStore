@@ -365,6 +365,14 @@
                             <div class="info-value" th:text="${orderStatus?.displayName ?: 'N/A'}">Đang xử lý</div>
                         </div>
                     </div>
+
+                    <div class="info-item">
+                        <i class="bi bi-credit-card"></i>
+                        <div class="info-content">
+                            <div class="info-label">Phương thức thanh toán</div>
+                            <div class="info-value" th:text="${paymentMethod ?: 'COD'}">COD</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

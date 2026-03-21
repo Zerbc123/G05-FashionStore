@@ -24,14 +24,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     Product findByProductId(Long productId);
 
+    // METHOD ĐỂ CHECK TRƯỚC KHI DELETE CATEGORY
+    boolean existsByCategory_CategoryId(int categoryId);
+
+    @Query("SELECT p FROM Product p " +
+            "LEFT JOIN FETCH p.variants " +
+            "LEFT JOIN FETCH p.category")
+    List<Product> findAllWithVariants();
+
     // Hiện sản phẩm bán chạy/mới nhất (Trả về Entity gốc)
     List<Product> findTop4ByOrderByProductIdDesc();
-
-    // Lấy danh sách sản phẩm kèm Variants và Category để hiện ở trang chủ/danh sách
-    @Query("SELECT DISTINCT p FROM Product p " +
-            "LEFT JOIN FETCH p.category " +
-            "LEFT JOIN FETCH p.variants")
-    List<Product> findAllWithVariants();
 
     // QUAN TRỌNG: Lấy chi tiết 1 sản phẩm kèm toàn bộ thông tin Color/Size
     // Dùng cái này cho trang Product Detail để performance tốt nhất
@@ -85,7 +87,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "JOIN oi.productVariant v " +
             "JOIN v.product p " +
             "LEFT JOIN p.category c " +
-            "WHERE oi.order.status = 'COMPLETED' " +
+            "WHERE oi.order.status = vn.edu.fpt.fashionstore.entity.OrderStatus.COMPLETED " +
             "GROUP BY p.productId, p.productName, c.categoryName " +
             "ORDER BY SUM(oi.quantity) DESC")
     List<ProductHomeInfo> findTopSellingProducts(Pageable pageable);

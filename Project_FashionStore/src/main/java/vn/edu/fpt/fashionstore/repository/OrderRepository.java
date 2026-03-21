@@ -4,13 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -57,14 +57,23 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerAndOrderDateBetween(
             @Param("customer") Customer customer,
             @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
-    );
+            @Param("endDate") Date endDate);
 
     // Kiểm tra khách hàng có sở hữu đơn hàng không
     boolean existsByOrderIdAndCustomer(Long orderId, Customer customer);
 
     // Tìm đơn hàng gần đây của khách hàng
     List<Order> findTop5ByCustomerOrderByOrderDateDesc(Customer customer);
+
+    // Tìm đơn hàng theo ID kèm thông tin chi tiết
+    @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems " +
+            "LEFT JOIN FETCH o.customer " +
+            "WHERE o.orderId = :orderId")
+    Order findByOrderIdWithDetails(@Param("orderId") Long orderId);
+
+    // Lấy danh sách đơn hàng của khách hàng theo customerId
+    List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);
 
     // Tìm đơn hàng theo nhiều trạng thái
     List<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses);
@@ -74,12 +83,50 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // ==========================================
 
     // Lấy chi tiết 1 đơn hàng kèm theo danh sách sản phẩm (Dùng cho giao diện Admin & Xuất PDF)
-    @Query("""
-            SELECT o FROM Order o
-            LEFT JOIN FETCH o.orderItems oi
-            LEFT JOIN FETCH oi.productVariant pv
-            LEFT JOIN FETCH pv.product
-            WHERE o.orderId = :id
-            """)
+    @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems oi " +
+            "LEFT JOIN FETCH oi.productVariant pv " +
+            "LEFT JOIN FETCH pv.product " +
+            "WHERE o.orderId = :id")
     Order findOrderWithItems(@Param("id") Long id);
+
+    // ==========================================
+    // REPORT METHODS
+    // ==========================================
+
+    // Get daily revenue data
+    @Query("SELECT o.orderDate, COALESCE(SUM(o.totalAmount), 0), COUNT(o) " +
+           "FROM Order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses " +
+           "GROUP BY o.orderDate " +
+           "ORDER BY o.orderDate")
+    List<Object[]> getDailyRevenue(@Param("startDate") LocalDate startDate, 
+                                   @Param("endDate") LocalDate endDate, 
+                                   @Param("statuses") List<OrderStatus> statuses);
+
+    // Get monthly revenue data
+    @Query("SELECT YEAR(o.orderDate), MONTH(o.orderDate), COALESCE(SUM(o.totalAmount), 0) " +
+           "FROM Order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses " +
+           "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate) " +
+           "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)")
+    List<Object[]> getMonthlyRevenue(@Param("startDate") LocalDate startDate, 
+                                     @Param("endDate") LocalDate endDate, 
+                                     @Param("statuses") List<OrderStatus> statuses);
+
+    // Get total revenue
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) " +
+           "FROM Order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses")
+    Double getTotalRevenue(@Param("startDate") LocalDate startDate, 
+                          @Param("endDate") LocalDate endDate, 
+                          @Param("statuses") List<OrderStatus> statuses);
+
+    // Get total orders count
+    @Query("SELECT COUNT(o) " +
+           "FROM Order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses")
+    Long getTotalOrders(@Param("startDate") LocalDate startDate, 
+                        @Param("endDate") LocalDate endDate, 
+                        @Param("statuses") List<OrderStatus> statuses);
 }

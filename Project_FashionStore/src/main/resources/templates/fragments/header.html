@@ -201,29 +201,232 @@
             background: rgba(255,255,255,0.2);
             transform: translateY(-2px);
         }
+        
+        /* Dropdown Styles */
+        .admin-header-simple .nav-dropdown {
+            position: relative;
+        }
+        
+        .admin-header-simple .dropdown-toggle {
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 15px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .admin-header-simple .dropdown-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .admin-header-simple .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0; /* Đổi thành right để không bị cắt */
+            left: auto; /* Thay vì left */
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-height: 70vh; /* Giới hạn chiều cao */
+            overflow-y: auto; /* Cho phép cuộn */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding: 8px 0;
+            margin-top: 4px;
+        }
+        
+        .admin-header-simple .nav-dropdown.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            display: block !important;
+        }
+        
+        .admin-header-simple .dropdown-menu li {
+            list-style: none;
+        }
+        
+        .admin-header-simple .dropdown-menu li a {
+            color: #2C3E50;
+            text-decoration: none;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 8px;
+        }
+        
+        .admin-header-simple .dropdown-menu li a:hover {
+            background: linear-gradient(135deg, #48BB78, #38A169);
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .admin-header-simple .dropdown-menu li a i {
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .admin-header-simple .dropdown-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 8px;
+        }
+        
+        .admin-header-simple .dropdown-toggle {
+            font-size: 1.2rem;
+            padding: 8px 12px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .admin-header-simple .dropdown-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
     </style>
+    <script>
+        // Handle dropdown toggle clicks
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin dropdown script loaded');
+            
+            // Try multiple selectors
+            const dropdownToggles = document.querySelectorAll('.admin-header-simple .dropdown-toggle');
+            console.log('Found dropdown toggles:', dropdownToggles.length);
+            
+            // Also try to find the gear icon directly
+            const gearIcon = document.querySelector('.admin-header-simple .dropdown-toggle i');
+            console.log('Gear icon found:', gearIcon);
+            
+            if (dropdownToggles.length === 0) {
+                console.log('No dropdown toggles found, trying alternative selector');
+                // Try alternative method
+                const navDropdowns = document.querySelectorAll('.admin-header-simple .nav-dropdown');
+                console.log('Nav dropdowns found:', navDropdowns.length);
+                
+                navDropdowns.forEach(function(dropdown, index) {
+                    const toggle = dropdown.querySelector('a');
+                    console.log('Toggle found:', toggle);
+                    
+                    if (toggle) {
+                        toggle.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            console.log('Dropdown clicked via alternative method:', index);
+                            
+                            const isActive = dropdown.classList.contains('active');
+                            console.log('Current state - active:', isActive);
+                            
+                            // Close all other dropdowns
+                            navDropdowns.forEach(function(otherDropdown) {
+                                otherDropdown.classList.remove('active');
+                            });
+                            
+                            // Toggle current dropdown
+                            if (!isActive) {
+                                dropdown.classList.add('active');
+                                console.log('Added active class');
+                            } else {
+                                console.log('Removed active class');
+                            }
+                        });
+                    }
+                });
+            } else {
+                dropdownToggles.forEach(function(toggle, index) {
+                    toggle.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('Dropdown clicked:', index);
+                        
+                        const dropdown = this.closest('.nav-dropdown');
+                        const isActive = dropdown.classList.contains('active');
+                        
+                        console.log('Current state - active:', isActive);
+                        console.log('Dropdown element:', dropdown);
+                        
+                        // Close all other dropdowns
+                        document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function(otherDropdown) {
+                            otherDropdown.classList.remove('active');
+                        });
+                        
+                        // Toggle current dropdown
+                        if (!isActive) {
+                            dropdown.classList.add('active');
+                            console.log('Added active class');
+                        } else {
+                            console.log('Removed active class');
+                        }
+                    });
+                });
+            }
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.admin-header-simple .nav-dropdown')) {
+                    document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function(dropdown) {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+        });
+    </script>
     <nav class="admin-header-simple">
         <a class="brand" th:href="@{/admin}">
             <i class="bi bi-shield-fill-check"></i>
             <span>Admin Panel</span>
         </a>
-        <ul class="nav-menu">
-            <li><a th:href="@{/admin}"><i class="bi bi-house-door"></i> Home</a></li>
-            <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-            <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> Products</a></li>
-            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
-            <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> Orders</a></li>
-            <li><a th:href="@{/admin/returns}"><i class="bi bi-arrow-return-left"></i> Returns</a></li>
-            <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
-            <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
-            <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
-            <li><a th:href="@{/admin/customers}"><i class="bi bi-people"></i> Customers</a></li>
-            <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
-            <li><a th:href="@{/admin/support}"><i class="bi bi-headset"></i> Support</a></li>
-            <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
-            <li><a th:href="@{/admin/profile}"><i class="bi bi-globe"></i> Profile</a></li>
-            <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-        </ul>
+        
+        <!-- Single Admin Dropdown -->
+        <div class="nav-dropdown">
+            <a href="#" class="dropdown-toggle">
+                <i class="bi bi-gear-fill"></i>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a th:href="@{/admin}"><i class="bi bi-house-door"></i> Home</a></li>
+                <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="dropdown-divider"></li>
+                <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> All Products</a></li>
+                <li><a th:href="@{/admin/categories}"><i class="bi bi-tags"></i> Categories</a></li>
+                <li><a th:href="@{/admin/inventory}"><i class="bi bi-box-seam"></i> Inventory</a></li>
+                <li class="dropdown-divider"></li>
+                <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> All Orders</a></li>
+                <li><a th:href="@{/admin/returns}"><i class="bi bi-arrow-return-left"></i> Returns</a></li>
+                <li class="dropdown-divider"></li>
+                <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
+                <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
+                <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
+                <li class="dropdown-divider"></li>
+                <li><a th:href="@{/admin/customers}"><i class="bi bi-person"></i> Customers</a></li>
+                <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
+                <li><a th:href="@{/admin/support}"><i class="bi bi-headset"></i> Support</a></li>
+                <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
+                <li><a th:href="@{/admin/profile}"><i class="bi bi-gear"></i> Profile</a></li>
+                <li class="dropdown-divider"></li>
+                <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
     </nav>
 </div>
 
@@ -262,6 +465,16 @@
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/staff/inventory}">
                         <i class="bi bi-box-seam"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/products}">
+                        <i class="bi bi-box"></i> Products
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/staff/categories}">
+                        <i class="bi bi-tags"></i> Categories
                     </a>
                 </li>
                 <li class="nav-item">

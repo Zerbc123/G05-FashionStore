@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -26,7 +29,7 @@
         .admin-navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .admin-navbar .navbar-brand {
@@ -37,7 +40,7 @@
         }
 
         .admin-navbar .nav-link {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             margin: 0 10px;
             transition: all 0.3s;
         }
@@ -49,26 +52,28 @@
 
         .admin-navbar .nav-link.active {
             color: white;
-            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
         }
 
         .main-content {
-            padding: 40px 0;
+            padding: 2rem 0;
         }
 
         .page-header {
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
         }
 
         .page-header h1 {
             font-family: 'Playfair Display', serif;
             color: #2d3436;
-            font-size: 2rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .welcome-text {
             color: #636e72;
-            margin-top: 5px;
+            font-size: 1.1rem;
         }
 
         /* Stats Cards */
@@ -83,7 +88,7 @@
             background: white;
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
             gap: 20px;
@@ -99,14 +104,14 @@
             right: 0;
             width: 100px;
             height: 100px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             transform: translate(30%, -30%);
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .stat-icon {
@@ -120,10 +125,21 @@
             color: white;
         }
 
-        .stat-icon.revenue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .stat-icon.orders { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .stat-icon.customers { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .stat-icon.products { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-icon.revenue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-icon.orders {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-icon.customers {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-icon.products {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
 
         .stat-info h3 {
             font-size: 2rem;
@@ -156,7 +172,7 @@
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
 
@@ -171,7 +187,7 @@
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
 
         .recent-orders h3 {
@@ -216,9 +232,20 @@
             font-weight: 600;
         }
 
-        .badge.pending { background: #fff3cd; color: #856404; }
-        .badge.completed { background: #d4edda; color: #155724; }
-        .badge.processing { background: #cce5ff; color: #004085; }
+        .badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
 
         /* Quick Actions */
         .quick-actions {
@@ -260,237 +287,235 @@
         }
     </style>
 </head>
+
 <body>
-<!-- Admin Header -->
-<div th:replace="~{fragments/header :: adminheader}"></div>
+    <!-- Admin Header -->
+    <div th:replace="~{fragments/header :: adminheader}"></div>
 
-<div class="main-content" style="margin-top: 80px;">
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
-            <p class="welcome-text">Welcome back, Admin! Here's what's happening today.</p>
-        </div>
+    <div class="main-content" style="margin-top: 80px;">
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+                <p class="welcome-text">Welcome back, Admin! Here's what's happening today.</p>
+            </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon revenue">
-                    <i class="bi bi-currency-dollar"></i>
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon revenue">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND
+                        </h3>
+                        <p>Total Revenue</p>
+                        <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Dynamic Update</span>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>$45,890</h3>
-                    <p>Total Revenue</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +12.5% from last month</span>
+
+                <div class="stat-card">
+                    <div class="stat-icon orders">
+                        <i class="bi bi-cart-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 th:text="${stats.totalOrders}">1,245</h3>
+                        <p>Total Orders</p>
+                        <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Real-time tracking</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon customers">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 th:text="${stats.totalCustomers}">3,567</h3>
+                        <p>Total Customers</p>
+                        <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Growing community</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon products">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 th:text="${stats.totalProducts}">456</h3>
+                        <p>Total Products</p>
+                        <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Live inventory</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon orders">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a th:href="@{/admin/products/add}" class="action-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    <div>Add Product</div>
+                </a>
+                <a th:href="@{/admin/orders}" class="action-btn">
                     <i class="bi bi-cart-check"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>1,245</h3>
-                    <p>Total Orders</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +8.3% from last month</span>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon customers">
+                    <div>View Orders</div>
+                </a>
+                <a th:href="@{/admin/customers}" class="action-btn">
                     <i class="bi bi-people"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>3,567</h3>
-                    <p>Total Customers</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +15.2% from last month</span>
-                </div>
+                    <div>Manage Customers</div>
+                </a>
+                <a th:href="@{/admin/reports}" class="action-btn">
+                    <i class="bi bi-graph-up"></i>
+                    <div>View Reports</div>
+                </a>
+                <a th:href="@{/admin/support}" class="action-btn">
+                    <i class="bi bi-headset"></i>
+                    <div>Quản Lý Hỗ Trợ</div>
+                </a>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon products">
-                    <i class="bi bi-box-seam"></i>
+            <div class="row">
+                <!-- Revenue Chart -->
+                <div class="col-lg-8">
+                    <div class="chart-card">
+                        <h3>Revenue Overview</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>456</h3>
-                    <p>Total Products</p>
-                    <span class="stat-change positive"><i class="bi bi-arrow-up"></i> +5 new this week</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <a th:href="@{/admin/products/add}" class="action-btn">
-                <i class="bi bi-plus-circle"></i>
-                <div>Add Product</div>
-            </a>
-            <a th:href="@{/admin/orders}" class="action-btn">
-                <i class="bi bi-cart-check"></i>
-                <div>View Orders</div>
-            </a>
-            <a th:href="@{/admin/customers}" class="action-btn">
-                <i class="bi bi-people"></i>
-                <div>Manage Customers</div>
-            </a>
-            <a th:href="@{/admin/reports}" class="action-btn">
-                <i class="bi bi-graph-up"></i>
-                <div>View Reports</div>
-            </a>
-            <a th:href="@{/admin/support}" class="action-btn">
-                <i class="bi bi-headset"></i>
-                <div>Quản Lý Hỗ Trợ</div>
-            </a>
-        </div>
-
-        <div class="row">
-            <!-- Revenue Chart -->
-            <div class="col-lg-8">
-                <div class="chart-card">
-                    <h3>Revenue Overview</h3>
-                    <canvas id="revenueChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Recent Orders -->
-            <div class="col-lg-4">
-                <div class="recent-orders">
-                    <h3>Recent Orders</h3>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-001</h6>
-                            <p>John Doe - $139.97</p>
+                <!-- Recent Orders -->
+                <div class="col-lg-4">
+                    <div class="recent-orders">
+                        <h3>Recent Orders</h3>
+                        <div th:each="order : ${recentOrders}" class="order-item">
+                            <div class="order-info">
+                                <h6 th:text="${order.orderId}">#ORD-2024-001</h6>
+                                <p
+                                    th:text="${order.customerName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                                    John Doe - 150,000 VND</p>
+                            </div>
+                            <span th:text="${order.status}"
+                                th:class="'badge ' + ${#strings.toLowerCase(order.status)}">Pending</span>
                         </div>
-                        <span class="badge pending">Pending</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-002</h6>
-                            <p>Jane Smith - $239.98</p>
+                        <div th:if="${#lists.isEmpty(recentOrders)}" class="p-3 text-center text-muted">
+                            No recent orders.
                         </div>
-                        <span class="badge processing">Processing</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-003</h6>
-                            <p>Mike Brown - $129.99</p>
-                        </div>
-                        <span class="badge completed">Completed</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-004</h6>
-                            <p>Sarah Davis - $89.99</p>
-                        </div>
-                        <span class="badge pending">Pending</span>
-                    </div>
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h6>#ORD-2024-005</h6>
-                            <p>Robert Johnson - $199.99</p>
-                        </div>
-                        <span class="badge completed">Completed</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Sales by Category -->
-        <div class="row mt-4">
-            <div class="col-lg-6">
-                <div class="chart-card">
-                    <h3>Sales by Category</h3>
-                    <canvas id="categoryChart"></canvas>
+            <!-- Sales by Category -->
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h3>Sales by Category</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-card">
-                    <h3>Order Status</h3>
-                    <canvas id="orderStatusChart"></canvas>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h3>Order Status</h3>
+                        <canvas id="orderStatusChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Revenue Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Revenue ($)',
-                data: [3200, 3800, 4200, 3900, 4500, 5200, 4800, 5500, 5800, 6200, 6500, 7000],
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const monthlyRevenue = /*[[${monthlyRevenue}]]*/[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue (đ)',
+                    data: monthlyRevenue,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                                return value.toLocaleString() + ' VND';
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Category Chart
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Men Fashion', 'Women Fashion', 'Accessories', 'Shoes'],
-            datasets: [{
-                data: [35, 40, 15, 10],
-                backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryNames = /*[[${categoryNames}]]*/['Category 1', 'Category 2', 'Category 3', 'Category 4'];
+        const categorySales = /*[[${categorySales}]]*/[35, 40, 15, 10];
 
-    // Order Status Chart
-    const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-    new Chart(orderStatusCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Pending', 'Processing', 'Shipping', 'Completed', 'Cancelled'],
-            datasets: [{
-                label: 'Orders',
-                data: [45, 32, 28, 156, 8],
-                backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryNames,
+                datasets: [{
+                    data: categorySales,
+                    backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b']
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
-    });
-</script>
+        });
+
+        // Order Status Chart
+        const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+        const pendingOrders = /*[[${pendingOrders}]]*/ 0;
+        const processingOrders = /*[[${processingOrders}]]*/ 0;
+        const completedOrders = /*[[${completedOrders}]]*/ 0;
+
+        new Chart(orderStatusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Pending', 'Shipping', 'Completed'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [pendingOrders, processingOrders, completedOrders],
+                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 </body>
+
 </html>

@@ -67,6 +67,18 @@ public class AccountService {
         return roleRepository.findAll();
     }
 
+    public List<Role> getStaffRoles(){
+        List<Role> roles = roleRepository.findAll();
+
+        // loại bỏ Admin và Customer
+        roles.removeIf(role ->
+                role.getRoleName().equalsIgnoreCase("Admin") ||
+                        role.getRoleName().equalsIgnoreCase("Customer")
+        );
+
+        return roles;
+    }
+
     public void createStaff(Account account,Integer roleId){
 
         if(accountRepository.existsByUsername(account.getUsername()))
@@ -258,6 +270,28 @@ public class AccountService {
         return account;
     }
 
+    public String getAccountStatus(String username){
+        Account account = accountRepository.findByUsername(username)
+                .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
+        
+        if(account == null) return "NOT_FOUND";
+        
+        if(account.getPassword() == null) return "NO_PASSWORD";
+        
+        boolean passwordValid;
+        if(account.getPassword().startsWith("$2a$")){
+            passwordValid = passwordEncoder.matches("dummy",account.getPassword());
+        }else{
+            passwordValid = false;
+        }
+        
+        if(!passwordValid && !"ACTIVE".equalsIgnoreCase(account.getStatus())){
+            return account.getStatus();
+        }
+        
+        return "ACTIVE";
+    }
+
     //REGISTER
 
     public Account registerAccount(String email,String password,String fullName,String phone){
@@ -265,7 +299,9 @@ public class AccountService {
         if(accountRepository.existsByEmail(email))
             return null;
 
-        String baseUsername = email.split("@")[0];
+        String rawUsername = email.split("@")[0];
+        String safeUsername = rawUsername.replaceAll("[^a-zA-Z0-9_]", "_");
+        String baseUsername = safeUsername;
         String finalUsername = baseUsername;
         int count = 1;
 
@@ -391,7 +427,17 @@ public class AccountService {
 
             account.setEmail(email);
             account.setFullName(name);
-            account.setUsername(email.split("@")[0]); // username tạm từ email
+            
+            // Lọc bỏ ký tự đặc biệt khỏi username để tránh lỗi validate ^[a-zA-Z0-9_]+$
+            String rawUsername = email.split("@")[0];
+            String safeUsername = rawUsername.replaceAll("[^a-zA-Z0-9_]", "_");
+            String finalUsername = safeUsername;
+            int count = 1;
+            while(accountRepository.existsByUsername(finalUsername)){
+                finalUsername = safeUsername + count++;
+            }
+            account.setUsername(finalUsername); 
+            
             account.setPassword(null); // OAuth không cần password
             account.setStatus("ACTIVE");
 

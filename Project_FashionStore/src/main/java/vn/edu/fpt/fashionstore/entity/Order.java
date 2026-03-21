@@ -21,6 +21,10 @@ public class Order {
     @JoinColumn(name = "account_id")
     private Account account;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id")
+    private Voucher voucher;
+
     @Column(name = "order_date", nullable = false)
     @Temporal(TemporalType.DATE)
     private Date orderDate;
@@ -39,6 +43,9 @@ public class Order {
     // THÊM BIẾN NÀY ĐỂ ĐỒNG BỘ VỚI CODE BẠN CỦA BẠN
     @Column(name = "payment_status")
     private String paymentStatus;
+
+    @Column(name = "payment_method", length = 50)
+    private String paymentMethod;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
@@ -82,6 +89,12 @@ public class Order {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public Voucher getVoucher() { return voucher; }
+    public void setVoucher(Voucher voucher) { this.voucher = voucher; }
 
     // --- Business methods cũ của bạn ---
     public boolean canBeCancelled() {

@@ -1,18 +1,30 @@
 package vn.edu.fpt.fashionstore.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import vn.edu.fpt.fashionstore.entity.OrderItem;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
+    // Check if any order item exists for a specific variant
+    boolean existsByProductVariantVariantId(int variantId);
+    
+    // Get all order items for a specific variant
+    List<OrderItem> findByProductVariantVariantId(int variantId);
+    
+    // Count order items for a specific variant
+    long countByProductVariantVariantId(int variantId);
     // Lấy danh sách order items theo đơn hàng
     List<OrderItem> findByOrderOrderByOrderItemIdAsc(Order order);
     
@@ -47,4 +59,32 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     // Kiểm tra order item có thuộc đơn hàng không
     boolean existsByOrderItemIdAndOrder(Long orderItemId, Order order);
+
+    // ==========================================
+    // REPORT METHODS
+    // ==========================================
+
+    // Get best selling products with details
+    @Query("SELECT pv.product.productName, SUM(oi.quantity), SUM(oi.totalPrice), pv.product.category.categoryName " +
+           "FROM OrderItem oi " +
+           "JOIN oi.productVariant pv " +
+           "JOIN oi.order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses " +
+           "GROUP BY pv.product.productName, pv.product.category.categoryName " +
+           "ORDER BY SUM(oi.quantity) DESC")
+    List<Object[]> getBestSellingProducts(@Param("startDate") LocalDate startDate, 
+                                          @Param("endDate") LocalDate endDate, 
+                                          @Param("statuses") List<OrderStatus> statuses);
+
+    // Get best selling categories
+    @Query("SELECT pv.product.category.categoryName, SUM(oi.quantity), SUM(oi.totalPrice) " +
+           "FROM OrderItem oi " +
+           "JOIN oi.productVariant pv " +
+           "JOIN oi.order o " +
+           "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.status IN :statuses " +
+           "GROUP BY pv.product.category.categoryName " +
+           "ORDER BY SUM(oi.quantity) DESC")
+    List<Object[]> getBestSellingCategories(@Param("startDate") LocalDate startDate, 
+                                            @Param("endDate") LocalDate endDate, 
+                                            @Param("statuses") List<OrderStatus> statuses);
 }

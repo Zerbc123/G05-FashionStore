@@ -55,7 +55,7 @@ public class StaffAccountController {
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("account", new Account());
-        model.addAttribute("roles", accountService.getAllRoles());
+        model.addAttribute("roles", accountService.getStaffRoles());
         return "admin/add_new_staff";
     }
 
@@ -73,7 +73,7 @@ public class StaffAccountController {
                               Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("account", account);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", "Vui lòng kiểm tra lại thông tin nhập vào");
             return "admin/add_new_staff";
         }
@@ -83,7 +83,7 @@ public class StaffAccountController {
             return "redirect:/admin/staff";
         } catch (RuntimeException ex) {
             model.addAttribute("account", account);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", ex.getMessage());
             return "admin/add_new_staff";
         }
@@ -136,7 +136,7 @@ public class StaffAccountController {
         try {
             Account staff = accountService.getById(id);
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             return "admin/update_staff";
         } catch (RuntimeException ex) {
             return "redirect:/admin/staff?error=" + ex.getMessage();
@@ -154,7 +154,7 @@ public class StaffAccountController {
         }
         if (bindingResult.hasErrors()) {
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", "Vui lòng kiểm tra lại thông tin nhập vào");
             return "admin/update_staff";
         }
@@ -174,7 +174,7 @@ public class StaffAccountController {
             return "redirect:/admin/staff";
         } catch (RuntimeException ex) {
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", ex.getMessage());
             return "admin/update_staff";
         }
@@ -190,7 +190,7 @@ public class StaffAccountController {
         try {
             Account staff = accountService.getById(id);
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             return "admin/edit_staff_info";
         } catch (RuntimeException ex) {
             return "redirect:/admin/staff?error=" + ex.getMessage();
@@ -208,7 +208,7 @@ public class StaffAccountController {
         }
         if (bindingResult.hasErrors()) {
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", "Vui lòng kiểm tra lại thông tin nhập vào");
             return "admin/edit_staff_info";
         }
@@ -234,7 +234,7 @@ public class StaffAccountController {
             return "redirect:/admin/staff";
         } catch (RuntimeException ex) {
             model.addAttribute("staff", staff);
-            model.addAttribute("roles", accountService.getAllRoles());
+            model.addAttribute("roles", accountService.getStaffRoles());
             model.addAttribute("error", ex.getMessage());
             return "admin/edit_staff_info";
         }

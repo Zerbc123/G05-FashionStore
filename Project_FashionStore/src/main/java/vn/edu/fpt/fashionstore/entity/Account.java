@@ -38,8 +38,7 @@ public class Account {
     private String fullName;
 
     @Column(name = "phone")
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(regexp = "^(0)[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số")
+    @Pattern(regexp = "^$|^(0)[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số")
     private String phone;
 
     @Column(name = "status")

@@ -19,7 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 @Controller
-@RequestMapping("/staff/support")
+@RequestMapping("/staff/support-requests")
 @RequiredArgsConstructor
 public class StaffSupportController {
 

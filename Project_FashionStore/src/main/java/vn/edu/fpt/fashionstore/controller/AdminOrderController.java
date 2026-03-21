@@ -92,7 +92,7 @@ public class AdminOrderController {
 
             // Chuyển String nhận từ HTML form sang Enum
             try {
-                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
                 order.setStatus(newStatus);
                 orderRepository.save(order);
             } catch (IllegalArgumentException e) {
@@ -116,79 +116,91 @@ public class AdminOrderController {
     public void exportOrderToPDF(@PathVariable Long id,
                                  HttpServletResponse response) throws IOException {
 
+        System.out.println("DEBUG: PDF export requested for order ID: " + id);
+
         Order order = orderRepository.findOrderWithItems(id);
+        System.out.println("DEBUG: Order found: " + (order != null ? "YES" : "NO"));
 
         if (order == null) {
+            System.out.println("DEBUG: Order not found, returning error message");
             response.getWriter().write("Không tìm thấy đơn hàng");
             return;
         }
 
+        System.out.println("DEBUG: Setting up PDF response headers");
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition",
                 "attachment; filename=don_hang_" + id + ".pdf");
 
-        PdfWriter writer = new PdfWriter(response.getOutputStream());
-        PdfDocument pdf = new PdfDocument(writer);
+        try {
+            System.out.println("DEBUG: Creating PDF writer and document");
+            PdfWriter writer = new PdfWriter(response.getOutputStream());
+            PdfDocument pdf = new PdfDocument(writer);
 
-        // ===== LOAD FONT TIẾNG VIỆT =====
-        PdfFont font = PdfFontFactory.createFont(
-                getClass().getResource("/fonts/arial.ttf").toExternalForm(),
-                PdfEncodings.IDENTITY_H,
-                pdf);
+            // ===== LOAD FONT TIẾNG VIỆT =====
+            System.out.println("DEBUG: Loading font");
+            PdfFont font = PdfFontFactory.createFont(
+                    getClass().getResource("/fonts/arial.ttf").toExternalForm(),
+                    PdfEncodings.IDENTITY_H,
+                    pdf);
 
-        Document document = new Document(pdf);
-        document.setFont(font);
-        document.add(new Paragraph("Fashion store")
-                .setBold()
-                .setFontSize(25));
+            Document document = new Document(pdf);
+            document.setFont(font);
+            System.out.println("DEBUG: PDF document created successfully");
 
-        // ===== TIÊU ĐỀ =====
-        document.add(new Paragraph("HÓA ĐƠN BÁN HÀNG")
-                .setBold()
-                .setFontSize(20));
+            document.add(new Paragraph("Fashion store")
+                    .setBold()
+                    .setFontSize(25));
 
-        document.add(new Paragraph(" "));
-        document.add(new Paragraph("Mã đơn hàng: #" + order.getOrderId()));
-        document.add(new Paragraph("Tên người đặt: " + order.getCustomer().getFullName()));
-        document.add(new Paragraph("Số điện thoại: " + order.getCustomer().getPhone()));
-        document.add(new Paragraph("Địa chỉ giao hàng: " + order.getShippingAddress()));
-        document.add(new Paragraph("Ngày đặt: " + order.getOrderDate()));
-        document.add(new Paragraph(" "));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Mã đơn hàng: #" + order.getOrderId()));
+            document.add(new Paragraph("Tên người đặt: " + order.getCustomer().getFullName()));
+            document.add(new Paragraph("Số điện thoại: " + order.getCustomer().getPhone()));
+            document.add(new Paragraph("Địa chỉ giao hàng: " + order.getShippingAddress()));
+            document.add(new Paragraph("Ngày đặt: " + order.getOrderDate()));
+            document.add(new Paragraph(" "));
 
-        // ===== BẢNG SẢN PHẨM =====
-        Table table = new Table(4);
-        table.addHeaderCell("Sản phẩm");
-        table.addHeaderCell("Đơn giá");
-        table.addHeaderCell("Số lượng");
-        table.addHeaderCell("Thành tiền");
+            // ===== BẢNG SẢN PHẨM =====
+            Table table = new Table(4);
+            table.addHeaderCell("Sản phẩm");
+            table.addHeaderCell("Đơn giá");
+            table.addHeaderCell("Số lượng");
+            table.addHeaderCell("Thành tiền");
 
-        double tongTien = 0;
+            double tongTien = 0;
 
-        for (OrderItem item : order.getOrderItems()) {
+            for (OrderItem item : order.getOrderItems()) {
 
-            // Đã sửa lại thành getTotalPrice() cho khớp với Entity OrderItem của bạn
-            double thanhTien = item.getTotalPrice() != null ? item.getTotalPrice() : 0;
-            int soLuong = item.getQuantity() != null ? item.getQuantity() : 0;
+                // Đã sửa lại thành getTotalPrice() cho khớp với Entity OrderItem của bạn
+                double thanhTien = item.getTotalPrice() != null ? item.getTotalPrice() : 0;
+                int soLuong = item.getQuantity() != null ? item.getQuantity() : 0;
 
-            // Tính ngược lại đơn giá để in ra bảng
-            double gia = (soLuong > 0) ? (thanhTien / soLuong) : 0;
+                // Tính ngược lại đơn giá để in ra bảng
+                double gia = (soLuong > 0) ? (thanhTien / soLuong) : 0;
 
-            tongTien += thanhTien;
+                tongTien += thanhTien;
 
-            table.addCell(item.getProductVariant().getProduct().getProductName());
-            table.addCell(String.format("%,.0f VNĐ", gia));
-            table.addCell(String.valueOf(soLuong));
-            table.addCell(String.format("%,.0f VNĐ", thanhTien));
+                table.addCell(item.getProductVariant().getProduct().getProductName());
+                table.addCell(String.format("%,.0f VNĐ", gia));
+                table.addCell(String.valueOf(soLuong));
+                table.addCell(String.format("%,.0f VNĐ", thanhTien));
+            }
+
+            document.add(table);
+
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("TỔNG TIỀN: " + String.format("%,.0f VNĐ", tongTien)).setBold());
+
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Cảm ơn quý khách đã mua hàng!"));
+
+            document.close();
+            System.out.println("DEBUG: PDF created and closed successfully");
+            
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error creating PDF: " + e.getMessage());
+            e.printStackTrace();
+            response.getWriter().write("Lỗi khi tạo PDF: " + e.getMessage());
         }
-
-        document.add(table);
-
-        document.add(new Paragraph(" "));
-        document.add(new Paragraph("TỔNG TIỀN: " + String.format("%,.0f VNĐ", tongTien)).setBold());
-
-        document.add(new Paragraph(" "));
-        document.add(new Paragraph("Cảm ơn quý khách đã mua hàng!"));
-
-        document.close();
     }
 }

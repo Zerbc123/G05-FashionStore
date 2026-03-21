@@ -73,7 +73,6 @@ public class OrderItem {
         // Không còn unitPrice nên không tính lại ở đây
     }
     
-    
     public Double getTotalPrice() {
         return totalPrice;
     }

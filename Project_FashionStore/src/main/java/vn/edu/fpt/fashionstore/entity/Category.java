@@ -15,8 +15,7 @@ public class Category {
     @Column (name = "category_name")
     private String categoryName;
 
-    @OneToMany(mappedBy = "category")
-    private List<CategorySize> sizes;
+
 
     public Category() {
     }
@@ -42,11 +41,5 @@ public class Category {
         this.categoryName = categoryName;
     }
 
-    public List<CategorySize> getSizes() {
-        return sizes;
-    }
 
-    public void setSizes(List<CategorySize> sizes) {
-        this.sizes = sizes;
-    }
 }

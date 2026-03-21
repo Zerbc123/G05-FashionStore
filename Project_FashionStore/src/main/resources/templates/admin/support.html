@@ -303,7 +303,7 @@
 
                         th:classappend="${status == 'OPEN'} ? 'active' : ''">
 
-                    <i class="fas fa-circle text-green-500 text-xs mr-1"></i> OPEN
+                    <i class="fas fa-circle text-green-500 text-xs mr-1"></i> Mở
 
                 </button>
 
@@ -313,7 +313,7 @@
 
                         th:classappend="${status == 'IN_PROGRESS'} ? 'active' : ''">
 
-                    <i class="fas fa-circle text-yellow-500 text-xs mr-1"></i> IN_PROGRESS
+                    <i class="fas fa-circle text-yellow-500 text-xs mr-1"></i> Đang xử lý
 
                 </button>
 
@@ -323,7 +323,7 @@
 
                         th:classappend="${status == 'RESOLVED'} ? 'active' : ''">
 
-                    <i class="fas fa-circle text-blue-500 text-xs mr-1"></i> RESOLVED
+                    <i class="fas fa-circle text-blue-500 text-xs mr-1"></i> Hoàn thành
 
                 </button>
 
@@ -333,7 +333,7 @@
 
                         th:classappend="${status == 'CLOSED'} ? 'active' : ''">
 
-                    <i class="fas fa-circle text-gray-500 text-xs mr-1"></i> CLOSED
+                    <i class="fas fa-circle text-gray-500 text-xs mr-1"></i> Đóng
 
                 </button>
 
@@ -400,12 +400,15 @@
                     <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">Hỗ trợ</span>
                 </td>
 
-                <td class="px-6 py-4">
-                    <span class="status-badge" 
-                          th:classappend="${request.status} == 'OPEN' ? 'bg-green-100 text-green-700' : 
-                                         (${request.status} == 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' : 
-                                         (${request.status} == 'RESOLVED' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'))"
-                          th:text="${request.status}">OPEN</span>
+                <td class="px-6 py-4 text-center">
+    <span class="status-badge"
+          th:classappend="${request.status.name()} == 'OPEN' ? 'bg-green-100 text-green-700' :
+                         (${request.status.name()} == 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-700' :
+                         (${request.status.name()} == 'RESOLVED' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'))"
+          th:text="${request.status.name() == 'OPEN' ? 'Mở' :
+                    request.status.name() == 'IN_PROGRESS' ? 'Đang xử lý' :
+                    request.status.name() == 'RESOLVED' ? 'Hoàn thành' : 'Đóng'}">
+    </span>
                 </td>
 
                 <td class="px-6 py-4 text-sm text-text-muted" 
