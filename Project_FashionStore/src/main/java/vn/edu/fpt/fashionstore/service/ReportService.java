@@ -130,20 +130,28 @@ public class ReportService {
             List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> products = new ArrayList<>();
             
+            System.out.println("DEBUG: Found " + (bestSellingProducts != null ? bestSellingProducts.size() : 0) + " best selling products");
+            
             if (bestSellingProducts != null) {
                 for (Object[] row : bestSellingProducts) {
-                    if (row != null && row.length >= 4) {
+                    // Query now returns: productId, productName, totalSold, revenue, categoryName
+                    if (row != null && row.length >= 5) {
                         Map<String, Object> item = new HashMap<>();
-                        item.put("productName", row[0] != null ? row[0] : "N/A");
-                        item.put("totalSold", row[1] != null ? ((Number) row[1]).longValue() : 0L);
-                        item.put("revenue", row[2] != null ? ((Number) row[2]).doubleValue() : 0.0);
-                        item.put("categoryName", row[3] != null ? row[3] : "N/A");
+                        item.put("productId", row[0] != null ? ((Number) row[0]).longValue() : 0L);
+                        item.put("productName", row[1] != null ? row[1] : "N/A");
+                        item.put("totalSold", row[2] != null ? ((Number) row[2]).longValue() : 0L);
+                        item.put("revenue", row[3] != null ? ((Number) row[3]).doubleValue() : 0.0);
+                        item.put("categoryName", row[4] != null ? row[4] : "N/A");
                         products.add(item);
+                        
+                        System.out.println("DEBUG: Product " + item.get("productName") + " - Sold: " + item.get("totalSold") + " - Revenue: " + item.get("revenue"));
                         
                         // Limit to top 5 products
                         if (products.size() >= 5) {
                             break;
                         }
+                    } else {
+                        System.out.println("DEBUG: Skipping row with insufficient data: " + (row != null ? row.length : "null") + " columns");
                     }
                 }
             }
@@ -151,6 +159,8 @@ public class ReportService {
             // Get best selling categories
             List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate, ACTIVE_STATUSES);
             List<Map<String, Object>> categories = new ArrayList<>();
+            
+            System.out.println("DEBUG: Found " + (bestSellingCategories != null ? bestSellingCategories.size() : 0) + " best selling categories");
             
             if (bestSellingCategories != null) {
                 for (Object[] row : bestSellingCategories) {
@@ -160,6 +170,8 @@ public class ReportService {
                         item.put("totalSold", row[1] != null ? ((Number) row[1]).longValue() : 0L);
                         item.put("revenue", row[2] != null ? ((Number) row[2]).doubleValue() : 0.0);
                         categories.add(item);
+                        
+                        System.out.println("DEBUG: Category " + item.get("categoryName") + " - Sold: " + item.get("totalSold") + " - Revenue: " + item.get("revenue"));
                     }
                 }
             }

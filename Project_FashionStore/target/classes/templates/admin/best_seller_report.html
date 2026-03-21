@@ -183,16 +183,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="item, stat : ${report.products != null ? report.products : empty}">
+                        <tr th:each="item, stat : ${report.products != null ? report.products : #lists.emptyList}">
                             <td>
                                 <div class="rank-badge" 
                                      th:classappend="${stat.index == 0 ? 'rank-1' : (stat.index == 1 ? 'rank-2' : (stat.index == 2 ? 'rank-3' : 'rank-other'))}"
                                      th:text="${stat.index + 1}">1</div>
                             </td>
-                            <td class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</td>
+                            <td>
+                                <a th:href="@{/admin/products/{id}(id=${item.productId})}" class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</a>
+                            </td>
                             <td><span class="category-badge" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span></td>
                             <td th:text="${item.totalSold != null ? item.totalSold : 0}">0</td>
-                             <td class="revenue-amount" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
+                            <td class="revenue-amount" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
                             <td>
                                 <span class="badge bg-success" th:if="${item.totalSold != null and item.totalSold > 50}">
                                     <i class="bi bi-arrow-up"></i> Hot
@@ -206,6 +208,13 @@
                                 <span class="badge bg-secondary" th:if="${item.totalSold == null or item.totalSold <= 5}">
                                     <i class="bi bi-arrow-down"></i> Normal
                                 </span>
+                            </td>
+                        </tr>
+                        <tr th:if="${report.products == null or #lists.isEmpty(report.products)}">
+                            <td colspan="6" class="text-center py-5">
+                                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-3">Không có dữ liệu bán hàng trong khoảng thời gian này</p>
+                                <small class="text-muted">Vui lòng chọn khoảng thời gian khác hoặc kiểm tra lại đơn hàng</small>
                             </td>
                         </tr>
                     </tbody>

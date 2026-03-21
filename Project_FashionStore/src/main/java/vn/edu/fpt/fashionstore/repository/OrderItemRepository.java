@@ -58,8 +58,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     // Kiểm tra order item có thuộc đơn hàng không
     boolean existsByOrderItemIdAndOrder(Long orderItemId, Order order);
 
-    // Selling Report Queries
-    @Query("SELECT p.productName, SUM(oi.quantity) as totalSold, SUM(oi.totalPrice) as revenue, c.categoryName " +
+    // Selling Report Queries - FIXED: Group by productId instead of productName to avoid merging different products with same name
+    @Query("SELECT p.productId, p.productName, SUM(oi.quantity) as totalSold, SUM(oi.totalPrice) as revenue, c.categoryName " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant v " +
            "JOIN v.product p " +
@@ -67,7 +67,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
            "JOIN oi.order o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
            "AND o.status IN :statuses " +
-           "GROUP BY p.productName, c.categoryName " +
+           "GROUP BY p.productId, p.productName, c.categoryName " +
            "ORDER BY totalSold DESC")
     List<Object[]> getBestSellingProducts(@Param("startDate") LocalDate startDate,
                                         @Param("endDate") LocalDate endDate,

@@ -293,7 +293,7 @@ public class AdminController {
 
         LocalDate start = startDate != null ? 
             LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(1);
+            LocalDate.of(2025, 1, 1); // Default: from 2025 to catch all historical data
         LocalDate end = endDate != null ? 
             LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
             LocalDate.now();
@@ -316,7 +316,7 @@ public class AdminController {
 
         LocalDate start = startDate != null && !startDate.isEmpty() ? 
             LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
-            LocalDate.now().minusMonths(1);
+            LocalDate.of(2025, 1, 1); // Default: from 2025 to catch all historical data
         LocalDate end = endDate != null && !endDate.isEmpty() ? 
             LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")) : 
             LocalDate.now();
