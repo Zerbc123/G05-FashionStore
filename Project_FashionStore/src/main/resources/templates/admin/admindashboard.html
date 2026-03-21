@@ -247,6 +247,31 @@
             color: #004085;
         }
 
+        .badge.confirmed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .badge.shipping {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge.refunded {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge.unknown {
+            background: #f2f2f2;
+            color: #666;
+        }
+
         /* Quick Actions */
         .quick-actions {
             display: grid;
@@ -306,7 +331,7 @@
                         <i class="bi bi-cash-stack"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND
+                        <h3 th:text="${#numbers.formatDecimal(totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND
                         </h3>
                         <p>Total Revenue</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Dynamic Update</span>
@@ -318,7 +343,7 @@
                         <i class="bi bi-cart-check"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalOrders}">1,245</h3>
+                        <h3 th:text="${totalOrders}">1,245</h3>
                         <p>Total Orders</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Real-time tracking</span>
                     </div>
@@ -329,7 +354,7 @@
                         <i class="bi bi-people"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalCustomers}">3,567</h3>
+                        <h3 th:text="${totalCustomers}">3,567</h3>
                         <p>Total Customers</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Growing community</span>
                     </div>
@@ -340,7 +365,7 @@
                         <i class="bi bi-box-seam"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalProducts}">456</h3>
+                        <h3 th:text="${totalProducts}">456</h3>
                         <p>Total Products</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Live inventory</span>
                     </div>
@@ -386,13 +411,12 @@
                         <h3>Recent Orders</h3>
                         <div th:each="order : ${recentOrders}" class="order-item">
                             <div class="order-info">
-                                <h6 th:text="${order.orderId}">#ORD-2024-001</h6>
-                                <p
-                                    th:text="${order.customerName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                                <h6 th:text="'#' + ${order.orderId}">#ORD-2024-001</h6>
+                                <p th:text="${order.customer != null ? order.customer.fullName : 'N/A'} + ' - ' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
                                     John Doe - 150,000 VND</p>
                             </div>
-                            <span th:text="${order.status}"
-                                th:class="'badge ' + ${#strings.toLowerCase(order.status)}">Pending</span>
+                            <span th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}"
+                                th:class="'badge ' + ${order.status != null ? #strings.toLowerCase(order.status.name()) : 'unknown'}">Pending</span>
                         </div>
                         <div th:if="${#lists.isEmpty(recentOrders)}" class="p-3 text-center text-muted">
                             No recent orders.

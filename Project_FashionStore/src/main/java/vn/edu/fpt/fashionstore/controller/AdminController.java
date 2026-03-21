@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,6 +57,7 @@ public class AdminController {
 
     // Admin Dashboard
     @GetMapping("/dashboard")
+    @Transactional(readOnly = true)
     public String dashboard(HttpSession session, Model model) {
         if (!isAdmin(session)) {
             return "redirect:/login";
@@ -101,12 +103,7 @@ public class AdminController {
         Map<Integer, Double> revenueByMonth = orders.stream()
             .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
-                order -> {
-                    // Convert Date to LocalDate safely using Calendar
-                    java.util.Calendar calendar = java.util.Calendar.getInstance();
-                    calendar.setTime(order.getOrderDate());
-                    return calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
-                },
+                order -> order.getOrderDate().getMonthValue(), // LocalDate.getMonthValue() returns 1-12
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             ));
         
@@ -157,6 +154,7 @@ public class AdminController {
 
     // Quản lý sản phẩm
     @GetMapping("/products")
+    @Transactional(readOnly = true)
     public String products(HttpSession session, Model model,
                        @RequestParam(required = false) String search,
                        @RequestParam(required = false) String category) {
@@ -203,6 +201,7 @@ public class AdminController {
 
     // Quản lý kho hàng
     @GetMapping("/inventory")
+    @Transactional(readOnly = true)
     public String inventory(HttpSession session, Model model,
                           @RequestParam(defaultValue = "0") int page,
                           @RequestParam(defaultValue = "10") int size) {
@@ -329,6 +328,7 @@ public class AdminController {
     // ======== ADMIN PROFILE ========
 
     @GetMapping("/profile")
+    @Transactional(readOnly = true)
     public String adminProfile(HttpSession session, Model model) {
         if (!isAdmin(session)) return "redirect:/login";
 

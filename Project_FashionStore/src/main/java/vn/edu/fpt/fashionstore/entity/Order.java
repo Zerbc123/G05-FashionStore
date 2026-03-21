@@ -26,10 +26,6 @@ public class Order {
     private Voucher voucher;
 
     @Column(name = "order_date", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date orderDate;
-
-    @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;
     
     @Column(name = "total_amount", nullable = false)
@@ -120,9 +116,6 @@ public class Order {
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
-    public Voucher getVoucher() { return voucher; }
-    public void setVoucher(Voucher voucher) { this.voucher = voucher; }
-
     // --- Business methods cũ của bạn ---
     public boolean canBeCancelled() {
         return status == OrderStatus.PENDING;
@@ -153,9 +146,9 @@ public class Order {
         System.out.println("Order #" + orderId + " cancelled by: " + cancelledBy + ", reason: " + reason);
     }
 
-    // public String getOrderCode() {
-    //     return "#" + String.format("%06d", orderId);
-    // }
+    public String getOrderCode() {
+        return "#" + String.format("%06d", orderId);
+    }
 
     // public String getDeliveryAddress() {
     //     return customer != null ? customer.getAddress() : "";

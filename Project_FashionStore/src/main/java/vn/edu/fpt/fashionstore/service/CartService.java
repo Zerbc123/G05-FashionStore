@@ -69,7 +69,10 @@ public class CartService {
             newCartItem.setQuantity(quantity);
             cartRepository.save(newCartItem);
         }
+    } catch (Exception e) {
+        throw new RuntimeException("Lỗi khi thêm vào giỏ hàng: " + e.getMessage(), e);
     }
+}
 
     // Cập nhật số lượng
     @Transactional

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:temp="http://www.thymeleaf.org/extras/temporal">
 
 <head>
     <meta charset="UTF-8">
@@ -21,19 +21,19 @@
             <div class="card-body">
 
                 <p><strong>Khách hàng:</strong>
-                    <span th:text="${order.customer.fullName}"></span>
+                    <span th:text="${order.customer != null ? order.customer.fullName : 'N/A'}"></span>
                 </p>
 
                 <p><strong>Số điện thoại:</strong>
-                    <span th:text="${order.customer.phone}"></span>
+                    <span th:text="${order.customer != null ? order.customer.phone : 'N/A'}"></span>
                 </p>
 
                 <p><strong>Ngày đặt:</strong>
-                    <span th:text="${#dates.format(order.orderDate,'dd/MM/yyyy')}"></span>
+                    <span th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></span>
                 </p>
 
                 <p><strong>Trạng thái:</strong>
-                    <span th:text="${order.status}"></span>
+                    <span th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}"></span>
                 </p>
 
                 <p><strong>Địa chỉ giao hàng:</strong>
@@ -69,18 +69,17 @@
                             <tr th:each="item : ${order.orderItems}">
 
                                 <td>
-                                    <img th:src="@{${item.productVariant.imageUrl}}" width="70" height="70"
+                                    <img th:src="@{${item.productVariant != null && item.productVariant.imageUrl != null ? item.productVariant.imageUrl : '/images/no-image.jpg'}}" width="70" height="70"
                                         style="object-fit:cover;">
                                 </td>
 
-                                <td th:text="${item.productVariant.product.productName}"></td>
+                                <td th:text="${item.productVariant != null && item.productVariant.product != null ? item.productVariant.product.productName : 'Unknown Product'}"></td>
 
-                                <td th:text="${#numbers.formatDecimal(item.productVariant.price,0,'COMMA',0,'POINT')} + ' đ'"></td>
+                                <td th:text="${#numbers.formatDecimal(item.productVariant != null ? item.productVariant.price : 0,0,'COMMA',0,'POINT')} + ' đ'"></td>
 
                                 <td th:text="${item.quantity}"></td>
 
-                                <td
-                                    th:text="${#numbers.formatDecimal(item.totalPrice,0,'COMMA',0,'POINT')} + ' đ'">
+                                <td th:text="${#numbers.formatDecimal(item.getTotalPrice(),0,'COMMA',0,'POINT')} + ' đ'">
                                 </td>
 
                             </tr>

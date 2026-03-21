@@ -3,7 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Banner")
+@Table(name = "Banners")
 public class Banner {
 
     @Id

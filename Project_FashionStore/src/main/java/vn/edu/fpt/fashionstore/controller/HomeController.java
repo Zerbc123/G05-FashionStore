@@ -35,6 +35,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 public class HomeController {
@@ -67,7 +68,10 @@ public class HomeController {
     @GetMapping("/")
     public String root() {
         return "redirect:/home";
-    }@GetMapping("/home")
+    }
+
+    @GetMapping("/home")
+    @Transactional(readOnly = true)
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
 
         // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
@@ -150,6 +154,7 @@ public class HomeController {
     }
 
     @GetMapping("/profile")
+    @Transactional(readOnly = true)
     public String viewProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
@@ -169,6 +174,7 @@ public class HomeController {
     }
 
     @GetMapping(value = "/edit-profile")
+    @Transactional(readOnly = true)
     public String editProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
@@ -190,6 +196,7 @@ public class HomeController {
     }
 
     @GetMapping(value = "/order-history")
+    @Transactional(readOnly = true)
     public String orderHistoryPage(HttpSession session, Model model) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -225,6 +232,7 @@ public class HomeController {
     }
 
     @PostMapping("/login")
+    @Transactional(readOnly = true)
     public String handleLogin(@RequestParam String username,
                               @RequestParam String password,
                               HttpSession session,

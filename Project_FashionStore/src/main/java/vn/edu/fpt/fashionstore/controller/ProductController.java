@@ -9,6 +9,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import vn.edu.fpt.fashionstore.entity.*;
 import vn.edu.fpt.fashionstore.service.*;
 import vn.edu.fpt.fashionstore.repository.*;
@@ -35,6 +38,31 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    // Thêm các repository còn thiếu
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ColorRepository colorRepository;
+
+    @Autowired
+    private CategorySizeRepository categorySizeRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private ProductVariantService productVariantService;
+
+    @Autowired
+    private ProductRepository productRepository;
+
     // ========================================================================
     // 1. DANH SÁCH SẢN PHẨM (LIST)
     // URL: /products
@@ -54,8 +82,6 @@ public class ProductController {
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
-            @RequestParam(defaultValue = "productName") String sort,
-            @RequestParam(defaultValue = "asc") String direction,
             Model model) {
 
         // Xử lý priceRange để chuyển thành minPrice và maxPrice
@@ -831,9 +857,15 @@ public class ProductController {
     // ========================================================================
     // 11. ADMIN - DELETE PRODUCT
     // ========================================================================
-    private boolean hasFilter(String keyword, Long categoryId, String size, Double minPrice, Double maxPrice) {
-        return (keyword != null && !keyword.isBlank()) || categoryId != null ||
-                (size != null && !size.isBlank()) || minPrice != null || maxPrice != null;
+    private boolean hasFilter(String keyword, Long categoryId, String categoryName,
+            String size, String color, Double minPrice, Double maxPrice) {
+        return (keyword != null && !keyword.isBlank())
+                || categoryId != null
+                || (categoryName != null && !categoryName.isBlank())
+                || (size != null && !size.isBlank())
+                || (color != null && !color.isBlank())
+                || minPrice != null
+                || maxPrice != null;
     }
 
     // --- THÊM MỚI HÀM NÀY ĐỂ LẤY KHÁCH HÀNG ---

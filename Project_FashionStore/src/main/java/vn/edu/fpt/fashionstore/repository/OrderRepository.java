@@ -56,8 +56,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.customer = :customer AND o.orderDate BETWEEN :startDate AND :endDate ORDER BY o.orderDate DESC")
     List<Order> findByCustomerAndOrderDateBetween(
             @Param("customer") Customer customer,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate);
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
        // Kiểm tra khách hàng có sở hữu đơn hàng không
        boolean existsByOrderIdAndCustomer(Long orderId, Customer customer);
@@ -73,12 +73,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "LEFT JOIN FETCH o.customer " +
             "WHERE o.orderId = :orderId")
     Order findByOrderIdWithDetails(@Param("orderId") Long orderId);
-
-    // Lấy danh sách đơn hàng của khách hàng theo customerId
-    List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);
-
-    // Tìm đơn hàng theo nhiều trạng thái
-    List<Order> findByStatusInOrderByOrderDateDesc(List<OrderStatus> statuses);
 
     // Lấy danh sách đơn hàng của khách hàng theo customerId
     List<Order> findByCustomer_CustomerIdOrderByOrderDateDesc(Long customerId);

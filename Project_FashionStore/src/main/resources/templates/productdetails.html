@@ -368,43 +368,46 @@ function updateBuyNowFormQuantity() {
     }
 }
 
+function addToCart() {
+    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+    const selectedColor = document.querySelector('input[name="colorId"]:checked');
+    
+    if (!selectedSize) {
+        alert('⚠️ Vui lòng chọn Kích thước trước khi thêm vào giỏ hàng!');
+        return;
+    }
+    
+    if (!selectedColor) {
+        alert('⚠️ Vui lòng chọn Màu sắc trước khi thêm vào giỏ hàng!');
+        return;
+    }
+    
+    // Submit form thêm vào giỏ hàng
+    document.getElementById('mainCartForm').submit();
+}
+
 function buyNow() {
-    // Lấy size và color đã chọn
     const selectedSize = document.querySelector('input[name="sizeId"]:checked');
     const selectedColor = document.querySelector('input[name="colorId"]:checked');
     const selectedQuantity = document.querySelector('input[name="quantity"]').value;
     
-    // Kiểm tra đã chọn size và color chưa
     if (!selectedSize) {
-        alert('Vui lòng chọn size!');
+        alert('⚠️ Vui lòng chọn Kích thước trước khi mua!');
         return;
     }
-
-    // --- HÀM CHO NÚT MUA NGAY ---
-    function buyNow() {
-        const selectedSize = document.querySelector('input[name="sizeId"]:checked');
-        const selectedColor = document.querySelector('input[name="colorId"]:checked');
-
-        if (!selectedSize || !selectedColor) {
-            alert('⚠️ Vui lòng chọn Kích thước và Màu sắc trước khi mua!');
-            return;
-        }
-
-        // Gán giá trị vào form ẩn
-        document.getElementById('directSizeId').value = selectedSize.value;
-        document.getElementById('directColorId').value = selectedColor.value;
-
-        // Bấm cò: Submit thẳng sang trang Thanh Toán
-        document.getElementById('directCheckoutForm').submit();
+    
+    if (!selectedColor) {
+        alert('⚠️ Vui lòng chọn Màu sắc trước khi mua!');
+        return;
     }
     
-    // Set giá trị vào form ẩn
-    document.getElementById('buyNowSizeId').value = selectedSize.value;
-    document.getElementById('buyNowColorId').value = selectedColor.value;
-    document.querySelector('#buyNowForm input[name="quantity"]').value = selectedQuantity;
+    // Gán giá trị vào form ẩn
+    document.getElementById('directSizeId').value = selectedSize.value;
+    document.getElementById('directColorId').value = selectedColor.value;
+    document.querySelector('#directCheckoutForm input[name="quantity"]').value = selectedQuantity;
     
     // Submit form MUA NGAY
-    document.getElementById('buyNowForm').submit();
+    document.getElementById('directCheckoutForm').submit();
 }
 </script>
 

@@ -269,6 +269,32 @@ public class ProductService {
     }
 
     // Sửa lỗi trong ảnh bạn gửi
+    // Lọc sản phẩm theo tên danh mục
+    public Page<Product> filterByCategoryName(String categoryName, Pageable pageable) {
+        Specification<Product> spec = (root, query, cb) -> {
+            query.distinct(true);
+            if (categoryName != null && !categoryName.isBlank()) {
+                return cb.equal(cb.lower(root.get("category").get("categoryName")), 
+                              categoryName.toLowerCase());
+            }
+            return cb.conjunction();
+        };
+        
+        Page<Product> result = productRepository.findAll(spec, pageable);
+        
+        // Force load variants và category sau khi query
+        result.forEach(product -> {
+            if (product.getVariants() != null) {
+                product.getVariants().size();
+            }
+            if (product.getCategory() != null) {
+                product.getCategory().getCategoryName();
+            }
+        });
+        
+        return result;
+    }
+
     public Product getProductById(Long productId) {
         // Đảm bảo tên phương thức này giống hệt tên trong Repository
         return productRepository.findByProductIdWithVariants(productId);

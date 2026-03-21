@@ -20,6 +20,10 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     Optional<Account> findByEmail(String email);
 
+    // Fetch Account with Customers eagerly to prevent LazyInitializationException
+    @Query("SELECT a FROM Account a LEFT JOIN FETCH a.customers WHERE a.email = :email")
+    Optional<Account> findByEmailWithCustomers(@Param("email") String email);
+
     // CHECK TRÙNG
     boolean existsByUsername(String username);
 

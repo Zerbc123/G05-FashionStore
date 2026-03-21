@@ -217,14 +217,36 @@ public class OrderController {
                 model.addAttribute("errorFullName", e.getMessage().contains("tên") ? e.getMessage() : null);
                 model.addAttribute("errorPhone", e.getMessage().contains("điện thoại") ? e.getMessage() : null);
                 model.addAttribute("errorAddress", e.getMessage().contains("địa chỉ") ? e.getMessage() : null);
+                return "checkout";
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải trang: " + ex.getMessage());
+                return "redirect:/order/checkout";
+            }
+        }
 
-        if (deliveryAddress.trim().isEmpty()) {
+        // Kiểm tra deliveryAddress riêng
+        boolean hasError = false;
+        if (deliveryAddress == null || deliveryAddress.trim().isEmpty()) {
             model.addAttribute("errorAddress", "Vui lòng chọn địa chỉ giao hàng.");
             hasError = true;
         }
 
         if (hasError) {
-            return checkoutPage(model, session, redirectAttributes);
+            // Load lại cart và trả về checkout với lỗi
+            try {
+                List<CartItem> cartItems = orderService.getCartItemsForValidation(session, currentCustomer);
+                double subtotal = orderService.calculateCartTotal(cartItems);
+                model.addAttribute("cartItems", cartItems);
+                model.addAttribute("total", subtotal);
+                model.addAttribute("fullName", fullName);
+                model.addAttribute("phone", phone);
+                model.addAttribute("address", deliveryAddress);
+                model.addAttribute("validVouchers", orderService.getValidVouchers());
+                return "checkout";
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+                return "redirect:/order/checkout";
+            }
         }
 
         try {

@@ -72,7 +72,7 @@ public class AccountService implements UserDetailsService {
         return roleRepository.findAll();
     }
 
-    public List<Role> getStaffRoles(){
+    public List<Role> getStaffRoles() {
         List<Role> roles = roleRepository.findAll();
 
         // loại bỏ Admin và Customer
@@ -83,8 +83,6 @@ public class AccountService implements UserDetailsService {
 
         return roles;
     }
-
-    public void createStaff(Account account,Integer roleId){
 
     public void createStaff(Account account, Integer roleId) {
         if (accountRepository.existsByUsername(account.getUsername()))
@@ -174,37 +172,37 @@ public class AccountService implements UserDetailsService {
     }
 
     // Test method để kiểm tra việc lấy Account từ DB
-    public String testAccountConnection(){
+    public String testAccountConnection() {
         try {
             long totalAccounts = accountRepository.count();
             Optional<Account> adminAccount = accountRepository.findByUsername("admin");
             Optional<Account> firstAccount = accountRepository.findById(1);
-            
+
             StringBuilder result = new StringBuilder();
             result.append("=== Account Connection Test ===\n");
             result.append("Total accounts: ").append(totalAccounts).append("\n");
-            
-            if(adminAccount.isPresent()){
+
+            if (adminAccount.isPresent()) {
                 Account admin = adminAccount.get();
                 result.append("Admin found: ").append(admin.getUsername()).append(" (").append(admin.getEmail()).append(")\n");
             } else {
                 result.append("Admin NOT found\n");
             }
-            
-            if(firstAccount.isPresent()){
+
+            if (firstAccount.isPresent()) {
                 Account first = firstAccount.get();
                 result.append("First account: ").append(first.getUsername()).append(" (ID: ").append(first.getAccountId()).append(")\n");
             } else {
                 result.append("No account with ID=1 found\n");
             }
-            
+
             // Test role mapping
             List<Role> roles = getAllRoles();
             result.append("Total roles: ").append(roles.size()).append("\n");
-            for(Role role : roles){
+            for (Role role : roles) {
                 result.append("- ").append(role.getRoleName()).append("\n");
             }
-            
+
             return result.toString();
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
@@ -241,44 +239,59 @@ public class AccountService implements UserDetailsService {
     public Account authenticate(String username, String password) {
         Account account = accountRepository.findByUsername(username)
                 .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
-        if (account == null || account.getPassword() == null) return null;
-        boolean passwordValid;
-        if (account.getPassword().startsWith("$2a$")) {
-            passwordValid = passwordEncoder.matches(password, account.getPassword());
-        } else {
-            passwordValid = account.getPassword().equals(password);
+        if (account == null || account.getPassword() == null) {
+            System.out.println("DEBUG: Account not found or password is null for username: " + username);
+            return null;
         }
-        if (!passwordValid || !"ACTIVE".equalsIgnoreCase(account.getStatus())) return null;
+        boolean passwordValid;
+        String storedPassword = account.getPassword();
+        System.out.println("DEBUG: Stored password format check for account: " + username);
+        
+        // Check if password is BCrypt encoded (starts with $2a$, $2b$, $2y$)
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+            System.out.println("DEBUG: Password is BCrypt encoded, using passwordEncoder.matches()");
+            passwordValid = passwordEncoder.matches(password, storedPassword);
+            System.out.println("DEBUG: passwordEncoder.matches() result: " + passwordValid);
+        } else {
+            System.out.println("DEBUG: Password is plain text or other format, direct comparison");
+            passwordValid = storedPassword.equals(password);
+            System.out.println("DEBUG: Direct comparison result: " + passwordValid);
+        }
+        if (!passwordValid || !"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+            System.out.println("DEBUG: Authentication failed - passwordValid: " + passwordValid + ", status: " + account.getStatus());
+            return null;
+        }
+        System.out.println("DEBUG: Authentication successful for: " + username);
         return account;
     }
 
-    public String getAccountStatus(String username){
+    public String getAccountStatus(String username) {
         Account account = accountRepository.findByUsername(username)
                 .orElseGet(() -> accountRepository.findByEmail(username).orElse(null));
-        
-        if(account == null) return "NOT_FOUND";
-        
-        if(account.getPassword() == null) return "NO_PASSWORD";
-        
+
+        if (account == null) return "NOT_FOUND";
+
+        if (account.getPassword() == null) return "NO_PASSWORD";
+
         boolean passwordValid;
-        if(account.getPassword().startsWith("$2a$")){
-            passwordValid = passwordEncoder.matches("dummy",account.getPassword());
-        }else{
+        if (account.getPassword().startsWith("$2a$")) {
+            passwordValid = passwordEncoder.matches("dummy", account.getPassword());
+        } else {
             passwordValid = false;
         }
-        
-        if(!passwordValid && !"ACTIVE".equalsIgnoreCase(account.getStatus())){
+
+        if (!passwordValid && !"ACTIVE".equalsIgnoreCase(account.getStatus())) {
             return account.getStatus();
         }
-        
+
         return "ACTIVE";
     }
 
     //REGISTER
 
-    public Account registerAccount(String email,String password,String fullName,String phone){
+    public Account registerAccount(String email, String password, String fullName, String phone) {
 
-        if(accountRepository.existsByEmail(email))
+        if (accountRepository.existsByEmail(email))
             return null;
 
         String rawUsername = email.split("@")[0];
@@ -359,7 +372,7 @@ public class AccountService implements UserDetailsService {
             customer.setGender("Nam".equalsIgnoreCase(gender)); // Assuming "Nam" is true, "Nữ" is false
         }
         customer.setDateOfBirth(dateOfBirth);
-        
+
         customerRepository.save(customer);
         return accountRepository.save(account);
     }
@@ -391,7 +404,8 @@ public class AccountService implements UserDetailsService {
                         OAUTH LOGIN
        ================================================= */
 
-    public void processOAuthPostLogin(String email, String name) {
+    @Transactional
+    public Account processOAuthPostLogin(String email, String name) {
 
         Optional<Account> accountOpt = accountRepository.findByEmail(email);
 
@@ -402,40 +416,40 @@ public class AccountService implements UserDetailsService {
 
             account.setEmail(email);
             account.setFullName(name);
-            
+
             // Lọc bỏ ký tự đặc biệt khỏi username để tránh lỗi validate ^[a-zA-Z0-9_]+$
             String rawUsername = email.split("@")[0];
             String safeUsername = rawUsername.replaceAll("[^a-zA-Z0-9_]", "_");
             String finalUsername = safeUsername;
             int count = 1;
-            while(accountRepository.existsByUsername(finalUsername)){
+            while (accountRepository.existsByUsername(finalUsername)) {
                 finalUsername = safeUsername + count++;
             }
-            account.setUsername(finalUsername); 
-            
+            account.setUsername(finalUsername);
+
             account.setPassword(null); // OAuth không cần password
             account.setStatus("ACTIVE");
 
             Role role = roleRepository.findByRoleName("Customer")
                     .orElseGet(() -> roleRepository.findById(3).orElse(null));
-            newAccount.setRole(customerRole);
-            Account savedAccount = accountRepository.save(newAccount);
-            
+            account.setRole(role);
+            Account savedAccount = accountRepository.save(account);
+
             Customer customer = new Customer();
             customer.setAccount(savedAccount);
-            customer.setFullName(fullName);
+            customer.setFullName(name);
             customer.setEmail(email);
             customer.setCreatedDate(LocalDate.now());
             customerRepository.save(customer);
             return savedAccount;
         }
 
-        Account account = existAccount.get();
+        Account account = accountOpt.get();
         // If account exists but customer record is missing, create it
         if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
             Customer customer = new Customer();
             customer.setAccount(account);
-            customer.setFullName(fullName != null ? fullName : account.getFullName());
+            customer.setFullName(name != null ? name : account.getFullName());
             customer.setEmail(email);
             customer.setCreatedDate(LocalDate.now());
             customerRepository.save(customer);

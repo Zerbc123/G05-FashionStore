@@ -3,7 +3,7 @@ package vn.edu.fpt.fashionstore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "order_items")
+@Table(name = "OrderItem")
 public class OrderItem {
     
     @Id
@@ -22,11 +22,8 @@ public class OrderItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
     
-    @Column(name = "unit_price", nullable = false)
-    private Double unitPrice;
-    
-    @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
+    @Column(name = "price", nullable = false)
+    private Double price;
     
     // Constructor
     public OrderItem() {}
@@ -35,11 +32,9 @@ public class OrderItem {
         this.order = order;
         this.productVariant = productVariant;
         this.quantity = (quantity != null) ? quantity : 0;
-        this.unitPrice = (productVariant != null && productVariant.getPrice() != null) 
+        this.price = (productVariant != null && productVariant.getPrice() != null) 
             ? productVariant.getPrice() 
             : 0.0;
-        // Tính totalPrice trực tiếp từ productVariant price * quantity
-        this.totalPrice = this.unitPrice * this.quantity;
     }
     
     // Getters and Setters
@@ -73,26 +68,22 @@ public class OrderItem {
     
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-        // Auto calculate total price when quantity changes
-        if (this.unitPrice != null && this.quantity != null) {
-            this.totalPrice = this.unitPrice * this.quantity;
-        }
     }
 
-    public Double getUnitPrice() {
-        return unitPrice;
+    public Double getPrice() {
+        return price;
     }
 
-    public void setUnitPrice(Double unitPrice) {
-        this.unitPrice = unitPrice;
+    public void setPrice(Double price) {
+        this.price = price;
     }
     
+    // Helper method to calculate total
     public Double getTotalPrice() {
-        return totalPrice;
-    }
-    
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+        if (price != null && quantity != null) {
+            return price * quantity;
+        }
+        return 0.0;
     }
     
     // Business methods
@@ -124,7 +115,7 @@ public class OrderItem {
         return "OrderItem{" +
                 "orderItemId=" + orderItemId +
                 ", quantity=" + quantity +
-                ", totalPrice=" + totalPrice +
+                ", price=" + price +
                 '}';
     }
 }

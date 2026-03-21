@@ -24,7 +24,7 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
        // Get top selling products
        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
                      "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                     "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
+                     "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
                      "FROM Product p " +
                      "JOIN p.category c " +
                      "JOIN p.variants pv " +
@@ -37,7 +37,7 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
        // Get all products with sales info
        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
                      "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                     "COALESCE(SUM(oi.quantity * oi.totalPrice), 0) as revenue " +
+                     "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
                      "FROM Product p " +
                      "JOIN p.category c " +
                      "JOIN p.variants pv " +

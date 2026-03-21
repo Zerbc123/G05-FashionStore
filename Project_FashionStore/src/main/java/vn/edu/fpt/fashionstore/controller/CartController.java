@@ -32,7 +32,8 @@ public class CartController {
     private AccountRepository accountRepository;
 
     // Lấy customer từ session
-    private Customer getCurrentCustomer(HttpSession session) {
+    @Transactional(readOnly = true)
+    protected Customer getCurrentCustomer(HttpSession session) {
         try {
             String email = (String) session.getAttribute("user");
             if (email == null) {
@@ -41,7 +42,8 @@ public class CartController {
             
             System.out.println("Finding customer for email: " + email);
             
-            Optional<Account> accountOpt = accountRepository.findByEmail(email);
+            // Use findByEmailWithCustomers to fetch Account with Customers eagerly
+            Optional<Account> accountOpt = accountRepository.findByEmailWithCustomers(email);
             if (accountOpt.isEmpty()) {
                 throw new RuntimeException("Không tìm thấy tài khoản!");
             }
