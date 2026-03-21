@@ -416,9 +416,8 @@ public class OrderService {
                 cartItems.add(tempCartItem);
             }
             
-            // Xóa session attributes sau khi sử dụng
-            session.removeAttribute("buyNowItems");
-            session.removeAttribute("isBuyNow");
+            // KHÔNG xóa session ở đây, chỉ xóa khi đặt hàng thành công
+            // để tránh mất dữ liệu khi reload trang (ví dụ khi áp dụng voucher)
             
         } else {
             // CHECKOUT THƯỜNG - lấy toàn bộ giỏ hàng
@@ -522,9 +521,8 @@ public class OrderService {
             // Tạo đơn hàng từ MUA NGAY items (KHÔNG clear cart)
             Order order = createOrderFromBuyNowItems(currentCustomer, deliveryAddress, buyNowCartItems);
             
-            // Xóa session attributes sau khi sử dụng
-            session.removeAttribute("buyNowItems");
-            session.removeAttribute("isBuyNow");
+            // KHÔNG xóa session ở đây, sẽ xóa ở controller sau khi đặt hàng thành công
+            // để tránh mất dữ liệu khi có lỗi xảy ra
             
             return order;
         } else {

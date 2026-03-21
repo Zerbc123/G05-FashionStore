@@ -251,8 +251,14 @@ public class OrderController {
 
         try {
             if ("MOMO".equals(paymentMethod)) {
+                System.out.println("=== MOMO PAYMENT SELECTED ===");
+                System.out.println("Delivery Address: " + deliveryAddress);
+                System.out.println("Total Amount: " + totalAmount);
+                
                 session.setAttribute("momo_deliveryAddress", deliveryAddress);
                 session.setAttribute("momo_totalAmount", totalAmount);
+                
+                System.out.println("Session attributes set successfully");
 
                 String orderIdStr = "ORD-" + System.currentTimeMillis();
                 String orderInfo = "Thanh toan don hang " + fullName;
@@ -269,7 +275,8 @@ public class OrderController {
                 }
             }
 
-            Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
+            // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
+            Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
             order.setTotalAmount(totalAmount);
             order.setPaymentMethod(paymentMethod != null && !paymentMethod.trim().isEmpty() ? paymentMethod : "COD");
             order.setPaymentStatus("COD".equals(order.getPaymentMethod()) ? "UNPAID" : "PAID");
@@ -284,6 +291,8 @@ public class OrderController {
             session.removeAttribute("deliveryAddress");
             session.removeAttribute("orderId");
             session.removeAttribute("appliedVoucher");
+            session.removeAttribute("isBuyNow");
+            session.removeAttribute("buyNowItems");
 
             redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng của bạn: #" + order.getOrderId());
 
@@ -316,22 +325,35 @@ public class OrderController {
                               @RequestParam(value = "transId", required = false) String transId,
                               HttpSession session,
                               RedirectAttributes redirectAttributes) {
+        System.out.println("=== MOMO SUCCESS CALLBACK ===");
+        System.out.println("MomoOrderId: " + momoOrderId);
+        System.out.println("TransId: " + transId);
+        
         Customer currentCustomer;
         try {
             currentCustomer = getCurrentCustomer(session);
+            System.out.println("Customer found: " + currentCustomer.getCustomerId());
         } catch (Exception e) {
+            System.err.println("Error getting customer: " + e.getMessage());
             return "redirect:/login";
         }
 
         String deliveryAddress = (String) session.getAttribute("momo_deliveryAddress");
         Double totalAmount = (Double) session.getAttribute("momo_totalAmount");
+        
+        System.out.println("Delivery Address: " + deliveryAddress);
+        System.out.println("Total Amount: " + totalAmount);
 
         if (deliveryAddress == null || totalAmount == null) {
+            System.err.println("Missing delivery address or total amount!");
             return "redirect:/order/confirmation";
         }
 
         try {
-            Order order = orderService.createOrderFromCart(currentCustomer, deliveryAddress);
+            System.out.println("Creating order from session data...");
+            // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
+            Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
+            System.out.println("Order created successfully: " + order.getOrderId());
             order.setTotalAmount(totalAmount);
             order.setStatus(OrderStatus.CONFIRMED);
             order.setPaymentMethod("MOMO");
@@ -348,12 +370,17 @@ public class OrderController {
             session.removeAttribute("momo_totalAmount");
             session.removeAttribute("deliveryAddress");
             session.removeAttribute("appliedVoucher");
+            session.removeAttribute("isBuyNow");
+            session.removeAttribute("buyNowItems");
 
             redirectAttributes.addFlashAttribute("successMessage", "Thanh toán MOMO thành công! Mã đơn hàng: #" + order.getOrderId());
             
+            System.out.println("Redirecting to confirmation page with orderId: " + order.getOrderId());
             return "redirect:/order/confirmation?orderId=" + order.getOrderId();
 
         } catch (RuntimeException e) {
+            System.err.println("ERROR in momoSuccess: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tạo đơn hàng: " + e.getMessage());
             return "redirect:/order/checkout";
         }

@@ -182,19 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
             passwordAlert.style.display = 'none';
         });
         
-        passwordInput.addEventListener('blur', function() {
-            // Validate password when user leaves the field
-            validatePassword();
-        });
-        
-        passwordInput.addEventListener('invalid', function(e) {
-            // Prevent default browser validation message
-            e.preventDefault();
-            
-            // Validate and show custom message
-            validatePassword();
-        });
-        
         // Add form submit validation
         loginForm.addEventListener('submit', function(e) {
             // Validate password before submitting

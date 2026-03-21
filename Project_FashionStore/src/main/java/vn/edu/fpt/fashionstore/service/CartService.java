@@ -119,15 +119,6 @@ public class CartService {
     public Integer findVariantByProductSizeColor(Long productId, Integer sizeId, Integer colorId) {
         try {
             List<ProductVariant> variants = productVariantRepository.findAll();
-            System.out.println("Searching for variant - ProductID: " + productId + ", SizeID: " + sizeId + ", ColorID: " + colorId);
-            System.out.println("Total variants found: " + variants.size());
-            
-            for (ProductVariant v : variants) {
-                System.out.println("Variant: " + v.getVariantId() + 
-                    " - Product: " + (v.getProduct() != null ? v.getProduct().getProductId() : "null") +
-                    " - Size: " + (v.getCategorySize() != null ? v.getCategorySize().getCategorySizeId() : "null") +
-                    " - Color: " + (v.getColor() != null ? v.getColor().getColorId() : "null"));
-            }
             
             Integer result = variants.stream()
                     .filter(v -> v.getProduct() != null && v.getProduct().getProductId().equals(productId))
@@ -137,7 +128,6 @@ public class CartService {
                     .findFirst()
                     .orElse(null);
             
-            System.out.println("Result: " + result);
             return result;
         } catch (Exception e) {
             System.err.println("Error finding variant: " + e.getMessage());

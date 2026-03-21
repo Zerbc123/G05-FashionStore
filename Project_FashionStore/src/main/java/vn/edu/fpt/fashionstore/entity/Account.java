@@ -21,7 +21,7 @@ public class Account {
     @Column(name = "username")
     @NotBlank(message = "Username không được để trống")
     @Size(min = 3, max = 50, message = "Username phải từ 3-50 ký tự")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username chỉ được chứa chữ, số và dấu gạch dưới")
+    @Pattern(regexp = "^[a-zA-Z0-9_.@-]+$", message = "Username chỉ được chứa chữ, số và các ký tự đặc biệt: _ . @ -")
     private String username;
 
     @Column(name = "password")

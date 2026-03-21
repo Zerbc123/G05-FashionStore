@@ -106,18 +106,6 @@ public class ProductController {
         // 2. Gọi Service lấy dữ liệu
         Page<Product> productPage;
 
-        // Debug: In ra các tham số nhận được từ UI
-        System.out.println("=== UI PARAMETERS ===");
-        System.out.println("keyword: " + keyword);
-        System.out.println("categoryId: " + categoryId);
-        System.out.println("categoryName: " + categoryName);
-        System.out.println("size: " + size);
-        System.out.println("color: " + color);
-        System.out.println("minPrice: " + minPrice);
-        System.out.println("maxPrice: " + maxPrice);
-        System.out.println("priceRange: " + priceRange);
-        System.out.println("hasFilter: " + hasFilter(keyword, categoryId, categoryName, size, color, minPrice, maxPrice));
-
         // Chỉ gọi searchAndFilterProducts khi thực sự có filter
         if (keyword != null && !keyword.isBlank() ||
                 categoryId != null ||
@@ -126,7 +114,6 @@ public class ProductController {
                 (color != null && !color.isBlank()) ||
                 minPrice != null ||
                 maxPrice != null) {
-            System.out.println("Calling searchAndFilterProducts...");
             
             // Nếu có categoryName, ưu tiên lọc theo categoryName trước
             if (categoryName != null && !categoryName.isBlank()) {
@@ -139,8 +126,6 @@ public class ProductController {
             productPage = productService.getAllProducts(pageable);
         }
 
-        System.out.println("Result: " + productPage.getTotalElements() + " products found");
-        System.out.println("=== END UI PARAMETERS ===");
 
         // 3. Xử lý trường hợp trang trống (khi đang ở trang 2 mà lọc ra ít kết quả)
         if (page > 0 && productPage.isEmpty() && productPage.getTotalElements() > 0) {

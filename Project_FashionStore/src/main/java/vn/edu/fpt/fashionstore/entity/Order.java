@@ -60,8 +60,7 @@ public class Order {
     @Transient
     private String cancellationReason;
 
-    // THÊM BIẾN NÀY ĐỂ ĐỒNG BỘ VỚI CODE BẠN CỦA BẠN
-    @Transient
+    @Column(name = "payment_status", length = 20)
     private String paymentStatus;
 
     @Column(name = "payment_method", length = 50)
