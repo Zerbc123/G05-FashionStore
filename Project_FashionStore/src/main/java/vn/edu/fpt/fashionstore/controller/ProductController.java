@@ -12,19 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import vn.edu.fpt.fashionstore.entity.Category;
-import vn.edu.fpt.fashionstore.entity.CategorySize;
-import vn.edu.fpt.fashionstore.entity.Color;
-import vn.edu.fpt.fashionstore.entity.Product;
-import vn.edu.fpt.fashionstore.entity.ProductVariant;
-import vn.edu.fpt.fashionstore.service.ProductService;
-import vn.edu.fpt.fashionstore.service.ProductVariantService;
-import vn.edu.fpt.fashionstore.service.CloudinaryService;
-import vn.edu.fpt.fashionstore.repository.*;
 import vn.edu.fpt.fashionstore.entity.*;
-import vn.edu.fpt.fashionstore.repository.AccountRepository;
-import vn.edu.fpt.fashionstore.repository.ReviewRepository;
 import vn.edu.fpt.fashionstore.service.*;
+import vn.edu.fpt.fashionstore.repository.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -21,8 +21,6 @@ import vn.edu.fpt.fashionstore.entity.Account;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")

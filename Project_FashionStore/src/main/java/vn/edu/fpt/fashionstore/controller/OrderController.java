@@ -17,8 +17,6 @@ import vn.edu.fpt.fashionstore.entity.Voucher;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 
-import jakarta.servlet.http.HttpSession;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -51,34 +49,6 @@ public class OrderController {
     private final VoucherRepository voucherRepository;
     private final VoucherService voucherService;
     private final MomoService momoService;
-
-    // Lấy customer từ session
-    private Customer getCurrentCustomer(HttpSession session) {
-        String email = (String) session.getAttribute("user");
-        if (email == null) {
-            throw new RuntimeException("Bạn chưa đăng nhập!");
-        }
-
-        Optional<Account> accountOpt = accountRepository.findByEmail(email);
-        if (accountOpt.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy tài khoản!");
-        }
-
-        Account account = accountOpt.get();
-        if (account.getCustomers() == null || account.getCustomers().isEmpty()) {
-            throw new RuntimeException("Không tìm thấy thông tin khách hàng!");
-        }
-
-        return account.getCustomers().get(0);
-    private final CartService cartService;
-    private final OrderService orderService;
-
-    public OrderController(
-            CartService cartService,
-            OrderService orderService) {
-        this.cartService = cartService;
-        this.orderService = orderService;
-    }
 
     // Lấy customer từ session - chuyển sang service
     private Customer getCurrentCustomer(HttpSession session) {
@@ -127,7 +97,6 @@ public class OrderController {
                     model.addAttribute("appliedVoucher", appliedVoucher);
                 }
             }
-            double total = orderService.calculateCartTotal(cartItems);
             System.out.println("Cart total: " + total);
 
             model.addAttribute("cartItems", cartItems);

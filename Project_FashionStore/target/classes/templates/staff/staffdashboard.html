@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f5f6fa; }
+        /* Staff navbar styles được định nghĩa trong header fragment */
+        .main-content { 
+            padding: 40px 0; 
+            margin-top: 80px; /* Tránh bị header che */
+        }
+        .page-header h1 { font-family: 'Playfair Display', serif; color: #2d3436; font-size: 2rem; margin-bottom: 10px; }
+        .welcome-text { color: #636e72; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 15px; transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: white; }
+        .stat-icon.pending { background: #ffc107; }
+        .stat-icon.processing { background: #17a2b8; }
+        .stat-icon.completed { background: #28a745; }
+        .stat-icon.support { background: #dc3545; }
+        .stat-info h3 { font-size: 1.5rem; font-weight: 700; color: #2d3436; margin: 0; }
+        .stat-info p { color: #636e72; margin: 0; font-size: 0.85rem; }
+        .task-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .task-card h3 { font-family: 'Playfair Display', serif; color: #2d3436; margin-bottom: 20px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+        .task-item:hover { background: #f8f9fa; }
+        .task-item:last-child { border-bottom: none; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .badge.urgent { background: #ffebee; color: #c62828; }
+        .badge.normal { background: #e3f2fd; color: #1976d2; }
+        .btn-action { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s; }
+        .btn-action.view { background: #e3f2fd; color: #1976d2; }
+        .btn-action:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+<!-- Staff Header -->
+<div th:replace="~{fragments/header :: staffheader}"></div>
+<div class="main-content">
+    <div class="container">
+        <div class="page-header"><h1><i class="bi bi-speedometer2"></i> Staff Dashboard</h1><p class="welcome-text">Welcome back! Here are your tasks for today.</p></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon pending"><i class="bi bi-clock-history"></i></div><div class="stat-info"><h3>12</h3><p>Pending Orders</p></div></div>
+            <div class="stat-card"><div class="stat-icon processing"><i class="bi bi-arrow-repeat"></i></div><div class="stat-info"><h3>8</h3><p>Processing</p></div></div>
+            <div class="stat-card"><div class="stat-icon completed"><i class="bi bi-check-circle"></i></div><div class="stat-info"><h3>45</h3><p>Completed Today</p></div></div>
+            <div class="stat-card"><div class="stat-icon support"><i class="bi bi-chat-dots"></i></div><div class="stat-info"><h3>5</h3><p>Support Tickets</p></div></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="task-card">
+                    <h3>Today's Tasks</h3>
+                    <div class="task-item"><div><h6 class="mb-1">Process Order #ORD-2024-001</h6><p class="mb-0 text-muted">John Doe - $139.97</p></div><div><span class="badge urgent">Urgent</span> <button class="btn-action view">View</button></div></div>
+                    <div class="task-item"><div><h6 class="mb-1">Confirm Order #ORD-2024-002</h6><p class="mb-0 text-muted">Jane Smith - $239.98</p></div><div><span class="badge normal">Normal</span> <button class="btn-action view">View</button></div></div>
+                    <div class="task-item"><div><h6 class="mb-1">Reply to Customer Support</h6><p class="mb-0 text-muted">Ticket #SUP-145</p></div><div><span class="badge urgent">Urgent</span> <button class="btn-action view">View</button></div></div>
+                    <div class="task-item"><div><h6 class="mb-1">Update Shipping Status</h6><p class="mb-0 text-muted">Order #ORD-2024-003</p></div><div><span class="badge normal">Normal</span> <button class="btn-action view">View</button></div></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="task-card">
+                    <h3>Quick Actions</h3>
+                    <a th:href="@{/staff/orders}" class="btn btn-primary w-100 mb-2"><i class="bi bi-cart-check"></i> View Orders</a>
+                    <a th:href="@{/staff/support}" class="btn btn-success w-100"><i class="bi bi-headset"></i> Support Tickets</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

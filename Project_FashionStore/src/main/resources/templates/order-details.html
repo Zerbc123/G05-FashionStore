@@ -426,11 +426,7 @@
                     <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
                 </a>
 
-                <form th:if="${orderStatus.name() == 'PENDING'}" th:action="@{'/order/details/' + ${orderId} + '/cancel'}" method="post">
-                    <button type="submit" class="btn btn-danger px-4 py-2" style="border-radius: 10px;" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                        <i class="bi bi-x-circle"></i> Hủy đơn hàng
-                    </button>
-                </form>
+
 
                 <button th:if="${orderStatus.name() == 'COMPLETED' and !hasReturnRequest}" type="button" class="btn btn-warning text-dark px-4 py-2 fw-bold" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#returnModal">
                     <i class="bi bi-box-arrow-left"></i> Yêu cầu Đổi Trả

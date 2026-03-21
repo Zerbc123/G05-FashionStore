@@ -18,27 +18,6 @@ import java.util.Optional;
 @Service
 public class OrderService {
 
-    @Autowired
-    private OrderRepository orderRepository;
-    
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-    
-    @Autowired
-    private CartService cartService;
-    
-    @Autowired
-    private ProductVariantRepository productVariantRepository;
-
-    @Transactional
-    public long countSuccessfulPurchases(Customer customer, Long productId) {
-        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng COMPLETED và đúng mã sản phẩm
-        return orderRepository.findAll().stream()
-                .filter(o -> o.getCustomer().getCustomerId() == customer.getCustomerId()
-                        && o.getStatus() == OrderStatus.COMPLETED)
-                .flatMap(o -> o.getOrderItems().stream())
-                .filter(oi -> oi.getProductVariant().getProduct().getProductId().equals(productId))
-                .count();
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
@@ -59,6 +38,17 @@ public class OrderService {
         this.accountRepository = accountRepository;
         this.productVariantRepository = productVariantRepository;
         this.voucherRepository = voucherRepository;
+    }
+
+    @Transactional
+    public long countSuccessfulPurchases(Customer customer, Long productId) {
+        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng COMPLETED và đúng mã sản phẩm
+        return orderRepository.findAll().stream()
+                .filter(o -> o.getCustomer().getCustomerId() == customer.getCustomerId()
+                        && o.getStatus() == OrderStatus.COMPLETED)
+                .flatMap(o -> o.getOrderItems().stream())
+                .filter(oi -> oi.getProductVariant().getProduct().getProductId().equals(productId))
+                .count();
     }
 
     // =======================================================
@@ -549,7 +539,7 @@ public class OrderService {
     
     @Transactional(readOnly = true)
     public List<Voucher> getValidVouchers() {
-        return voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(new java.util.Date());
+        return voucherRepository.findByIsActiveTrueAndExpiredDateGreaterThanEqual(LocalDate.now());
     }
     
     @Transactional(readOnly = true)

@@ -57,6 +57,40 @@
         .color-label { display: inline-block; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ddd; margin-right: 12px; cursor: pointer; }
         .color-selector input:checked + .color-label { border-color: #2d3436; transform: scale(1.1); }
 
+        /* Quantity Selector */
+        .quantity-selector { 
+            display: flex; 
+            align-items: center; 
+            gap: 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 150px;
+        }
+        .btn-quantity-minus, .btn-quantity-plus {
+            border: none;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .btn-quantity-minus:hover, .btn-quantity-plus:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .quantity-input {
+            border: none;
+            text-align: center;
+            font-weight: 600;
+            width: 50px;
+            background: white;
+        }
+        .quantity-input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
         /* Buttons */
         .btn-add-cart { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; margin-top: 20px; transition: 0.3s; }
         .btn-add-cart:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3); }
@@ -152,6 +186,19 @@
                                 <span class="color-label" th:style="'background-color:' + ${color.colorCode}"></span>
                                 <span class="color-name ms-2" th:text="${color.colorName}">Màu</span>
                             </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="option-title">SỐ LƯỢNG:</label>
+                        <div class="quantity-selector d-flex align-items-center gap-3">
+                            <button type="button" class="btn-quantity-minus" onclick="decreaseQuantity()">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" name="quantity" class="form-control quantity-input" value="1" min="1" max="99" readonly>
+                            <button type="button" class="btn-quantity-plus" onclick="increaseQuantity()">
+                                <i class="bi bi-plus"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -295,18 +342,42 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // --- HÀM CHO NÚT THÊM VÀO GIỎ HÀNG ---
-    function addToCart() {
-        const selectedSize = document.querySelector('input[name="sizeId"]:checked');
-        const selectedColor = document.querySelector('input[name="colorId"]:checked');
+function decreaseQuantity() {
+    const quantityInput = document.querySelector('input[name="quantity"]');
+    let currentValue = parseInt(quantityInput.value);
+    if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+        updateBuyNowFormQuantity();
+    }
+}
 
-        if (!selectedSize || !selectedColor) {
-            alert('⚠️ Vui lòng chọn Kích thước và Màu sắc trước khi thêm vào giỏ hàng!');
-            return;
-        }
+function increaseQuantity() {
+    const quantityInput = document.querySelector('input[name="quantity"]');
+    let currentValue = parseInt(quantityInput.value);
+    if (currentValue < 99) {
+        quantityInput.value = currentValue + 1;
+        updateBuyNowFormQuantity();
+    }
+}
 
-        // Nếu đã chọn đủ, submit form Thêm vào giỏ hàng
-        document.getElementById('mainCartForm').submit();
+function updateBuyNowFormQuantity() {
+    const quantityInput = document.querySelector('input[name="quantity"]');
+    const buyNowQuantityInput = document.querySelector('input[name="quantity"][value="1"]');
+    if (buyNowQuantityInput) {
+        buyNowQuantityInput.value = quantityInput.value;
+    }
+}
+
+function buyNow() {
+    // Lấy size và color đã chọn
+    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+    const selectedColor = document.querySelector('input[name="colorId"]:checked');
+    const selectedQuantity = document.querySelector('input[name="quantity"]').value;
+    
+    // Kiểm tra đã chọn size và color chưa
+    if (!selectedSize) {
+        alert('Vui lòng chọn size!');
+        return;
     }
 
     // --- HÀM CHO NÚT MUA NGAY ---
@@ -326,6 +397,15 @@
         // Bấm cò: Submit thẳng sang trang Thanh Toán
         document.getElementById('directCheckoutForm').submit();
     }
+    
+    // Set giá trị vào form ẩn
+    document.getElementById('buyNowSizeId').value = selectedSize.value;
+    document.getElementById('buyNowColorId').value = selectedColor.value;
+    document.querySelector('#buyNowForm input[name="quantity"]').value = selectedQuantity;
+    
+    // Submit form MUA NGAY
+    document.getElementById('buyNowForm').submit();
+}
 </script>
 
 </body>

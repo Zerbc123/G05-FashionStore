@@ -230,6 +230,19 @@
             box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
         }
         
+        .btn-action.disabled {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-action.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -413,11 +426,7 @@
                     <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
                 </a>
 
-                <form th:if="${orderStatus.name() == 'PENDING'}" th:action="@{'/order/details/' + ${orderId} + '/cancel'}" method="post">
-                    <button type="submit" class="btn btn-danger px-4 py-2" style="border-radius: 10px;" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                        <i class="bi bi-x-circle"></i> Hủy đơn hàng
-                    </button>
-                </form>
+
 
                 <button th:if="${orderStatus.name() == 'COMPLETED' and !hasReturnRequest}" type="button" class="btn btn-warning text-dark px-4 py-2 fw-bold" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#returnModal">
                     <i class="bi bi-box-arrow-left"></i> Yêu cầu Đổi Trả
@@ -441,6 +450,18 @@
                         </div>
                     </div>
                 </div>
+                
+                <button class="btn-action btn-danger" 
+                        th:if="${orderStatus?.name() != 'CANCELLED' and orderStatus?.name() != 'CONFIRMED'}" 
+                        onclick="showCancelModal()">
+                    <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                </button>
+                
+                <button class="btn-action btn-secondary disabled" 
+                        th:if="${orderStatus?.name() == 'CONFIRMED'}" 
+                        disabled>
+                    <i class="bi bi-lock"></i> Đơn hàng đã xác nhận, không thể hủy
+                </button>
             </div>
         </div>
     </div>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FashionStore Admin - Vô hiệu hóa nhân viên</title>
+
+    <!-- Bootstrap CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#F06292',
+                            light: '#F48FB1',
+                        },
+                        secondary: {
+                            bg: '#FFF5F7',
+                        },
+                        text: {
+                            main: '#2F2F2F',
+                            muted: '#7A7A7A',
+                        },
+                        divider: '#EAEAEA',
+                        success: '#C8E6C9',
+                        danger: '#F8D7DA',
+                        warning: '#FFF3CD'
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Poppins"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+                    },
+                    backgroundImage: {
+                        'admin-gradient': 'linear-gradient(90deg, #F06292 0%, #F48FB1 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF3F3; color: #2F2F2F; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            padding: 32px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7A7A7A;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .value-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2F2F2F;
+        }
+
+        .status-badge {
+            padding: 4px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-danger-outline {
+            border: 1px solid #F8D7DA;
+            color: #d32f2f;
+            transition: all 0.3s ease;
+        }
+        .btn-danger-outline:hover {
+            background-color: #F8D7DA;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- Admin Header -->
+<div th:replace="~{fragments/header :: adminheader}"></div>
+
+<div style="margin-top: 80px;">
+<!-- ADMIN HEADER (Hidden) -->
+<header class="h-16 bg-admin-gradient flex items-center justify-between px-8 text-white sticky top-0 z-50" style="display: none;">
+    <div class="flex items-center gap-4">
+        <span class="text-xl font-heading font-bold tracking-wide">FashionStore Admin</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="relative">
+            <i class="fa-solid fa-bell text-lg cursor-pointer"></i>
+            <span class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3 pl-4 border-l border-white/20">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold">Quản trị viên</p>
+                <p class="text-[10px] opacity-80">Admin Root</p>
+            </div>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-user-gear"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow p-8 max-w-[800px] mx-auto w-full">
+
+    <!-- Page Title & Warning Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-heading font-bold text-text-main">Vô hiệu hóa tài khoản</h1>
+        <div class="w-12 h-1 bg-primary mt-2"></div>
+        <p class="text-text-muted mt-4 text-sm">Vui lòng xác nhận việc tạm dừng hoặc vô hiệu hóa quyền truy cập của nhân viên này.</p>
+    </div>
+
+    <!-- Deactivation Confirmation Card -->
+    <div class="info-card border-t-4 border-primary">
+        <div class="flex items-start gap-6 mb-10">
+            <div class="w-16 h-16 rounded-2xl bg-danger/30 flex items-center justify-center text-red-600 text-2xl shrink-0">
+                <i class="fa-solid fa-user-slash"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-text-main mb-1">Xác nhận vô hiệu hóa</h2>
+                <p class="text-sm text-text-muted">Hành động này sẽ ngăn nhân viên đăng nhập vào hệ thống cho đến khi được kích hoạt lại.</p>
+            </div>
+        </div>
+
+        <!-- Staff Info Section -->
+        <div class="space-y-6 bg-secondary-bg/30 p-6 rounded-2xl border border-divider mb-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="label-text">Staff Name</p>
+                    <p class="value-text font-semibold">Lê Hoàng Thành</p>
+                </div>
+                <div>
+                    <p class="label-text">Account Status</p>
+                    <span class="status-badge bg-success text-green-700">Đang hoạt động</span>
+                </div>
+            </div>
+            <div class="pt-4 border-t border-divider">
+                <p class="text-xs text-text-muted italic">Mã nhân viên: <span class="font-mono font-bold text-primary">STF-2024-001</span></p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-end gap-4">
+            <!-- Cancel Button -->
+            <button onclick="window.location.href='staff_list.html'" class="w-full sm:w-auto px-8 py-3 bg-white border border-divider text-text-muted rounded-xl font-bold hover:bg-secondary-bg transition shadow-sm text-sm order-3 sm:order-1">
+                Cancel
+            </button>
+
+            <!-- Deactivate Button (Initial Action) -->
+            <button onclick="simulateDeactivate()" class="w-full sm:w-auto px-8 py-3 bg-white border border-primary text-primary rounded-xl font-bold hover:bg-primary hover:text-white transition shadow-sm text-sm order-2">
+                Deactivate
+            </button>
+
+            <!-- Confirm Button (Final Action) -->
+            <button onclick="confirmDeactivation()" class="w-full sm:w-auto px-8 py-3 bg-admin-gradient text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm order-1 sm:order-3">
+                Confirm
+            </button>
+        </div>
+    </div>
+
+    <!-- System Message -->
+    <div class="mt-8 p-4 bg-warning/20 border border-warning rounded-xl flex items-center gap-3">
+        <i class="fa-solid fa-circle-info text-yellow-700"></i>
+        <p class="text-xs text-yellow-800 leading-relaxed">Lưu ý: Bạn có thể khôi phục trạng thái hoạt động của nhân viên bất cứ lúc nào từ trang quản lý chi tiết.</p>
+    </div>
+
+</main>
+
+<footer class="py-6 border-t border-divider bg-white text-center mt-auto">
+    <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest">FashionStore Admin Console &copy; 2024</p>
+</footer>
+
+<script>
+    function simulateDeactivate() {
+        // Highlighting the impact
+        const statusBadge = document.querySelector('.status-badge');
+        statusBadge.classList.remove('bg-success', 'text-green-700');
+        statusBadge.classList.add('bg-warning', 'text-yellow-700');
+        statusBadge.innerText = 'Chờ vô hiệu hóa';
+
+        console.log("Deactivation process initiated...");
+    }
+
+    function confirmDeactivation() {
+        // Simulated final action
+        const confirmation = confirm("Bạn có chắc chắn muốn vô hiệu hóa tài khoản của Lê Hoàng Thành?");
+        if (confirmation) {
+            alert("Tài khoản nhân viên đã được vô hiệu hóa thành công.");
+            window.location.href = 'staff_list.html';
+        }
+    }
+</script>
+
+</body>
+</html>
