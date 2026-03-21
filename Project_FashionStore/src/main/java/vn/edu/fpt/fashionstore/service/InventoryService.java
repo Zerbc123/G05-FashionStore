@@ -97,7 +97,7 @@ public class InventoryService {
                         case "low-stock":
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
-                            return variant.getStock() == 0;
+                            return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;
                     }
@@ -115,7 +115,7 @@ public class InventoryService {
                         case "low-stock":
                             return variant.getStock() > 0 && variant.getStock() <= 20;
                         case "out-stock":
-                            return variant.getStock() == 0;
+                            return variant.getStock() == null || variant.getStock() == 0;
                         default:
                             return true;
                     }

@@ -317,12 +317,21 @@ public class StaffAccountController {
                     "Xóa vĩnh viễn tài khoản thành công!"
             );
 
-        } catch (Exception e) {
-
-            redirectAttributes.addFlashAttribute(
-                    "errorMessage",
-                    "Không thể xóa vì tài khoản đang được sử dụng trong hệ thống!"
-            );
+        } catch (RuntimeException e) {
+            
+            // Handle specific FK constraint violation
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.contains("đang được phân công xử lý yêu cầu hỗ trợ")) {
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        errorMessage
+                );
+            } else {
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        "Không thể xóa vì tài khoản đang được sử dụng trong hệ thống!"
+                );
+            }
         }
 
         return "redirect:/admin/staff/trash";

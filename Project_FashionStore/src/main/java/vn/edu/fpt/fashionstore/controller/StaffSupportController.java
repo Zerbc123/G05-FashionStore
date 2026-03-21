@@ -29,6 +29,7 @@ public class StaffSupportController {
     private final SupportRequestService supportRequestService;
     private final SupportChatService supportChatService;
     private final AccountService accountService;
+    private final ChatWebSocketController chatWebSocketController;
 
     // Kiểm tra quyền truy cập STAFF
     private boolean isStaff(HttpSession session) {
@@ -43,6 +44,13 @@ public class StaffSupportController {
 
     // Lấy ID của staff đang đăng nhập
     private Integer getCurrentStaffId(HttpSession session) {
+        // Thử lấy userId từ session trước (nếu có)
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId != null) {
+            return userId;
+        }
+        
+        // Nếu không có, lấy từ email
         String email = (String) session.getAttribute("user");
         if (email == null) return null;
         
@@ -234,24 +242,20 @@ public class StaffSupportController {
         }
 
         try {
-            SupportRequest supportRequest = supportRequestService.findById(id);
-            Integer currentStaffId = getCurrentStaffId(session);
-            String currentStaffName = getCurrentStaffName(session);
+            // Lấy thông tin staff hiện tại
+            Integer staffId = getCurrentStaffId(session);
+            String staffName = getCurrentStaffName(session);
 
-            // Kiểm tra xem staff có được phân công cho request này không
-            if (supportRequest.getAssignedStaffId() != null &&
-                    !supportRequest.getAssignedStaffId().equals(currentStaffId)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền gửi tin nhắn cho yêu cầu này!");
-                return "redirect:/staff/support";
-            }
+            // Gửi tin nhắn và lấy tin nhắn vừa gửi
+            SupportChat newMessage = supportChatService.sendStaffMessage(id, staffId, staffName, messageContent);
 
-            // Gửi tin nhắn
-            supportChatService.sendStaffMessage(id, currentStaffId, currentStaffName, messageContent);
+            // Broadcast tin nhắn mới đến tất cả clients qua WebSocket
+            chatWebSocketController.broadcastToRoom(id, newMessage);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi tin nhắn thành công!");
+            redirectAttributes.addFlashAttribute("success", "Đã gửi tin nhắn thành công!");
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi gửi tin nhắn: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi gửi tin nhắn: " + e.getMessage());
         }
 
         return "redirect:/staff/support/view/" + id;

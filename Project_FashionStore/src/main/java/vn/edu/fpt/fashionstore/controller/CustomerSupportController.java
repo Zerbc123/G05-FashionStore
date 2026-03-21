@@ -25,6 +25,7 @@ public class CustomerSupportController {
     private final SupportRequestService supportRequestService;
     private final SupportChatService supportChatService;
     private final AccountService accountService;
+    private final ChatWebSocketController chatWebSocketController;
 
     // Kiểm tra quyền truy cập CUSTOMER
     private boolean isCustomer(HttpSession session) {
@@ -172,8 +173,11 @@ public class CustomerSupportController {
                 return "redirect:/customer/support/my-tickets";
             }
 
-            // Gửi tin nhắn
-            supportChatService.sendCustomerMessage(id, customer.getFullName(), messageContent);
+            // Gửi tin nhắn và lấy tin nhắn vừa gửi
+            SupportChat newMessage = supportChatService.sendCustomerMessage(id, customer.getFullName(), messageContent);
+
+            // Broadcast tin nhắn mới đến tất cả clients qua WebSocket
+            chatWebSocketController.broadcastToRoom(id, newMessage);
 
             redirectAttributes.addFlashAttribute("success", "Đã gửi tin nhắn thành công!");
 

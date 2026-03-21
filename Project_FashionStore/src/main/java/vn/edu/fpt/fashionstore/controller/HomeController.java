@@ -160,8 +160,11 @@ public class HomeController {
         if (acc != null) {
             model.addAttribute("account", acc);
 
-            Customer cus = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
-                    ? acc.getCustomers().get(0) : new Customer();
+            // Fix lazy loading by using AccountService.findCustomerByEmail
+            Customer cus = accountService.findCustomerByEmail(email);
+            if (cus == null) {
+                cus = new Customer();
+            }
             model.addAttribute("customer", cus);
 
             return "profile";

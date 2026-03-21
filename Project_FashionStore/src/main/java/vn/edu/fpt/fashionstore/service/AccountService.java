@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Role;
+import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.RoleRepository;
@@ -275,9 +276,21 @@ public class AccountService {
         return accountRepository.searchDeleted(keyword.trim(), pageable);
     }
 
+    @Transactional
     public void hardDeleteAccount(Integer id){
         Account account = getById(id);
+        
+        // Check if staff is assigned to any support requests
+        if (supportRequestRepository.existsByAssignedStaffId(id)) {
+            throw new RuntimeException("Không thể xóa tài khoản nhân viên này! Nhân viên đang được phân công xử lý yêu cầu hỗ trợ. Vui lòng chuyển giao yêu cầu hỗ trợ cho nhân viên khác trước khi xóa.");
+        }
+        
         accountRepository.delete(account);
+    }
+
+    // Get support requests assigned to a specific staff (for reassignment)
+    public List<SupportRequest> getAssignedSupportRequests(Integer staffId) {
+        return supportRequestRepository.findByAssignedStaffId(staffId);
     }
 
     /*  LOGIN */

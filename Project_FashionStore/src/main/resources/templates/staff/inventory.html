@@ -388,7 +388,7 @@
                         <td>
                             <span th:if="${variant.stock > 20}" class="badge-stock badge-in-stock">Còn hàng</span>
                             <span th:if="${variant.stock > 0 and variant.stock <= 20}" class="badge-stock badge-low-stock">Sắp hết</span>
-                            <span th:if="${variant.stock == null or variant.stock == 0}" class="badge-stock badge-out-stock">Hết hàng</span>
+                            <span th:if="${variant.stock == 0}" class="badge-stock badge-out-stock">Hết hàng</span>
                         </td>
                         <td>
                             <form th:action="@{/staff/inventory/update-stock}" method="post" class="stock-input-group">
