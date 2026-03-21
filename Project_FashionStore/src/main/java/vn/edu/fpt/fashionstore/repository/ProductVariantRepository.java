@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
 import java.util.List;
 
+import java.util.List;
+
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
     List<ProductVariant> findByProduct_ProductId(Long productId);
     void deleteByProduct_ProductId(Long productId);
@@ -24,4 +26,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
            "LOWER(pv.categorySize.sizeName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "CAST(pv.price AS string) LIKE CONCAT('%', :searchTerm, '%')")
     Page<ProductVariant> searchVariants(@Param("searchTerm") String searchTerm, Pageable pageable);
+    
+    @Query("SELECT pv FROM ProductVariant pv " +
+           "LEFT JOIN FETCH pv.product p " +
+           "LEFT JOIN FETCH p.category c")
+    List<ProductVariant> findAllWithProductAndCategory();
 }

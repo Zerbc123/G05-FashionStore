@@ -6,13 +6,10 @@ import vn.edu.fpt.fashionstore.repository.*;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +34,7 @@ public class ReportService {
 
     private static final List<OrderStatus> ACTIVE_STATUSES = Arrays.asList(
             OrderStatus.COMPLETED, OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPING);
-    
+
     private static final List<OrderStatus> REVENUE_STATUSES = Arrays.asList(
             OrderStatus.COMPLETED);
 
@@ -482,11 +479,18 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            // Convert LocalDate to Date for type compatibility with Customer.createdDate
-            Date startDateAsDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            System.out.println("DEBUG: Getting customer report from " + startDate + " to " + endDate);
+            System.out.println("DEBUG: Active statuses: " + ACTIVE_STATUSES);
             
+            // Test basic database connection
+            Long totalCustomers = customerReportRepository.getTotalCustomerCount();
+            Long totalOrders = customerReportRepository.getTotalOrderCount();
+            System.out.println("DEBUG: Total customers in database: " + totalCustomers);
+            System.out.println("DEBUG: Total orders in database: " + totalOrders);
+
             // Customer summary with null safety
-            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDateAsDate, ACTIVE_STATUSES);
+            List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate, ACTIVE_STATUSES);
+            System.out.println("DEBUG: Customer summary list size: " + (summaryList != null ? summaryList.size() : 0));
             if (summaryList != null && !summaryList.isEmpty()) {
                 Object[] summary = summaryList.get(0);
                 if (summary != null && summary.length >= 4) {
@@ -497,6 +501,7 @@ public class ReportService {
                 }
             } else {
                 // Fallback values
+                System.out.println("DEBUG: Using fallback values - no summary data found");
                 report.put("totalCustomers", 0L);
                 report.put("activeCustomers", 0L);
                 report.put("newCustomers", 0L);
@@ -505,6 +510,7 @@ public class ReportService {
 
             // Top customers
             List<Object[]> topCustomersData = customerReportRepository.getTopCustomers(ACTIVE_STATUSES);
+            System.out.println("DEBUG: Top customers data size: " + (topCustomersData != null ? topCustomersData.size() : 0));
             List<Map<String, Object>> topCustomers = new ArrayList<>();
             if (topCustomersData != null) {
                 for (Object[] row : topCustomersData) {
@@ -526,8 +532,9 @@ public class ReportService {
             }
 
             // Registration summary
-            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDateAsDate,
+            List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDate,
                     ACTIVE_STATUSES);
+            System.out.println("DEBUG: Registration summary data size: " + (registrationData != null ? registrationData.size() : 0));
             List<Map<String, Object>> registrationSummary = new ArrayList<>();
             if (registrationData != null) {
                 for (Object[] row : registrationData) {
@@ -544,6 +551,7 @@ public class ReportService {
 
             // All customers
             List<Object[]> allCustomersData = customerReportRepository.getAllCustomersWithOrders(ACTIVE_STATUSES);
+            System.out.println("DEBUG: All customers data size: " + (allCustomersData != null ? allCustomersData.size() : 0));
             List<Map<String, Object>> allCustomers = new ArrayList<>();
             if (allCustomersData != null) {
                 for (Object[] row : allCustomersData) {

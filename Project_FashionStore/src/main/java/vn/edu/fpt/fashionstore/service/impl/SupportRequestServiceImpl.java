@@ -1,10 +1,9 @@
 package vn.edu.fpt.fashionstore.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.SupportRequest;
 import vn.edu.fpt.fashionstore.repository.SupportRequestRepository;
 import vn.edu.fpt.fashionstore.service.SupportRequestService;
-import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -121,6 +120,19 @@ public class SupportRequestServiceImpl implements SupportRequestService {
     public Page<SupportRequest> findByCustomerKeywordAndStatus(String keyword, SupportStatus status, Pageable pageable) {
         return repository.findByCustomerNameContainingIgnoreCaseOrCustomerEmailContainingIgnoreCaseOrTitleContainingIgnoreCaseAndStatus(
                 keyword, keyword, keyword, status, pageable);
+    }
+
+    @Override
+    public SupportRequest save(SupportRequest request) {
+        return repository.save(request);
+    }
+
+    @Override
+    public List<SupportRequest> findByCustomerEmail(String customerEmail) {
+        if (customerEmail == null || customerEmail.trim().isEmpty()) {
+            return List.of();
+        }
+        return repository.findByCustomerEmailOrderByCreatedAtDesc(customerEmail);
     }
 
     @Override

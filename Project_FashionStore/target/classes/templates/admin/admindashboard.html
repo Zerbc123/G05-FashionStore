@@ -247,11 +247,29 @@
             color: #004085;
         }
 
+        .badge.confirmed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .badge.shipping {
+            background: #cce5ff;
+            color: #004085;
+        }
+
         .badge.cancelled {
-            background: #ff6b6b;
-            color: #ffffff;
-            font-weight: 700;
-            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge.refunded {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge.unknown {
+            background: #f2f2f2;
+            color: #666;
         }
 
         /* Quick Actions */
@@ -313,7 +331,7 @@
                         <i class="bi bi-cash-stack"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND
+                        <h3 th:text="${#numbers.formatDecimal(totalRevenue / 1000000, 1, 2) + 'M VND'}">28.06M VND
                         </h3>
                         <p>Total Revenue</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Dynamic Update</span>
@@ -325,7 +343,7 @@
                         <i class="bi bi-cart-check"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalOrders}">1,245</h3>
+                        <h3 th:text="${totalOrders}">1,245</h3>
                         <p>Total Orders</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Real-time tracking</span>
                     </div>
@@ -336,7 +354,7 @@
                         <i class="bi bi-people"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalCustomers}">3,567</h3>
+                        <h3 th:text="${totalCustomers}">3,567</h3>
                         <p>Total Customers</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Growing community</span>
                     </div>
@@ -347,7 +365,7 @@
                         <i class="bi bi-box-seam"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 th:text="${stats.totalProducts}">456</h3>
+                        <h3 th:text="${totalProducts}">456</h3>
                         <p>Total Products</p>
                         <span class="stat-change positive"><i class="bi bi-arrow-up"></i> Live inventory</span>
                     </div>
@@ -359,6 +377,10 @@
                 <a th:href="@{/admin/products/add}" class="action-btn">
                     <i class="bi bi-plus-circle"></i>
                     <div>Add Product</div>
+                </a>
+                <a th:href="@{/admin/inventory}" class="action-btn">
+                    <i class="bi bi-box-seam"></i>
+                    <div>Inventory</div>
                 </a>
                 <a th:href="@{/admin/orders}" class="action-btn">
                     <i class="bi bi-cart-check"></i>
@@ -389,26 +411,30 @@
 
                 <!-- Recent Orders -->
                 <div class="col-lg-4">
-                    <div class="recent-orders">
+                    <div class="recent-orders h-100">
                         <h3>Recent Orders</h3>
+                        <div th:if="${#lists.isEmpty(recentOrders)}" class="p-4 text-center text-muted">
+                            <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
+                            No recent orders found.
+                        </div>
                         <div th:each="order : ${recentOrders}" class="order-item">
                             <div class="order-info">
-                                <h6 th:text="${order.orderId}">#ORD-2024-001</h6>
-                                <p
-                                    th:text="${order.customer != null ? (order.customer.fullName + ' - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND') : ('Unknown Customer - ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND')}">
-                                    John Doe - 150,000 VND</p>
+                                <h6 th:text="'#' + ${order.orderId}">#1074</h6>
+                                <p>
+                                    <span th:text="${order.customer != null ? order.customer.fullName : 'Guest'}">Customer Name</span>
+                                    <span class="text-muted mx-1">|</span>
+                                    <span class="text-primary font-weight-bold" 
+                                          th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">150,000đ</span>
+                                </p>
                             </div>
-                            <span th:text="${order.status}"
-                                th:class="'badge ' + ${#strings.toLowerCase(order.status)}">Pending</span>
-                        </div>
-                        <div th:if="${#lists.isEmpty(recentOrders)}" class="p-3 text-center text-muted">
-                            No recent orders.
+                            <span th:class="'badge ' + ${order.status != null ? #strings.toLowerCase(order.status.name()) : 'unknown'}"
+                                  th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}">Pending</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sales by Category -->
+            <!-- Sales by Category & Order Status -->
             <div class="row mt-4">
                 <div class="col-lg-6">
                     <div class="chart-card">
@@ -494,9 +520,9 @@
 
         // Order Status Chart
         const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-        const pendingOrders = /*[[${stats.pendingOrders}]]*/ 0;
-        const processingOrders = /*[[${stats.processingOrders}]]*/ 0;
-        const completedOrders = /*[[${stats.completedOrders}]]*/ 0;
+        const pendingOrders = /*[[${pendingOrders}]]*/ 0;
+        const processingOrders = /*[[${processingOrders}]]*/ 0;
+        const completedOrders = /*[[${completedOrders}]]*/ 0;
 
         new Chart(orderStatusCtx, {
             type: 'bar',

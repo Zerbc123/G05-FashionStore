@@ -14,6 +14,9 @@ public class SupportRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "customer_id", nullable = false)
+    private Integer customerId;
+
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(min = 5, max = 255, message = "Tiêu đề phải từ 5-255 ký tự")
@@ -49,9 +52,16 @@ public class SupportRequest {
     @Column(name = "assigned_staff_name", columnDefinition = "NVARCHAR(100)")
     private String assignedStaffName;
 
+    // FK relationship to Account
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_staff_id", referencedColumnName = "account_id", 
+               insertable = false, updatable = false)
+    private Account assignedStaff;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         this.status = SupportStatus.OPEN;
     }
 
@@ -128,5 +138,21 @@ public class SupportRequest {
 
     public void setAssignedStaffName(String assignedStaffName) {
         this.assignedStaffName = assignedStaffName;
+    }
+
+    public Account getAssignedStaff() {
+        return assignedStaff;
+    }
+
+    public void setAssignedStaff(Account assignedStaff) {
+        this.assignedStaff = assignedStaff;
+    }
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
     }
 }

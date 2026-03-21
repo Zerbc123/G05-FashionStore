@@ -93,9 +93,9 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ngày sinh</label>
                                 <input type="date" name="dateOfBirth" id="dateOfBirth" class="form-control"
-                                       th:value="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'yyyy-MM-dd') : ''}"
+                                       th:value="${customer.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'yyyy-MM-dd') : ''}"
                                        min="1950-01-01"
-                                       max="[[${#dates.format(#dates.createNow(),'yyyy-MM-dd')}]]">
+                                       max="[[${#temporals.format(#temporals.createNow(),'yyyy-MM-dd')}]]">
                                 <div id="dobError" class="text-danger small mt-1"></div>
                             </div>
 
@@ -103,9 +103,8 @@
                         <div class="mb-3">
                             <label class="form-label">Giới tính</label>
                             <select name="gender" class="form-select">
-                                <option value="Nam" th:selected="${customer.gender == 'Nam'}">Nam</option>
-                                <option value="Nữ" th:selected="${customer.gender == 'Nữ'}">Nữ</option>
-                                <option value="Khác" th:selected="${customer.gender == 'Khác'}">Khác</option>
+                                <option value="Nam" th:selected="${customer.gender == true}">Nam</option>
+                                <option value="Nữ" th:selected="${customer.gender == false}">Nữ</option>
                             </select>
                         </div>
                         <div class="mb-3">

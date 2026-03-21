@@ -36,7 +36,7 @@
                     <td th:text="${v.voucherId}">1</td>
                     <td><span class="badge bg-secondary fs-6" th:text="${v.code}">CODE</span></td>
                     <td class="text-danger fw-bold" th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</td>
-                    <td th:text="${#dates.format(v.expiredDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${#temporals.format(v.expiredDate, 'dd/MM/yyyy')}">01/01/2026</td>
                     <td>
                         <span th:if="${v.isActive}" class="badge bg-success">Đang hoạt động</span>
                         <span th:unless="${v.isActive}" class="badge bg-danger">Đã khóa</span>

@@ -14,6 +14,7 @@ import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -162,9 +163,9 @@ public class CustomerService {
         stats.put("vipCustomers", vipCount);
         
         // New customers this month
-        Date oneMonthAgo = new Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000);
+        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
         long newCustomersThisMonth = allCustomers.stream()
-            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().after(oneMonthAgo))
+            .filter(customer -> customer.getCreatedDate() != null && customer.getCreatedDate().isAfter(oneMonthAgo))
             .count();
         
         stats.put("newCustomersThisMonth", newCustomersThisMonth);

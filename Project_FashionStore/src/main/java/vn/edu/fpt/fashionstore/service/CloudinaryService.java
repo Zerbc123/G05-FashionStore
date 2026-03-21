@@ -24,10 +24,6 @@ public class CloudinaryService {
         }
 
         // Debug: Check Cloudinary config
-        System.out.println("Cloudinary config: " + cloudinary.config);
-        System.out.println("Cloud name: " + cloudinary.config.cloudName);
-        System.out.println("API Key: " + cloudinary.config.apiKey);
-
         @SuppressWarnings("unchecked")
         Map<String, Object> uploadParams = ObjectUtils.asMap(
             "folder", "fashion_store/products",

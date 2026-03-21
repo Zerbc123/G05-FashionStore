@@ -26,15 +26,17 @@ import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CartService;
 import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
+import vn.edu.fpt.fashionstore.service.WishlistService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.edu.fpt.fashionstore.util.PhoneUtils;
 import vn.edu.fpt.fashionstore.util.DateUtils;
 import vn.edu.fpt.fashionstore.util.AddressUtils;
 
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 public class HomeController {
@@ -56,6 +58,9 @@ public class HomeController {
     private OrderService orderService;
 
     @Autowired
+    private WishlistService wishlistService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
@@ -67,7 +72,10 @@ public class HomeController {
     @GetMapping("/")
     public String root() {
         return "redirect:/home";
-    }@GetMapping("/home")
+    }
+
+    @GetMapping("/home")
+    @Transactional(readOnly = true)
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
 
         // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
@@ -150,6 +158,7 @@ public class HomeController {
     }
 
     @GetMapping("/profile")
+    @Transactional(readOnly = true)
     public String viewProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
@@ -159,9 +168,19 @@ public class HomeController {
         if (acc != null) {
             model.addAttribute("account", acc);
 
-            Customer cus = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
-                    ? acc.getCustomers().get(0) : new Customer();
+            // Fix lazy loading by using AccountService.findCustomerByEmail
+            Customer cus = accountService.findCustomerByEmail(email);
+            if (cus == null) {
+                cus = new Customer();
+            }
             model.addAttribute("customer", cus);
+            
+            // Lấy số lượng wishlist cho customer
+            long wishlistCount = 0;
+            if (cus.getCustomerId() != null) {
+                wishlistCount = wishlistService.getWishlistCount(cus);
+            }
+            model.addAttribute("wishlistCount", wishlistCount);
 
             return "profile";
         }
@@ -169,6 +188,7 @@ public class HomeController {
     }
 
     @GetMapping(value = "/edit-profile")
+    @Transactional(readOnly = true)
     public String editProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
         if (email == null) return "redirect:/login";
@@ -190,6 +210,7 @@ public class HomeController {
     }
 
     @GetMapping(value = "/order-history")
+    @Transactional(readOnly = true)
     public String orderHistoryPage(HttpSession session, Model model) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -225,28 +246,22 @@ public class HomeController {
     }
 
     @PostMapping("/login")
+    @Transactional(readOnly = true)
     public String handleLogin(@RequestParam String username,
                               @RequestParam String password,
                               HttpSession session,
                               RedirectAttributes ra) {
 
-        System.out.println("DEBUG: Login attempt for username: " + username);
-        System.out.println("DEBUG: Password length: " + (password != null ? password.length() : "null"));
-
-        // validate password format (exactly 6 alphanumeric characters)
+        // Validate password format for existing users login (as requested)
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            System.out.println("DEBUG: Password validation failed");
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số!");
             return "redirect:/login";
         }
 
-        System.out.println("DEBUG: Password validation passed, calling authenticate");
         Account account = accountService.authenticate(username, password);
-        System.out.println("DEBUG: Authenticate result: " + (account != null ? "SUCCESS" : "FAILED"));
 
         if (account != null) {
             String roleName = (account.getRole() != null) ? account.getRole().getRoleName() : "Customer";
-            System.out.println("DEBUG: Role name: " + roleName);
 
             session.setAttribute("user", account.getEmail());
             session.setAttribute("userRole", roleName);
@@ -255,7 +270,6 @@ public class HomeController {
             updateCartCountForCustomer(session, account);
 
             if ("Admin".equalsIgnoreCase(roleName)) {
-                System.out.println("DEBUG: Redirecting to /admin");
                 return "redirect:/admin";
             }
 
@@ -263,11 +277,9 @@ public class HomeController {
                 "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
                 "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
                 "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
-                System.out.println("DEBUG: Redirecting to /staff");
                 return "redirect:/staff";
             }
 
-            System.out.println("DEBUG: Redirecting to /home (default for customer)");
             return "redirect:/home";
         }
 
@@ -303,8 +315,14 @@ public class HomeController {
                                  @RequestParam String phone,
                                  @RequestParam String password,
                                  @RequestParam String confirmPassword,
-                                 HttpSession session,
+                                 jakarta.servlet.http.HttpSession session,
                                  RedirectAttributes ra) {
+
+        // Luôn trả lại các giá trị đã nhập vào form nếu có lỗi (ngoại trừ mật khẩu)
+        ra.addFlashAttribute("enteredFirstName", firstName);
+        ra.addFlashAttribute("enteredLastName", lastName);
+        ra.addFlashAttribute("enteredEmail", email);
+        ra.addFlashAttribute("enteredPhone", phone);
 
         if (!password.equals(confirmPassword)) {
             ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp!");
@@ -312,7 +330,7 @@ public class HomeController {
         }
 
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số, không chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/register";
         }
 
@@ -356,7 +374,7 @@ public class HomeController {
             @RequestParam String phone,
             @RequestParam String address,
             @RequestParam String gender,
-            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateOfBirth,
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateOfBirth,
             HttpSession session,
             RedirectAttributes ra) {
 
@@ -527,11 +545,63 @@ public class HomeController {
     }
 
     @GetMapping("/reset-password")
-    public String resetPasswordPage(HttpSession session) {
+    public String resetPasswordPage(HttpSession session, Model model) {
         if (session.getAttribute("resetOtpCode") == null) {
             return "redirect:/forgot-password";
         }
+        Long lastOtpTime = (Long) session.getAttribute("lastOtpRequestTime");
+        Integer otpCount = (Integer) session.getAttribute("otpRequestCount");
+        model.addAttribute("lastOtpTime", lastOtpTime != null ? lastOtpTime : 0L);
+        model.addAttribute("otpCount", otpCount != null ? otpCount : 1);
         return "reset-password";
+    }
+
+    @PostMapping("/resend-otp")
+    public String resendForgotPasswordOtp(HttpSession session, RedirectAttributes ra) {
+        String email = (String) session.getAttribute("resetEmail");
+        if (email == null) {
+            return "redirect:/forgot-password";
+        }
+
+        // Kiểm tra chống spam OTP
+        Long lastOtpRequestTime = (Long) session.getAttribute("lastOtpRequestTime");
+        Integer otpRequestCount = (Integer) session.getAttribute("otpRequestCount");
+
+        if (lastOtpRequestTime != null && otpRequestCount != null) {
+            long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
+            long waitTimeSeconds = (otpRequestCount == 1) ? 30 : (long) otpRequestCount * 60;
+
+            if (timeSinceLastRequest < waitTimeSeconds * 1000) {
+                long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
+                ra.addFlashAttribute("error", "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
+                return "redirect:/reset-password";
+            }
+        }
+
+        try {
+            String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
+
+            session.setAttribute("resetOtpCode", otp);
+            session.setAttribute("resetOtpTimestamp", System.currentTimeMillis());
+            session.setAttribute("lastOtpRequestTime", System.currentTimeMillis());
+            if (otpRequestCount == null) {
+                session.setAttribute("otpRequestCount", 1);
+            } else {
+                session.setAttribute("otpRequestCount", otpRequestCount + 1);
+            }
+
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Mã xác nhận đặt lại mật khẩu - Fashion Store");
+            message.setText("Mã OTP đặt lại mật khẩu của bạn là: " + otp + ". Mã có hiệu lực trong 5 phút.");
+            mailSender.send(message);
+
+            ra.addFlashAttribute("success", "Mã OTP mới đã được gửi đến email của bạn!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi gửi email: " + e.getMessage());
+        }
+
+        return "redirect:/reset-password";
     }
 
     @PostMapping("/reset-password")
@@ -569,18 +639,26 @@ public class HomeController {
 
         // Kiểm tra định dạng mật khẩu
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải gồm 6 ký tự chữ và số!");
+            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/reset-password";
         }
 
         try {
             // Cập nhật mật khẩu
             Optional<Account> accountOpt = accountService.findByEmail(email);
-            if (accountOpt.isPresent()) {
-                Account account = accountOpt.get();
-                account.setPassword(passwordEncoder.encode(newPassword));
-                accountService.saveAccount(account);
+            if (!accountOpt.isPresent()) {
+                session.removeAttribute("resetOtpCode");
+                session.removeAttribute("resetOtpTimestamp");
+                session.removeAttribute("resetEmail");
+                session.removeAttribute("lastOtpRequestTime");
+                session.removeAttribute("otpRequestCount");
+                ra.addFlashAttribute("error", "Tài khoản không tồn tại. Vui lòng thử lại!");
+                return "redirect:/forgot-password";
             }
+
+            Account account = accountOpt.get();
+            account.setPassword(passwordEncoder.encode(newPassword));
+            accountService.saveAccount(account);
 
             // Xóa session
             session.removeAttribute("resetOtpCode");
@@ -605,22 +683,14 @@ public class HomeController {
 
     private void updateCartCountForCustomer(HttpSession session, Account account) {
         try {
-            System.out.println("DEBUG: Updating cart count for account: " + account.getEmail());
-            System.out.println("DEBUG: Customers list: " + (account.getCustomers() != null ? account.getCustomers().size() : "null"));
-            
             if (account.getCustomers() != null && !account.getCustomers().isEmpty()) {
                 Customer customer = account.getCustomers().get(0);
-                System.out.println("DEBUG: Found customer: " + customer.getCustomerId());
                 List<CartItem> cartItems = cartService.getCartItems(customer);
-                System.out.println("DEBUG: Cart items count: " + cartItems.size());
                 session.setAttribute("cartCount", cartItems.size());
             } else {
-                System.out.println("DEBUG: No customers found, setting cart count to 0");
                 session.setAttribute("cartCount", 0);
             }
         } catch (Exception e) {
-            System.out.println("DEBUG: Error in updateCartCountForCustomer: " + e.getMessage());
-            e.printStackTrace();
             session.setAttribute("cartCount", 0);
         }
     }

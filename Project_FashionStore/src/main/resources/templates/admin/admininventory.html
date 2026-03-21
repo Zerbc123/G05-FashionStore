@@ -540,6 +540,7 @@
                                 <span th:if="${variant.stock > 20}" class="stock-badge in-stock">Còn hàng</span>
                                 <span th:if="${variant.stock > 0 and variant.stock <= 20}" class="stock-badge low-stock">Sắp hết</span>
                                 <span th:if="${variant.stock == null or variant.stock == 0}" class="stock-badge out-stock">Hết hàng</span>
+                                <span th:if="${variant.stock == 0}" class="stock-badge out-stock">Hết hàng</span>
                             </td>
                             <td>
                                 <form th:action="@{/admin/inventory/update-stock}" method="post" style="display: inline;">
@@ -574,6 +575,7 @@
 
         <!-- Pagination -->
         <nav th:if="${productVariantPage != null and productVariantPage.totalElements > 0}">
+        <nav th:if="${totalPages > 0}">
             <ul class="pagination">
                 <!-- Previous -->
                 <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">

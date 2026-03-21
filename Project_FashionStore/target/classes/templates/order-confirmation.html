@@ -206,7 +206,7 @@
                     <i class="bi bi-calendar"></i>
                     <div class="info-content">
                         <div class="info-label">Ngày đặt hàng</div>
-                        <div class="info-value" th:text="${#dates.format(orderDate, 'dd/MM/yyyy')}">01/03/2026</div>
+                        <div class="info-value" th:text="${#temporals.format(orderDate, 'dd/MM/yyyy')}">01/03/2026</div>
                     </div>
                 </div>
                 
@@ -220,6 +220,14 @@
                             <span th:if="${orderStatus != null and orderStatus.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
                             <span th:if="${orderStatus == null}" class="badge bg-secondary">N/A</span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="bi bi-credit-card"></i>
+                    <div class="info-content">
+                        <div class="info-label">Phương thức thanh toán</div>
+                        <div class="info-value" th:text="${paymentMethod ?: 'COD'}">COD</div>
                     </div>
                 </div>
             </div>

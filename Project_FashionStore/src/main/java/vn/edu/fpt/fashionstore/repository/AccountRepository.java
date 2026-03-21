@@ -20,15 +20,23 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     Optional<Account> findByEmail(String email);
 
+    // Fetch Account with Customers eagerly to prevent LazyInitializationException
+    @Query("SELECT a FROM Account a LEFT JOIN FETCH a.customers WHERE a.email = :email")
+    Optional<Account> findByEmailWithCustomers(@Param("email") String email);
+
     // CHECK TRÙNG
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
 
+    boolean existsByPhone(String phone);
+
     // CHECK TRÙNG KHI UPDATE (TRỪ CHÍN NÓ)
     boolean existsByUsernameAndAccountIdNot(String username, Integer accountId);
 
     boolean existsByEmailAndAccountIdNot(String email, Integer accountId);
+
+    boolean existsByPhoneAndAccountIdNot(String phone, Integer accountId);
 
     // LẤY TẤT CẢ ACCOUNT KHÔNG BỊ DELETED (PHÂN TRANG)
     Page<Account> findByStatusIn(
@@ -72,26 +80,29 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     List<Account> findByRole_RoleName(String roleName);
 
 
-
     /* =================================================
                 STAFF MANAGEMENT (ADMIN)
        ================================================= */
 
     // LẤY DANH SÁCH NHÂN VIÊN (SALE, STOCK, SUPPORT, MANAGER)
-    @Query("SELECT a FROM Account a " +
-        "WHERE a.status IN ('ACTIVE','LOCKED') " +
-        "AND a.role.roleId IN (3,4,5,6)")
+    @Query("""
+        SELECT a FROM Account a
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
+        AND a.role.roleId IN (3,4,5,6)
+    """)
     Page<Account> findStaffAccounts(Pageable pageable);
 
-    // SEARCH NHÂN VIÊN - Fixed Text Block issue
-    @Query("SELECT a FROM Account a " +
-        "WHERE a.status IN ('ACTIVE','LOCKED') " +
-        "AND a.role.roleId IN (3,4,5,6) " +
-        "AND (" +
-        "LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        "OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        "OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-        ")")
+    // SEARCH NHÂN VIÊN
+    @Query("""
+        SELECT a FROM Account a
+        WHERE a.status IN ('ACTIVE','LOCKED','LEAVE')
+        AND a.role.roleId IN (3,4,5,6)
+        AND (
+            LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
     Page<Account> searchStaffAccounts(
             @Param("keyword") String keyword,
             Pageable pageable

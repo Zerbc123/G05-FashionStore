@@ -24,5 +24,6 @@ public interface CartRepository extends JpaRepository<CartItem, Integer> {
     List<CartItem> findByCustomer(@Param("customer") Customer customer);
 
     // Tìm một sản phẩm cụ thể trong giỏ hàng của khách hàng
-    Optional<CartItem> findByCustomerAndProductVariant(Customer customer, ProductVariant productVariant);
+    @Query("SELECT ci FROM CartItem ci WHERE ci.customer = :customer AND ci.productVariant = :productVariant")
+    Optional<CartItem> findByCustomerAndProductVariant(@Param("customer") Customer customer, @Param("productVariant") ProductVariant productVariant);
 }

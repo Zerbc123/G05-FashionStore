@@ -21,7 +21,7 @@ public class Account {
     @Column(name = "username")
     @NotBlank(message = "Username không được để trống")
     @Size(min = 3, max = 50, message = "Username phải từ 3-50 ký tự")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username chỉ được chứa chữ, số và dấu gạch dưới")
+    @Pattern(regexp = "^[a-zA-Z0-9_.@-]+$", message = "Username chỉ được chứa chữ, số và các ký tự đặc biệt: _ . @ -")
     private String username;
 
     @Column(name = "password")
@@ -38,14 +38,13 @@ public class Account {
     private String fullName;
 
     @Column(name = "phone")
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(regexp = "^(0)[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số")
+    @Pattern(regexp = "^$|^(0)[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10-11 chữ số")
     private String phone;
 
     @Column(name = "status")
     private String status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
 

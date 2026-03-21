@@ -53,7 +53,6 @@ public class PaymentController {
     /**
      * Handle Momo payment return (redirect URL after payment)
      * @param params Payment response parameters from Momo
-     * @param model Model for view
      * @return Payment result page
      */
     @GetMapping("/momo/return")

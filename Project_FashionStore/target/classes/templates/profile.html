@@ -89,7 +89,7 @@
                             <button class="avatar-edit-btn"><i class="bi bi-camera"></i></button>
                         </div>
                         <h3 class="user-name" th:text="${account.fullName}">Họ và Tên</h3>
-                        <p class="member-since" th:text="'Member since ' + ${#dates.format(customer.createdDate, 'MMM yyyy')}">Member since 2024</p>
+                        <p class="member-since" th:text="'Member since ' + ${#temporals.format(customer.createdDate, 'MMM yyyy')}">Member since 2024</p>
                     </div>
 
                     <div>
@@ -99,7 +99,15 @@
                         </a>
                         <a th:href="@{/wishlist}" class="profile-action-btn">
                             <span><i class="bi bi-heart"></i> Wishlist</span>
-                            <span class="badge">12</span>
+                            <span class="badge" th:text="${wishlistCount}">0</span>
+                        </a>
+                        <a th:href="@{/customer/support}" class="profile-action-btn">
+                            <span><i class="bi bi-headset"></i> Hỗ trợ khách hàng</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a th:href="@{/customer/support/my-tickets}" class="profile-action-btn">
+                            <span><i class="bi bi-ticket-detailed"></i> Yêu cầu hỗ trợ của tôi</span>
+                            <i class="bi bi-chevron-right"></i>
                         </a>
                     </div>
                 </div>
@@ -141,7 +149,7 @@
                         <div class="col-md-6">
                             <div class="info-item">
                                 <div class="info-label">Date of Birth</div>
-                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #dates.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
+                                <div class="info-value" th:text="${customer.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
                             </div>
                         </div>
 
