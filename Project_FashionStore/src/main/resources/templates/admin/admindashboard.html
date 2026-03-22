@@ -22,7 +22,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f6fa;
+            background: #FFF9F9;
             min-height: 100vh;
         }
 
@@ -126,7 +126,7 @@
         }
 
         .stat-icon.revenue {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
 
         .stat-icon.orders {
@@ -273,10 +273,10 @@
         }
 
         .action-btn:hover {
-            border-color: #667eea;
+            border-color: #11998e;
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-            color: #667eea;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.2);
+            color: #11998e;
         }
 
         .action-btn i {
@@ -445,8 +445,8 @@
                 datasets: [{
                     label: 'Revenue (đ)',
                     data: monthlyRevenue,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: '#11998e',
+                    backgroundColor: 'rgba(17, 153, 142, 0.1)',
                     tension: 0.4,
                     fill: true
                 }]
@@ -485,7 +485,7 @@
                 labels: categoryNames,
                 datasets: [{
                     data: categorySales,
-                    backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b']
+                    backgroundColor: ['#11998e', '#38ef7d', '#4facfe', '#43e97b']
                 }]
             },
             options: {

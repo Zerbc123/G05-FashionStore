@@ -378,24 +378,14 @@
                 </form>
 
 
-
                 <form th:action="${isAdmin ? '/admin/support/update-status/' + supportRequest.id  : '/staff/support/update-status/' + supportRequest.id}" method="post">
-
                     <input type="hidden" name="status" value="CLOSED">
-
                     <button type="submit" 
-
                             class="px-4 py-2 bg-white border border-gray-500 text-gray-600 text-sm font-bold rounded-lg hover:bg-gray-500 hover:text-white transition shadow-sm"
-
                             th:if="${supportRequest.status == 'RESOLVED'}">
-
                         <i class="fa-solid fa-times mr-2"></i>Đóng yêu cầu
-
                     </button>
-
                 </form>
-
-
 
                 <form th:action="${isAdmin ? '/admin/support/delete/' + supportRequest.id : '/staff/support/delete/' + supportRequest.id}"
                       method="post"
