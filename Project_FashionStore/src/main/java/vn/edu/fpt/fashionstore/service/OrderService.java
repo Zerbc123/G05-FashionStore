@@ -63,10 +63,8 @@ public class OrderService {
                 throw new RuntimeException("Giỏ hàng trống, không thể tạo đơn hàng!");
             }
 
-            // Tính tổng tiền
-            double totalAmount = cartItems.stream()
-                .mapToDouble(item -> item.getProductVariant().getPrice() * item.getQuantity())
-                .sum();
+            // Tính tổng tiền đơn hàng từ các sản phẩm trong đơn
+            double totalAmount = calculateOrderTotalAmount(cartItems);
 
             // Tạo đơn hàng mới với địa chỉ giao hàng và tài khoản
             Order order = new Order(customer, totalAmount);
@@ -113,10 +111,8 @@ public class OrderService {
                 throw new RuntimeException("Không có sản phẩm để mua!");
             }
 
-            // Tính tổng tiền
-            double totalAmount = buyNowItems.stream()
-                .mapToDouble(item -> item.getProductVariant().getPrice() * item.getQuantity())
-                .sum();
+            // Tính tổng tiền đơn hàng từ các sản phẩm mua ngay
+            double totalAmount = calculateOrderTotalAmount(buyNowItems);
 
             // Tạo đơn hàng mới với địa chỉ giao hàng và tài khoản
             Order order = new Order(customer, totalAmount);
@@ -274,6 +270,16 @@ public class OrderService {
     // =======================================================
     // 6. HELPER METHODS
     // =======================================================
+    private double calculateItemTotal(CartItem cartItem) {
+        return cartItem.getProductVariant().getPrice() * cartItem.getQuantity();
+    }
+
+    private double calculateOrderTotalAmount(List<CartItem> cartItems) {
+        return cartItems.stream()
+                .mapToDouble(this::calculateItemTotal)
+                .sum();
+    }
+
     private String generateOrderCode() {
         // Tạo mã đơn hàng theo format: ORD + timestamp + random
         long timestamp = System.currentTimeMillis();
@@ -538,4 +544,7 @@ public class OrderService {
             throw new RuntimeException("Vui lòng chọn địa chỉ giao hàng!");
         }
     }
+
+
+
 }

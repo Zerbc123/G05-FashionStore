@@ -142,4 +142,20 @@ public class CartService {
     public CartItem getCartItemById(Integer cartItemId) {
         return cartRepository.findById(cartItemId).orElse(null);
     }
+
+
+
+    // Phần của SWT
+    public double calculate(double price, int quantity) {
+
+        if(price < 0){
+            throw new IllegalArgumentException("Invalid price");
+        }
+
+        if(quantity < 0){
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+
+        return price * quantity;
+    }
 }
