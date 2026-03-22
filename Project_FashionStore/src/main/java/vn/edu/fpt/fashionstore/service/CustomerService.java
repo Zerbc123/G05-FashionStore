@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.fashionstore.entity.Account;
 import vn.edu.fpt.fashionstore.entity.Customer;
 import vn.edu.fpt.fashionstore.entity.Order;
+import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.repository.AccountRepository;
 import vn.edu.fpt.fashionstore.repository.CustomerRepository;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
@@ -135,7 +136,7 @@ public class CustomerService {
         Map<Long, Long> customerOrderCount = new HashMap<>();
         
         allOrders.stream()
-            .filter(order -> order.getCustomer() != null && "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getCustomer() != null && order.getStatus() == OrderStatus.CONFIRMED)
             .forEach(order -> {
                 Long customerId = order.getCustomer().getCustomerId();
                 Double amount = order.getTotalAmount() != null ? order.getTotalAmount() : 0.0;
@@ -193,11 +194,11 @@ public class CustomerService {
         // Order statistics
         long totalOrders = customerOrders.size();
         long completedOrders = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getStatus() == OrderStatus.CONFIRMED)
             .count();
         
         double totalSpent = customerOrders.stream()
-            .filter(order -> "COMPLETED".equals(order.getStatus()))
+            .filter(order -> order.getStatus() == OrderStatus.CONFIRMED)
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         

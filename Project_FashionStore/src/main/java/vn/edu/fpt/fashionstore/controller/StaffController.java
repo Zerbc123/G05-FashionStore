@@ -122,23 +122,23 @@ public class StaffController {
                 .filter(o -> o.getStatus() != null && "PENDING".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
-        long shipping = orders.stream()
-                .filter(o -> o.getStatus() != null && "SHIPPING".equalsIgnoreCase(o.getStatus().name()))
+        long confirmed = orders.stream()
+                .filter(o -> o.getStatus() != null && "CONFIRMED".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
-        long completed = orders.stream()
-                .filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+        long cancelled = orders.stream()
+                .filter(o -> o.getStatus() != null && "CANCELLED".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
         double revenue = orders.stream()
-                .filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+                .filter(o -> o.getStatus() != null && "CONFIRMED".equalsIgnoreCase(o.getStatus().name()))
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
         model.addAttribute("orders", orders);
         model.addAttribute("pendingCount", pending);
-        model.addAttribute("shippingCount", shipping);
-        model.addAttribute("completedCount", completed);
+        model.addAttribute("confirmedCount", confirmed);
+        model.addAttribute("cancelledCount", cancelled);
         model.addAttribute("totalRevenue", revenue);
 
         return "staff/stafforder";

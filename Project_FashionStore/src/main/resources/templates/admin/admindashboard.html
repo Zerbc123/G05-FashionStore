@@ -242,29 +242,9 @@
             color: #155724;
         }
 
-        .badge.processing {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        .badge.confirmed {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .badge.shipping {
-            background: #cce5ff;
-            color: #004085;
-        }
-
         .badge.cancelled {
             background: #f8d7da;
             color: #721c24;
-        }
-
-        .badge.refunded {
-            background: #d1ecf1;
-            color: #0c5460;
         }
 
         .badge.unknown {
@@ -521,17 +501,17 @@
         // Order Status Chart
         const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
         const pendingOrders = /*[[${pendingOrders}]]*/ 0;
-        const processingOrders = /*[[${processingOrders}]]*/ 0;
-        const completedOrders = /*[[${completedOrders}]]*/ 0;
+        const confirmedOrders = /*[[${confirmedOrders}]]*/ 0;
+        const cancelledOrders = /*[[${cancelledOrders}]]*/ 0;
 
         new Chart(orderStatusCtx, {
             type: 'bar',
             data: {
-                labels: ['Pending', 'Shipping', 'Completed'],
+                labels: ['Pending', 'Confirmed', 'Cancelled'],
                 datasets: [{
                     label: 'Orders',
-                    data: [pendingOrders, processingOrders, completedOrders],
-                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745']
+                    data: [pendingOrders, confirmedOrders, cancelledOrders],
+                    backgroundColor: ['#ffc107', '#0D6EFD', '#dc3545']
                 }]
             },
             options: {

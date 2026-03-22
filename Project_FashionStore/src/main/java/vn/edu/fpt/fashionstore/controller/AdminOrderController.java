@@ -55,23 +55,23 @@ public class AdminOrderController {
                 .filter(o -> "PENDING".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
-        long shipping = orders.stream()
-                .filter(o -> "SHIPPING".equalsIgnoreCase(o.getStatus().name()))
+        long confirmed = orders.stream()
+                .filter(o -> "CONFIRMED".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
-        long completed = orders.stream()
-                .filter(o -> "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+        long cancelled = orders.stream()
+                .filter(o -> "CANCELLED".equalsIgnoreCase(o.getStatus().name()))
                 .count();
 
         double revenue = orders.stream()
-                .filter(o -> "COMPLETED".equalsIgnoreCase(o.getStatus().name()))
+                .filter(o -> "CONFIRMED".equalsIgnoreCase(o.getStatus().name()))
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
         model.addAttribute("orders", orders);
         model.addAttribute("pendingCount", pending);
-        model.addAttribute("shippingCount", shipping);
-        model.addAttribute("completedCount", completed);
+        model.addAttribute("confirmedCount", confirmed);
+        model.addAttribute("cancelledCount", cancelled);
         model.addAttribute("totalRevenue", revenue);
 
         return "admin/adminorder";
@@ -89,9 +89,9 @@ public class AdminOrderController {
         orderRepository.findById(id).ifPresent(order -> {
             String currentStatus = order.getStatus().name();
 
-            // Prevent changing from Completed to Shipping or Pending
-            if ("COMPLETED".equalsIgnoreCase(currentStatus) &&
-                    ("Shipping".equalsIgnoreCase(status) || "Pending".equalsIgnoreCase(status))) {
+            // Prevent changing from Confirmed to Pending
+            if (("CONFIRMED".equalsIgnoreCase(currentStatus) || "CANCELLED".equalsIgnoreCase(currentStatus)) &&
+                    "PENDING".equalsIgnoreCase(status)) {
                 return;
             }
 

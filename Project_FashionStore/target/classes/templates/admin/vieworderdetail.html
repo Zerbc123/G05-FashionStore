@@ -33,7 +33,7 @@
                 </p>
 
                 <p><strong>Trạng thái:</strong>
-                    <span th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}"></span>
+                    <span th:text="${order.status != null ? order.status.displayName : 'N/A'}"></span>
                 </p>
 
                 <p><strong>Địa chỉ giao hàng:</strong>

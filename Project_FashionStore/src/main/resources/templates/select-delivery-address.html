@@ -63,7 +63,7 @@
 <main class="container mb-5">
     <h2 class="page-title">Chọn Địa Chỉ Giao Hàng</h2>
 
-    <form th:action="@{/order/checkout/update-delivery-address}" method="POST">
+    <form id="deliveryAddressForm" th:action="@{/order/checkout/update-delivery-address}" method="POST">
         <!-- Địa chỉ hiện tại từ profile -->
         <div class="address-box">
             <h4 class="section-title"><i class="bi bi-person-check me-2"></i>Địa chỉ mặc định</h4>
@@ -88,7 +88,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
-                        <select id="orderProvince" name="province" class="form-select" required>
+                        <select id="orderProvince" name="province" class="form-select">
                             <option value="">Đang tải tỉnh/thành...</option>
                         </select>
                         <div id="orderProvinceLoadingIndicator" style="margin-top: 0.5rem;">
@@ -97,13 +97,13 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Phường/Xã (Sau sáp nhập)<span class="text-danger">*</span></label>
-                        <select id="orderWard" name="ward" class="form-select" required disabled>
+                        <select id="orderWard" name="ward" class="form-select" disabled>
                             <option value="">Chọn Phường/Xã</option>
                         </select>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Số nhà & Tên đường <span class="text-danger">*</span></label>
-                        <input type="text" id="orderHouse" name="house" class="form-control" placeholder="Vi du: 123 Nguyen Trai" required />
+                        <input type="text" id="orderHouse" name="house" class="form-control" placeholder="Vi du: 123 Nguyen Trai" />
                     </div>
                     <input type="hidden" id="orderAddress" name="newAddress" />
                 </div>
@@ -128,7 +128,7 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
+<script th:inline="javascript">
 let orderProvincesList = [];
 
 function selectAddress(type) {
@@ -149,7 +149,6 @@ function loadOrderProvinces() {
     const provSelect = document.getElementById('orderProvince');
     const loadingIndicator = document.getElementById('orderProvinceLoadingIndicator');
     
-    fetch('/fashionstore/address-api?depth=2')
     fetch('/fashionstore/address-api?depth=2')
         .then(res => {
             if (!res.ok) throw new Error('API failed');
@@ -215,10 +214,20 @@ document.addEventListener('DOMContentLoaded', function() {
         houseElem.addEventListener('input', combineOrderAddress);
     }
     
-    const form = document.querySelector('form');
+    const form = document.getElementById('deliveryAddressForm');
     if (form) {
         form.addEventListener('submit', function(e) {
-            const selectedOption = document.querySelector('input[name="addressOption"]:checked').value;
+            let selectedOption = document.querySelector('input[name="addressOption"]:checked').value;
+            
+            // Auto switch to 'new' if user explicitly typed into the new address fields
+            const houseVal = document.getElementById('orderHouse').value.trim();
+            const wardVal = document.getElementById('orderWard').value;
+            const provVal = document.getElementById('orderProvince').value;
+            
+            if ((houseVal || wardVal || provVal) && selectedOption !== 'new') {
+                selectedOption = 'new';
+                document.querySelector('input[name="addressOption"][value="new"]').checked = true;
+            }
             
             if (selectedOption === 'profile') {
                 const currentAddress = /*[[${currentAddress}]]*/ '';
@@ -228,9 +237,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const orderAddr = document.getElementById('orderAddress').value;
                 document.getElementById('finalAddress').value = orderAddr;
                 
-                if (!orderAddr || orderAddr.trim() === '') {
+                if (!houseVal || !wardVal || !provVal) {
                     e.preventDefault();
-                    alert('Vui long chon day du dia chi (Tinh, Phuong, So nha)');
+                    alert('Vui lòng điền và chọn đầy đủ địa chỉ mới (Giới hạn: Tỉnh, Phường/Xã, Số nhà)!');
                     return false;
                 }
             }

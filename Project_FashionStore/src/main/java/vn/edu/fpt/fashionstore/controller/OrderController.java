@@ -42,7 +42,6 @@ import java.util.*;
 public class OrderController {
 
     private final OrderRepository orderRepository;
-    private final ReturnRequestService returnRequestService;
     private final CartService cartService;
     private final OrderService orderService;
     private final AccountRepository accountRepository;
@@ -158,8 +157,13 @@ public class OrderController {
             double cartTotal = cartService.getCartTotal(cartItems);
 
             if (voucherCode == null || voucherCode.trim().isEmpty()) {
-                session.removeAttribute("appliedVoucher");
-                redirectAttributes.addFlashAttribute("successMessage", "Đã hủy áp dụng mã giảm giá.");
+                Voucher existingVoucher = (Voucher) session.getAttribute("appliedVoucher");
+                if (existingVoucher != null) {
+                    session.removeAttribute("appliedVoucher");
+                    redirectAttributes.addFlashAttribute("successMessage", "Đã hủy áp dụng mã giảm giá.");
+                } else {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập hoặc chọn mã giảm giá!");
+                }
                 return "redirect:/order/checkout";
             }
 
@@ -571,12 +575,6 @@ public class OrderController {
             model.addAttribute("isAdmin", isAdmin);
             model.addAttribute("isManager", isManager);
 
-            boolean hasReturnRequest = returnRequestService.hasReturnRequest(order);
-            model.addAttribute("hasReturnRequest", hasReturnRequest);
-            if (hasReturnRequest) {
-                model.addAttribute("returnRequest", returnRequestService.getReturnRequestByOrder(order));
-            }
-
             return "order-details";
 
         } catch (RuntimeException e) {
@@ -585,37 +583,6 @@ public class OrderController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng.");
             return "redirect:/cart";
-        }
-    }
-
-    // =======================================================
-    // 7. XỬ LÝ KHÁCH HÀNG YÊU CẦU TRẢ HÀNG
-    // =======================================================
-    @PostMapping("/details/{oid}/return")
-    public String requestReturn(
-            @PathVariable("oid") String orderId,
-            @RequestParam("reason") String reason,
-            @RequestParam("description") String description,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-        try {
-            Customer currentCustomer = getCurrentCustomer(session);
-            Long orderIdLong = Long.parseLong(orderId);
-            Order order = orderService.getOrderById(orderIdLong);
-
-            if (order.getStatus() != OrderStatus.COMPLETED) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có thể trả hàng khi đơn hàng đã giao thành công!");
-                return "redirect:/order/details/" + orderId;
-            }
-
-            returnRequestService.createReturnRequest(order, currentCustomer, reason, description);
-
-            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu Trả hàng/Hoàn tiền đã được gửi. Shop sẽ phản hồi sớm nhất!");
-            return "redirect:/order/details/" + orderId;
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            return "redirect:/order/details/" + orderId;
         }
     }
 

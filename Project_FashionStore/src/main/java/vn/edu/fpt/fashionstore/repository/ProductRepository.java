@@ -87,7 +87,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "JOIN oi.productVariant v " +
             "JOIN v.product p " +
             "LEFT JOIN p.category c " +
-            "WHERE oi.order.status = vn.edu.fpt.fashionstore.entity.OrderStatus.COMPLETED " +
+            "WHERE oi.order.status = vn.edu.fpt.fashionstore.entity.OrderStatus.CONFIRMED " +
             "GROUP BY p.productId, p.productName, c.categoryName " +
             "ORDER BY SUM(oi.quantity) DESC")
     List<ProductHomeInfo> findTopSellingProducts(Pageable pageable);

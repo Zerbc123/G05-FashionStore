@@ -34,10 +34,10 @@ public class ReportService {
     private ProductReportRepository productReportRepository;
 
     private static final List<OrderStatus> ACTIVE_STATUSES = Arrays.asList(
-            OrderStatus.COMPLETED, OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPING);
+            OrderStatus.PENDING, OrderStatus.CONFIRMED);
     
     private static final List<OrderStatus> REVENUE_STATUSES = Arrays.asList(
-            OrderStatus.COMPLETED);
+            OrderStatus.CONFIRMED);
 
     // Revenue Report Methods
     public Map<String, Object> getRevenueReport(LocalDate startDate, LocalDate endDate) {
