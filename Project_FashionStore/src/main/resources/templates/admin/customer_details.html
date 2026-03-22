@@ -304,7 +304,10 @@
                         </div>
                         <div class="info-item">
                             <label class="info-label">Customer Status:</label>
-                            <span th:class="'badge ' + ${customerDetails.status.toLowerCase()}" th:text="${customerDetails.status}">Active</span>
+                            <span th:if="${customerDetails.status != null}" 
+                                  th:class="'badge ' + ${customerDetails.status.toLowerCase()}" 
+                                  th:text="${customerDetails.status}">Active</span>
+                            <span th:unless="${customerDetails.status != null}" class="badge inactive">Unknown</span>
                             <small class="text-muted d-block mt-1">Based on account status and order activity</small>
                         </div>
                         <div class="info-item">
@@ -334,7 +337,7 @@
                         <div class="info-item">
                             <span class="info-label">Member Since:</span>
                             <span class="info-value" th:if="${customerDetails.customer != null and customerDetails.customer.createdDate != null}" 
-                                  th:text="${#dates.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
+                                  th:text="${#temporals.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
                             <span class="info-value" th:unless="${customerDetails.customer != null and customerDetails.customer.createdDate != null}">Unknown</span>
                         </div>
                         <div class="info-item" th:if="${customerDetails.customer != null}">
@@ -343,7 +346,7 @@
                         </div>
                         <div class="info-item" th:if="${customerDetails.customer != null and customerDetails.customer.dateOfBirth != null}">
                             <span class="info-label">Date of Birth:</span>
-                            <span class="info-value" th:text="${#dates.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
+                            <span class="info-value" th:text="${#temporals.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
                         </div>
                     </div>
                 </div>

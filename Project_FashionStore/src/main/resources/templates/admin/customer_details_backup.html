@@ -213,6 +213,15 @@
 <!-- Main Content -->
 <div class="main-content">
     <div class="container">
+        <!-- Check if customerDetails exists -->
+        <div th:if="${customerDetails == null or customerDetails.isEmpty()}" class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+            Customer details not found or unable to load customer information.
+            <a th:href="@{/admin/customers}" class="btn btn-primary ms-3">Back to Customers</a>
+        </div>
+        
+        <!-- Display customer details if available -->
+        <div th:if="${customerDetails != null and not customerDetails.isEmpty()}">
         <!-- Page Header -->
         <div class="page-header">
             <h1><i class="bi bi-person-circle"></i> Customer Details</h1>
@@ -304,10 +313,7 @@
                         </div>
                         <div class="info-item">
                             <label class="info-label">Customer Status:</label>
-                            <span th:if="${customerDetails.status != null}" 
-                                  th:class="'badge ' + ${customerDetails.status.toLowerCase()}" 
-                                  th:text="${customerDetails.status}">Active</span>
-                            <span th:unless="${customerDetails.status != null}" class="badge inactive">Unknown</span>
+                            <span th:class="'badge ' + ${customerDetails.status != null ? customerDetails.status.toLowerCase() : 'inactive'}" th:text="${customerDetails.status != null ? customerDetails.status : 'Unknown'}">Active</span>
                             <small class="text-muted d-block mt-1">Based on account status and order activity</small>
                         </div>
                         <div class="info-item">
@@ -337,7 +343,7 @@
                         <div class="info-item">
                             <span class="info-label">Member Since:</span>
                             <span class="info-value" th:if="${customerDetails.customer != null and customerDetails.customer.createdDate != null}" 
-                                  th:text="${#temporals.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
+                                  th:text="${#dates.format(customerDetails.customer.createdDate, 'dd MMM yyyy')}">Jan 1, 2024</span>
                             <span class="info-value" th:unless="${customerDetails.customer != null and customerDetails.customer.createdDate != null}">Unknown</span>
                         </div>
                         <div class="info-item" th:if="${customerDetails.customer != null}">
@@ -346,12 +352,14 @@
                         </div>
                         <div class="info-item" th:if="${customerDetails.customer != null and customerDetails.customer.dateOfBirth != null}">
                             <span class="info-label">Date of Birth:</span>
-                            <span class="info-value" th:text="${#temporals.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
+                            <span class="info-value" th:text="${#dates.format(customerDetails.customer.dateOfBirth, 'dd MMM yyyy')}">Jan 1, 1990</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+        </div> <!-- Close customerDetails wrapper -->
     </div>
 </div>
 </div>
