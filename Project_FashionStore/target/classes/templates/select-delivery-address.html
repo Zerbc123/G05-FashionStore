@@ -67,17 +67,24 @@
         <!-- Địa chỉ hiện tại từ profile -->
         <div class="address-box">
             <h4 class="section-title"><i class="bi bi-person-check me-2"></i>Địa chỉ mặc định</h4>
-            <div class="address-option" onclick="selectAddress('profile')" id="profileAddress">
+            <div class="address-option" 
+                 th:classappend="${currentAddress == null or #strings.isEmpty(currentAddress)} ? 'bg-light text-muted opacity-75' : ''"
+                 th:onclick="${currentAddress != null and !#strings.isEmpty(currentAddress)} ? 'selectAddress(\'profile\')' : ''" 
+                 id="profileAddress"
+                 th:style="${currentAddress == null or #strings.isEmpty(currentAddress)} ? 'cursor: not-allowed;' : ''">
                 <div class="d-flex align-items-start gap-3">
-                    <i class="bi bi-geo-alt-fill text-primary mt-1"></i>
+                    <i class="bi bi-geo-alt-fill mt-1" th:classappend="${currentAddress != null and !#strings.isEmpty(currentAddress)} ? 'text-primary' : 'text-danger'"></i>
                     <div class="flex-grow-1">
-                        <div class="fw-bold mb-1">Địa chỉ từ hồ sơ</div>
-                        <div class="text-muted" th:text="${currentAddress != null ? currentAddress : 'Chưa có địa chỉ trong hồ sơ'}">
+                        <div class="fw-bold mb-1" th:text="${currentAddress != null and !#strings.isEmpty(currentAddress) ? 'Địa chỉ từ hồ sơ' : 'Hồ sơ chưa có địa chỉ'}">Địa chỉ từ hồ sơ</div>
+                        <div class="text-muted" th:text="${currentAddress != null and !#strings.isEmpty(currentAddress) ? currentAddress : 'Bạn cần nhập địa chỉ mới ở dưới hoặc cập nhật trong Profile.'}">
                             123 Nguyễn Trãi, Phường Cầu Kho, Quận 1, TP. Hồ Chí Minh
                         </div>
                     </div>
                 </div>
-                <input type="radio" name="addressOption" value="profile" checked style="display: none;">
+                <input type="radio" name="addressOption" value="profile" 
+                       th:checked="${currentAddress != null and !#strings.isEmpty(currentAddress)}" 
+                       th:disabled="${currentAddress == null or #strings.isEmpty(currentAddress)}"
+                       style="display: none;">
             </div>
         </div>
 
@@ -132,15 +139,16 @@
 let orderProvincesList = [];
 
 function selectAddress(type) {
-    document.querySelectorAll('.address-option').forEach(option => {
-        option.classList.remove('selected');
-    });
-    
     if (type === 'profile') {
+        const profileInput = document.querySelector('input[name="addressOption"][value="profile"]');
+        if (profileInput.disabled) return;
+        
         document.getElementById('profileAddress').classList.add('selected');
-        document.querySelector('input[name="addressOption"][value="profile"]').checked = true;
+        document.getElementById('newAddress').classList.remove('selected');
+        profileInput.checked = true;
     } else {
         document.getElementById('newAddress').classList.add('selected');
+        document.getElementById('profileAddress').classList.remove('selected');
         document.querySelector('input[name="addressOption"][value="new"]').checked = true;
     }
 }
@@ -195,6 +203,14 @@ function combineOrderAddress() {
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrderProvinces();
+    
+    // Auto-select 'new' if profile address is empty
+    const profileInput = document.querySelector('input[name="addressOption"][value="profile"]');
+    if (profileInput && profileInput.disabled) {
+        selectAddress('new');
+    } else {
+        selectAddress('profile');
+    }
     
     const provElem = document.getElementById('orderProvince');
     if (provElem) {

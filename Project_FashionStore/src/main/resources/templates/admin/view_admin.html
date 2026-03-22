@@ -25,7 +25,7 @@
         }
 
         .hero-section {
-            padding: 80px 0;
+            padding: 120px 0 80px 0; /* Tăng padding-top để bù cho header */
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
             text-align: center;
@@ -238,7 +238,7 @@
     <div th:replace="~{fragments/header :: adminheader}"></div>
 
     <!-- Hero Section -->
-    <section class="hero-section" style="margin-top: 76px;">
+    <section class="hero-section">
         <div class="container">
             <div class="user-badge">
                 <i class="bi bi-person-circle"></i>
@@ -354,37 +354,6 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">248</div>
-                        <div class="stat-label">Sản Phẩm</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">1,234</div>
-                        <div class="stat-label">Đơn Hàng</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">5,678</div>
-                        <div class="stat-label">Khách Hàng</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">15</div>
-                        <div class="stat-label">Nhân Viên</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Footer -->
     <footer class="admin-footer">

@@ -208,6 +208,10 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(existingAccount);
     }
 
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+
     public List<Account> getSupportStaff() {
         return accountRepository.findByRole_RoleName("SUPPORT");
     }

@@ -445,18 +445,22 @@ public class OrderController {
             }
 
             if ("profile".equals(addressOption)) {
-                session.setAttribute("deliveryAddress", currentCustomer.getAddress());
+                // Kiểm tra nếu địa chỉ trong profile đang trống
+                String profileAddress = currentCustomer.getAddress();
+                if (profileAddress == null || profileAddress.trim().isEmpty()) {
+                    redirectAttributes.addFlashAttribute("errorMessage", 
+                        "Hồ sơ của bạn chưa có địa chỉ! Vui lòng nhập địa chỉ mới bên dưới.");
+                    return "redirect:/order/checkout/select-delivery-address";
+                }
+                session.setAttribute("deliveryAddress", profileAddress);
             } else if ("new".equals(addressOption) && finalAddress != null && !finalAddress.trim().isEmpty()) {
                 session.setAttribute("deliveryAddress", finalAddress);
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn địa chỉ giao hàng!");
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập đầy đủ địa chỉ giao hàng!");
                 return "redirect:/order/checkout/select-delivery-address";
             }
 
-            
-            // Gọi service để xử lý logic
-            orderService.updateDeliveryAddressInSession(session, currentCustomer, addressOption, finalAddress);
-            
+
             return "redirect:/order/checkout";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
