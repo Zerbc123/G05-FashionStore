@@ -12,11 +12,11 @@ import java.util.List;
 
 public interface CustomerReportRepository extends JpaRepository<Customer, Integer> {
 
-       // Get customer summary
+       // Get customer summary - Đếm chính xác ID duy nhất để tránh lặp
        @Query("SELECT COUNT(DISTINCT c), " +
-                     "COUNT(DISTINCT CASE WHEN o IS NOT NULL THEN c.customerId END), " +
+                     "COUNT(DISTINCT o.customer), " +
                      "COUNT(DISTINCT CASE WHEN c.createdDate >= :startDate THEN c.customerId END), " +
-                     "COUNT(DISTINCT CASE WHEN o IS NULL THEN c.customerId END) " +
+                     "COUNT(DISTINCT c) - COUNT(DISTINCT o.customer) " +
                      "FROM Customer c " +
                      "LEFT JOIN c.account a " +
                      "LEFT JOIN Order o ON a.accountId = o.account.accountId AND o.status IN :statuses")

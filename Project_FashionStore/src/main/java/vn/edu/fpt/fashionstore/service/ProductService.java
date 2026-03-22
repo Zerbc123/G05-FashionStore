@@ -331,6 +331,12 @@ public class ProductService {
             }
 
             if (categoryName != null && !categoryName.isBlank()) {
+                if (categoryName.equalsIgnoreCase("Phụ kiện")) {
+                    List<String> accessoryCategories = List.of(
+                        "túi xách", "giày dép", "mũ nón", "đồng hồ", "mắt kính", "phụ kiện khác", "phụ kiện"
+                    );
+                    return cb.lower(root.get("category").get("categoryName")).in(accessoryCategories);
+                }
                 return cb.equal(cb.lower(root.get("category").get("categoryName")), 
                               categoryName.toLowerCase());
             }

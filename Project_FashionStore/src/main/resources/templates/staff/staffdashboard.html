@@ -11,10 +11,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: #f5f6fa; }
-        /* Staff navbar styles được định nghĩa trong header fragment */
         .main-content { 
             padding: 40px 0; 
-            margin-top: 80px; /* Tránh bị header che */
+            margin-top: 80px;
         }
         .page-header h1 { font-family: 'Playfair Display', serif; color: #2d3436; font-size: 2rem; margin-bottom: 10px; }
         .welcome-text { color: #636e72; }
@@ -34,15 +33,9 @@
         .task-item:hover { background: #f8f9fa; }
         .task-item:last-child { border-bottom: none; }
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .badge.urgent { background: #ffebee; color: #c62828; }
-        .badge.normal { background: #e3f2fd; color: #1976d2; }
-        .btn-action { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s; }
-        .btn-action.view { background: #e3f2fd; color: #1976d2; }
-        .btn-action:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
-<!-- Staff Header -->
 <div th:replace="~{fragments/header :: staffheader}"></div>
 <div class="main-content">
     <div class="container">
@@ -53,26 +46,7 @@
             <div class="stat-card"><div class="stat-icon completed"><i class="bi bi-check-circle"></i></div><div class="stat-info"><h3>45</h3><p>Completed Today</p></div></div>
             <div class="stat-card"><div class="stat-icon support"><i class="bi bi-chat-dots"></i></div><div class="stat-info"><h3>5</h3><p>Support Tickets</p></div></div>
         </div>
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="task-card">
-                    <h3>Today's Tasks</h3>
-                    <div class="task-item"><div><h6 class="mb-1">Process Order #ORD-2024-001</h6><p class="mb-0 text-muted">John Doe - $139.97</p></div><div><span class="badge urgent">Urgent</span> <button class="btn-action view">View</button></div></div>
-                    <div class="task-item"><div><h6 class="mb-1">Confirm Order #ORD-2024-002</h6><p class="mb-0 text-muted">Jane Smith - $239.98</p></div><div><span class="badge normal">Normal</span> <button class="btn-action view">View</button></div></div>
-                    <div class="task-item"><div><h6 class="mb-1">Reply to Customer Support</h6><p class="mb-0 text-muted">Ticket #SUP-145</p></div><div><span class="badge urgent">Urgent</span> <button class="btn-action view">View</button></div></div>
-                    <div class="task-item"><div><h6 class="mb-1">Update Shipping Status</h6><p class="mb-0 text-muted">Order #ORD-2024-003</p></div><div><span class="badge normal">Normal</span> <button class="btn-action view">View</button></div></div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="task-card">
-                    <h3>Quick Actions</h3>
-                    <a th:href="@{/staff/orders}" class="btn btn-primary w-100 mb-2"><i class="bi bi-cart-check"></i> View Orders</a>
-                    <a th:href="@{/staff/support}" class="btn btn-success w-100"><i class="bi bi-headset"></i> Support Tickets</a>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

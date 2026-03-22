@@ -84,9 +84,10 @@ public class StaffController {
 
     // ======== STAFF VIEW ========
 
-    @GetMapping({"", "/", "/view"})
+    @GetMapping({ "", "/", "/view" })
     public String staffView(HttpSession session, Model model) {
-        if (!isStaff(session)) return "redirect:/login";
+        if (!isStaff(session))
+            return "redirect:/login";
         model.addAttribute("title", "Staff Panel");
         return "staff/staffview";
     }
@@ -97,11 +98,11 @@ public class StaffController {
             model.addAttribute("error", RoleUtils.getAccessDeniedMessage("dashboard"));
             return "staff/access_denied";
         }
-        
+
         // Add permission attributes for UI control
         boolean canManage = RoleUtils.canManageDashboard(session);
         model.addAttribute("canManageDashboard", canManage);
-        
+
         model.addAttribute("title", "Staff Dashboard");
         return "staff/staffdashboard";
     }
@@ -114,7 +115,8 @@ public class StaffController {
             return "redirect:/login";
         }
 
-        // Sử dụng query có FETCH để lấy luôn Customer, tránh lỗi Lazy loading trong view
+        // Sử dụng query có FETCH để lấy luôn Customer, tránh lỗi Lazy loading trong
+        // view
         List<Order> orders = orderRepository.findOrdersForAdmin();
 
         // Thống kê cho dashboard mini trên trang orders
@@ -160,9 +162,9 @@ public class StaffController {
     @PostMapping("/orders/update-status/{id}")
     @org.springframework.transaction.annotation.Transactional
     public String updateStatus(@PathVariable Long id,
-                               @RequestParam String status,
-                               HttpSession session,
-                               RedirectAttributes ra) {
+            @RequestParam String status,
+            HttpSession session,
+            RedirectAttributes ra) {
 
         if (!RoleUtils.canManageOrders(session)) {
             ra.addFlashAttribute("error", "Bạn không có quyền cập nhật đơn hàng!");
@@ -185,24 +187,25 @@ public class StaffController {
 
     @GetMapping("/inventory")
     public String inventory(@RequestParam(defaultValue = "0") int page,
-                             @RequestParam(defaultValue = "10") int size,
-                             HttpSession session, Model model) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpSession session, Model model) {
         if (!RoleUtils.canViewInventory(session)) {
             return "redirect:/login";
         }
-        
+
         // Check if user can manage inventory (Admin, Stock)
         boolean canManage = RoleUtils.canManageInventory(session);
         model.addAttribute("canManageInventory", canManage);
-        
+
         // Fetch paginated data from database
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductVariant> productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
+        Page<ProductVariant> productVariantPage = inventoryService
+                .getAllProductVariantsWithProductAndCategory(pageable);
         InventoryService.InventoryStats stats = inventoryService.getInventoryStats();
-        
+
         // Get all categories for dropdown
         List<String> categories = inventoryService.getAllCategories();
-        
+
         model.addAttribute("title", "Inventory Management");
         model.addAttribute("productVariantPage", productVariantPage);
         model.addAttribute("productVariants", productVariantPage.getContent());
@@ -212,120 +215,124 @@ public class StaffController {
         model.addAttribute("totalPages", productVariantPage.getTotalPages());
         model.addAttribute("totalItems", productVariantPage.getTotalElements());
         model.addAttribute("pageSize", size);
-        
+
         return "staff/inventory";
     }
 
     @PostMapping("/inventory/update-stock")
-    public String updateStock(@RequestParam Integer variantId, 
-                            @RequestParam Integer newStock,
-                            HttpSession session, 
-                            RedirectAttributes redirectAttributes) {
+    public String updateStock(@RequestParam Integer variantId,
+            @RequestParam Integer newStock,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         if (!RoleUtils.canManageInventory(session)) {
             redirectAttributes.addFlashAttribute("error", RoleUtils.getAccessDeniedMessage("inventory"));
             return "redirect:/staff/inventory";
         }
-        
+
         try {
             inventoryService.updateStock(variantId, newStock);
             redirectAttributes.addFlashAttribute("success", "Cập nhật tồn kho thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật tồn kho: " + e.getMessage());
         }
-        
+
         return "redirect:/staff/inventory";
     }
 
     @GetMapping("/inventory/filter")
     public String filterInventory(@RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "10") int size,
-                                 @RequestParam(required = false) String search,
-                                 @RequestParam(required = false) String category,
-                                 @RequestParam(required = false) String stockStatus,
-                                 HttpSession session, Model model) {
-        logger.info("Filter inventory called with params: page={}, size={}, search='{}', category='{}', stockStatus='{}'", 
-                   page, size, search, category, stockStatus);
-        
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String stockStatus,
+            HttpSession session, Model model) {
+        logger.info(
+                "Filter inventory called with params: page={}, size={}, search='{}', category='{}', stockStatus='{}'",
+                page, size, search, category, stockStatus);
+
         if (!isStaff(session)) {
             logger.warn("User not authenticated as staff, redirecting to login");
             return "redirect:/login";
         }
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<ProductVariant> productVariantPage;
-        
+
         try {
             // Get all variants with JOIN FETCH to avoid lazy loading
             List<ProductVariant> allVariants = inventoryService.getAllVariantsWithProductAndCategory();
-            
+
             // Apply filters sequentially
             List<ProductVariant> filteredVariants = allVariants;
-            
+
             // Apply search filter if provided
             if (search != null && !search.trim().isEmpty()) {
                 logger.info("Applying search filter for: '{}'", search.trim());
                 String searchTrim = search.trim().toLowerCase();
                 filteredVariants = filteredVariants.stream()
-                    .filter(variant -> variant.getProduct() != null &&
-                        variant.getProduct().getProductName() != null &&
-                        (variant.getProduct().getProductName().toLowerCase().contains(searchTrim) ||
-                         (variant.getProduct().getDescription() != null &&
-                          variant.getProduct().getDescription().toLowerCase().contains(searchTrim))))
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(variant -> variant.getProduct() != null &&
+                                variant.getProduct().getProductName() != null &&
+                                (variant.getProduct().getProductName().toLowerCase().contains(searchTrim) ||
+                                        (variant.getProduct().getDescription() != null &&
+                                                variant.getProduct().getDescription().toLowerCase()
+                                                        .contains(searchTrim))))
+                        .collect(java.util.stream.Collectors.toList());
             }
-            
+
             // Apply category filter if provided
             if (category != null && !category.equals("all")) {
                 logger.info("Applying category filter for: '{}'", category);
                 final String categoryFilter = category;
                 filteredVariants = filteredVariants.stream()
-                    .filter(variant -> variant.getProduct() != null && 
-                        variant.getProduct().getCategory() != null &&
-                        variant.getProduct().getCategory().getCategoryName() != null &&
-                        variant.getProduct().getCategory().getCategoryName().equalsIgnoreCase(categoryFilter))
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(variant -> variant.getProduct() != null &&
+                                variant.getProduct().getCategory() != null &&
+                                variant.getProduct().getCategory().getCategoryName() != null &&
+                                variant.getProduct().getCategory().getCategoryName().equalsIgnoreCase(categoryFilter))
+                        .collect(java.util.stream.Collectors.toList());
             }
-            
+
             // Apply stock status filter if provided
             if (stockStatus != null && !stockStatus.equals("all")) {
                 logger.info("Applying stock status filter for: '{}'", stockStatus);
                 final String stockStatusFilter = stockStatus;
                 filteredVariants = filteredVariants.stream()
-                    .filter(variant -> {
-                        if (variant.getStock() == null) return false;
-                        switch (stockStatusFilter.toLowerCase()) {
-                            case "in-stock":
-                                return variant.getStock() > 20;
-                            case "low-stock":
-                                return variant.getStock() > 0 && variant.getStock() <= 20;
-                            case "out-stock":
-                                return variant.getStock() == null || variant.getStock() == 0;
-                            default:
-                                return true;
-                        }
-                    })
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(variant -> {
+                            if (variant.getStock() == null)
+                                return false;
+                            switch (stockStatusFilter.toLowerCase()) {
+                                case "in-stock":
+                                    return variant.getStock() > 20;
+                                case "low-stock":
+                                    return variant.getStock() > 0 && variant.getStock() <= 20;
+                                case "out-stock":
+                                    return variant.getStock() == null || variant.getStock() == 0;
+                                default:
+                                    return true;
+                            }
+                        })
+                        .collect(java.util.stream.Collectors.toList());
             }
-            
+
             // Apply pagination to filtered results
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), filteredVariants.size());
-            List<ProductVariant> pageContent = start < filteredVariants.size() ? 
-                filteredVariants.subList(start, end) : java.util.Collections.emptyList();
-            
-            productVariantPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filteredVariants.size());
-            
+            List<ProductVariant> pageContent = start < filteredVariants.size() ? filteredVariants.subList(start, end)
+                    : java.util.Collections.emptyList();
+
+            productVariantPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable,
+                    filteredVariants.size());
+
         } catch (Exception e) {
             logger.error("Error filtering inventory: {}", e.getMessage(), e);
             // Fallback to all products if filtering fails
             productVariantPage = inventoryService.getAllProductVariants(pageable);
         }
-        
+
         InventoryService.InventoryStats stats = inventoryService.getInventoryStats();
-        
+
         // Get all categories for dropdown
         List<String> categories = inventoryService.getAllCategories();
-        
+
         model.addAttribute("title", "Inventory Management");
         model.addAttribute("productVariantPage", productVariantPage);
         model.addAttribute("productVariants", productVariantPage.getContent());
@@ -334,7 +341,7 @@ public class StaffController {
         model.addAttribute("search", search);
         model.addAttribute("category", category);
         model.addAttribute("stockStatus", stockStatus);
-        
+
         // Only add pagination attributes if there are results
         if (productVariantPage.getTotalElements() > 0) {
             model.addAttribute("currentPage", page);
@@ -347,10 +354,10 @@ public class StaffController {
             model.addAttribute("totalItems", 0);
             model.addAttribute("pageSize", size);
         }
-        
-        logger.info("Returning inventory view with {} items, total pages: {}", 
-                   productVariantPage.getContent().size(), productVariantPage.getTotalPages());
-        
+
+        logger.info("Returning inventory view with {} items, total pages: {}",
+                productVariantPage.getContent().size(), productVariantPage.getTotalPages());
+
         return "staff/inventory";
     }
 
@@ -358,10 +365,12 @@ public class StaffController {
 
     @GetMapping("/profile")
     public String staffProfile(HttpSession session, Model model) {
-        if (!isStaff(session)) return "redirect:/login";
+        if (!isStaff(session))
+            return "redirect:/login";
 
         String email = (String) session.getAttribute("user");
-        if (email == null) return "redirect:/login";
+        if (email == null)
+            return "redirect:/login";
 
         vn.edu.fpt.fashionstore.entity.Account staff = accountService.getAccountByEmail(email);
 
@@ -381,28 +390,28 @@ public class StaffController {
     @GetMapping("/products")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String products(HttpSession session, Model model,
-                          @RequestParam(required = false) String search,
-                          @RequestParam(required = false) String category) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category) {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
 
         // Lấy danh sách sản phẩm từ database với variants
         List<vn.edu.fpt.fashionstore.entity.Product> allProducts = productService.getAllProductsWithVariants();
-        
+
         // Filter theo search và category
         List<vn.edu.fpt.fashionstore.entity.Product> products = allProducts;
-        
+
         if (search != null && !search.trim().isEmpty()) {
             products = products.stream()
-                .filter(p -> p.getProductName().toLowerCase().contains(search.toLowerCase()))
-                .collect(java.util.stream.Collectors.toList());
+                    .filter(p -> p.getProductName().toLowerCase().contains(search.toLowerCase()))
+                    .collect(java.util.stream.Collectors.toList());
         }
-        
+
         if (category != null && !category.isEmpty() && !"Tất cả".equals(category)) {
             products = products.stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().getCategoryName().equals(category))
-                .collect(java.util.stream.Collectors.toList());
+                    .filter(p -> p.getCategory() != null && p.getCategory().getCategoryName().equals(category))
+                    .collect(java.util.stream.Collectors.toList());
         }
 
         // Tính toán thống kê (dựa trên allProducts, không phải filtered)
@@ -410,7 +419,7 @@ public class StaffController {
         long inStockCount = 0;
         long lowStockCount = 0;
         long outOfStockCount = 0;
-        
+
         for (vn.edu.fpt.fashionstore.entity.Product product : products) {
             if (product.getVariants() != null && !product.getVariants().isEmpty()) {
                 int stock = product.getVariants().get(0).getStock();
@@ -426,7 +435,7 @@ public class StaffController {
                 outOfStockCount++;
             }
         }
-        
+
         model.addAttribute("products", products);
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("inStockCount", inStockCount);
@@ -435,11 +444,11 @@ public class StaffController {
         model.addAttribute("search", search != null ? search : "");
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
         model.addAttribute("title", "Product Management");
-        
+
         // Thêm userRole để check quyền Admin (cho button Sửa)
         String userRole = (String) session.getAttribute("userRole");
         model.addAttribute("isAdmin", "Admin".equalsIgnoreCase(userRole));
-        
+
         return "staff/staffproduct";
     }
 
@@ -468,7 +477,7 @@ public class StaffController {
     public String viewProductVariants(
             @RequestParam("productId") Long productId,
             HttpSession session, Model model) {
-        
+
         if (!isStaff(session)) {
             return "redirect:/login";
         }
@@ -480,20 +489,20 @@ public class StaffController {
 
         List<ProductVariant> variants = productVariantService.getVariantsByProductId(productId);
         logger.info("Found {} variants for product ID: {}", variants.size(), productId);
-        
+
         // Calculate statistics
         long totalVariants = variants.size();
         long inStockCount = variants.stream().filter(v -> v.getStock() > 20).count();
         long lowStockCount = variants.stream().filter(v -> v.getStock() > 0 && v.getStock() <= 20).count();
         long outOfStockCount = variants.stream().filter(v -> v.getStock() == 0).count();
-        
+
         model.addAttribute("product", product);
         model.addAttribute("variants", variants);
         model.addAttribute("totalVariants", totalVariants);
         model.addAttribute("inStockCount", inStockCount);
         model.addAttribute("lowStockCount", lowStockCount);
         model.addAttribute("outOfStockCount", outOfStockCount);
-        
+
         // Thêm userRole để check quyền Admin
         String userRole = (String) session.getAttribute("userRole");
         model.addAttribute("isAdmin", "Admin".equalsIgnoreCase(userRole));
@@ -506,7 +515,7 @@ public class StaffController {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
-        
+
         Product product = productService.getProductById(productId);
         if (product == null) {
             return "redirect:/staff/products";
@@ -515,7 +524,7 @@ public class StaffController {
         // Get available colors and sizes
         List<Color> colors = productVariantService.getAllColors();
         List<CategorySize> sizes = productVariantService.getAllCategorySizes();
-        
+
         model.addAttribute("product", product);
         model.addAttribute("colors", colors);
         model.addAttribute("sizes", sizes);
@@ -534,7 +543,7 @@ public class StaffController {
             @RequestParam("variantImage") MultipartFile variantImage,
             RedirectAttributes redirectAttributes,
             HttpSession session) {
-        
+
         if (!isStaff(session)) {
             return "redirect:/login";
         }
@@ -568,15 +577,15 @@ public class StaffController {
             // Create new variant
             ProductVariant variant = new ProductVariant();
             variant.setProduct(productService.getProductById(productId));
-            
+
             // Find color and size by ID using proper comparison
             variant.setColor(productVariantService.getAllColors().stream()
-                .filter(c -> Objects.equals(c.getColorId(), colorId))
-                .findFirst().orElse(null));
+                    .filter(c -> Objects.equals(c.getColorId(), colorId))
+                    .findFirst().orElse(null));
             variant.setCategorySize(productVariantService.getAllCategorySizes().stream()
-                .filter(s -> Objects.equals(s.getCategorySizeId(), sizeId))
-                .findFirst().orElse(null));
-            
+                    .filter(s -> Objects.equals(s.getCategorySizeId(), sizeId))
+                    .findFirst().orElse(null));
+
             variant.setPrice(price);
             variant.setStock(stock);
             variant.setImageUrl(imageUrl);
@@ -597,7 +606,7 @@ public class StaffController {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
-        
+
         ProductVariant variant = productVariantService.getVariantById(variantId).orElse(null);
         if (variant == null) {
             return "redirect:/staff/products";
@@ -606,7 +615,7 @@ public class StaffController {
         // Get available colors and sizes
         List<Color> colors = productVariantService.getAllColors();
         List<CategorySize> sizes = productVariantService.getAllCategorySizes();
-        
+
         model.addAttribute("variant", variant);
         model.addAttribute("colors", colors);
         model.addAttribute("sizes", sizes);
@@ -625,7 +634,7 @@ public class StaffController {
             @RequestParam("variantImage") MultipartFile variantImage,
             RedirectAttributes redirectAttributes,
             HttpSession session) {
-        
+
         if (!isStaff(session)) {
             return "redirect:/login";
         }
@@ -665,11 +674,11 @@ public class StaffController {
 
             // Update variant properties
             variant.setColor(productVariantService.getAllColors().stream()
-                .filter(c -> Objects.equals(c.getColorId(), colorId))
-                .findFirst().orElse(null));
+                    .filter(c -> Objects.equals(c.getColorId(), colorId))
+                    .findFirst().orElse(null));
             variant.setCategorySize(productVariantService.getAllCategorySizes().stream()
-                .filter(s -> Objects.equals(s.getCategorySizeId(), sizeId))
-                .findFirst().orElse(null));
+                    .filter(s -> Objects.equals(s.getCategorySizeId(), sizeId))
+                    .findFirst().orElse(null));
             variant.setPrice(price);
             variant.setStock(stock);
 
@@ -689,7 +698,7 @@ public class StaffController {
             @RequestParam("variantId") Integer variantId,
             RedirectAttributes redirectAttributes,
             HttpSession session) {
-        
+
         if (!isStaff(session)) {
             return "redirect:/login";
         }
@@ -703,7 +712,8 @@ public class StaffController {
 
             // Check if variant is referenced in any order items
             if (productVariantService.isVariantLinkedToOrders(variantId)) {
-                redirectAttributes.addFlashAttribute("error", "Cannot delete variant: It is referenced in existing orders");
+                redirectAttributes.addFlashAttribute("error",
+                        "Cannot delete variant: It is referenced in existing orders");
                 return "redirect:/products/staff/variants?productId=" + variant.getProduct().getProductId();
             }
 
@@ -725,14 +735,14 @@ public class StaffController {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
-        
+
         if (keyword != null && !keyword.trim().isEmpty()) {
             model.addAttribute("categories", categoryService.searchCategories(keyword));
             model.addAttribute("keyword", keyword);
         } else {
             model.addAttribute("categories", categoryService.getAllCategories());
         }
-        
+
         model.addAttribute("title", "Category Management");
         return "staff/category-list";
     }

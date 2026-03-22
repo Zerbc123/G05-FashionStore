@@ -110,7 +110,7 @@ public class ReportService {
         try {
             // Get best selling products
             List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate,
-                    ACTIVE_STATUSES);
+                    REVENUE_STATUSES);
             List<Map<String, Object>> products = new ArrayList<>();
 
             if (bestSellingProducts != null) {
@@ -133,7 +133,7 @@ public class ReportService {
 
             // Get best selling categories
             List<Object[]> bestSellingCategories = orderItemRepository.getBestSellingCategories(startDate, endDate,
-                    ACTIVE_STATUSES);
+                    REVENUE_STATUSES);
             List<Map<String, Object>> categories = new ArrayList<>();
 
             if (bestSellingCategories != null) {

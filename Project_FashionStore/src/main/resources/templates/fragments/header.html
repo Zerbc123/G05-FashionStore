@@ -1,350 +1,427 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
 </head>
+
 <body>
-<!-- Header Fragment -->
-<nav class="navbar navbar-expand-lg" th:fragment="header">
-    <div class="container">
-        <a class="navbar-brand" th:href="@{/home}">FashionStore</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/home}">Trang chủ</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link" th:href="@{/products}">Sản phẩm <i class="bi bi-chevron-down ms-1" style="font-size: 0.8rem;"></i></a>
-                    <div class="mega-dropdown">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="dropdown-category">
-                                    <h4 class="category-title">
-                                        <i class="bi bi-bag"></i>
-                                        Quần
-                                    </h4>
-                                    <ul class="brand-list">
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}" class="brand-link">Quần Jean</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}" class="brand-link">Adidas</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}" class="brand-link">Nike</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}" class="brand-link">Puma</a></li>
-                                    </ul>
+    <!-- Header Fragment -->
+    <nav class="navbar navbar-expand-lg" th:fragment="header">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/home}">FashionStore</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/home}">Trang chủ</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" th:href="@{/products}">Sản phẩm <i class="bi bi-chevron-down ms-1"
+                                style="font-size: 0.8rem;"></i></a>
+                        <div class="mega-dropdown">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="dropdown-category">
+                                        <h4 class="category-title">
+                                            <i class="bi bi-bag"></i>
+                                            Quần
+                                        </h4>
+                                        <ul class="brand-list">
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}"
+                                                    class="brand-link">Quần Jean</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}"
+                                                    class="brand-link">Adidas</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}"
+                                                    class="brand-link">Nike</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Quần Jean')}"
+                                                    class="brand-link">Puma</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="dropdown-category">
-                                    <h4 class="category-title">
-                                        <i class="bi bi-person"></i>
-                                        Áo
-                                    </h4>
-                                    <ul class="brand-list">
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Áo Thun')}" class="brand-link">Áo Thun</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Sơ Mi')}" class="brand-link">Sơ Mi</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(categoryName='Áo Khoác')}" class="brand-link">Áo Khoác</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='Adidas')}" class="brand-link">Adidas</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='Nike')}" class="brand-link">Nike</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='Puma')}" class="brand-link">Puma</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='H&M')}" class="brand-link">H&M</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='Uniqlo')}" class="brand-link">Uniqlo</a></li>
-                                        <li class="brand-item"><a th:href="@{/products(keyword='Gucci')}" class="brand-link">Gucci</a></li>
-                                    </ul>
+                                <div class="col-md-4">
+                                    <div class="dropdown-category">
+                                        <h4 class="category-title">
+                                            <i class="bi bi-person"></i>
+                                            Áo
+                                        </h4>
+                                        <ul class="brand-list">
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Áo Thun')}"
+                                                    class="brand-link">Áo Thun</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Sơ Mi')}"
+                                                    class="brand-link">Sơ Mi</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(categoryName='Áo Khoác')}"
+                                                    class="brand-link">Áo Khoác</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='Adidas')}"
+                                                    class="brand-link">Adidas</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='Nike')}"
+                                                    class="brand-link">Nike</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='Puma')}"
+                                                    class="brand-link">Puma</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='H&M')}"
+                                                    class="brand-link">H&M</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='Uniqlo')}"
+                                                    class="brand-link">Uniqlo</a></li>
+                                            <li class="brand-item"><a th:href="@{/products(keyword='Gucci')}"
+                                                    class="brand-link">Gucci</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="dropdown-category">
-                                    <h4 class="category-title">
-                                        <i class="bi bi-watch"></i>
-                                        Phụ kiện
-                                    </h4>
-                                    <a th:href="@{/products(categoryName='Phụ Kiện')}" class="simple-category">Túi xách</a>
-                                    <a th:href="@{/products(categoryName='Phụ Kiện')}" class="simple-category">Giày dép</a>
-                                    <a th:href="@{/products(categoryName='Phụ Kiện')}" class="simple-category">Mũ nón</a>
-                                    <a th:href="@{/products(categoryName='Phụ Kiện')}" class="simple-category">Kính mắt</a>
-                                    <a th:href="@{/products(categoryName='Phụ Kiện')}" class="simple-category">Đồng hồ</a>
+                                <div class="col-md-4">
+                                    <div class="dropdown-category">
+                                        <h4 class="category-title">
+                                            <a th:href="@{/products(categoryName='Phụ kiện')}"
+                                                style="color: inherit; text-decoration: none;">
+                                                <i class="bi bi-watch"></i>
+                                                Phụ kiện
+                                            </a>
+                                        </h4>
+                                        <a th:href="@{/products(categoryName='Túi xách')}" class="simple-category">Túi
+                                            xách</a>
+                                        <a th:href="@{/products(categoryName='Giày dép')}" class="simple-category">Giày
+                                            dép</a>
+                                        <a th:href="@{/products(categoryName='Mũ nón')}" class="simple-category">Mũ
+                                            nón</a>
+                                        <a th:href="@{/products(categoryName='Đồng hồ')}" class="simple-category">Đồng
+                                            hồ</a>
+                                        <a th:href="@{/products(categoryName='Mắt kính')}" class="simple-category">Mắt
+                                            kính</a>
+                                        <a th:href="@{/products(categoryName='Phụ kiện khác')}"
+                                            class="simple-category">Phụ kiện khác</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </li>
+                </ul>
+                <div class="nav-icons">
+                    <!-- Search Form -->
+                    <form th:action="@{/products}" method="get" class="header-search-form">
+                        <div class="header-search-wrapper">
+                            <input type="text" name="keyword" class="header-search-input" placeholder="Tìm kiếm..."
+                                th:value="${param.keyword}">
+                            <button type="submit" class="header-search-btn">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <a th:href="@{/cart}" style="position: relative; text-decoration: none; color: inherit;">
+                        <i class="bi bi-cart3 nav-icon"></i>
+                        <span class="cart-badge" th:if="${session.cartCount != null and session.cartCount > 0}"
+                            th:text="${session.cartCount}">0</span>
+                    </a>
+
+                    <!-- Khi chưa login: Hiển thị 2 nút -->
+                    <div th:if="${session.user == null}" style="display: flex; gap: 0.8rem; align-items: center;">
+                        <a th:href="@{/login}" class="btn btn-sm"
+                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                        </a>
+                        <a th:href="@{/register}" class="btn btn-sm btn-outline"
+                            style="border: 2px solid var(--primary-color); color: var(--primary-color); background: transparent; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                            <i class="bi bi-person-plus me-1"></i>Đăng ký
+                        </a>
                     </div>
-                </li>
-            </ul>
-            <div class="nav-icons">
-                <!-- Search Form -->
-                <form th:action="@{/products}" method="get" class="header-search-form">
-                    <div class="header-search-wrapper">
-                        <input type="text" name="keyword" class="header-search-input" placeholder="Tìm kiếm..." th:value="${param.keyword}">
-                        <button type="submit" class="header-search-btn">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </form>
-                <a th:href="@{/cart}" style="position: relative; text-decoration: none; color: inherit;">
-                    <i class="bi bi-cart3 nav-icon"></i>
-                    <span class="cart-badge" th:if="${session.cartCount != null and session.cartCount > 0}" th:text="${session.cartCount}">0</span>
-                </a>
-                
-                <!-- Khi chưa login: Hiển thị 2 nút -->
-                <div th:if="${session.user == null}" style="display: flex; gap: 0.8rem; align-items: center;">
-                    <a th:href="@{/login}" class="btn btn-sm" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
-                    </a>
-                    <a th:href="@{/register}" class="btn btn-sm btn-outline" style="border: 2px solid var(--primary-color); color: var(--primary-color); background: transparent; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
-                        <i class="bi bi-person-plus me-1"></i>Đăng ký
-                    </a>
-                </div>
-                
-                <!-- Khi đã login: Hiển thị icon user với dropdown -->
-                <div th:if="${session.user != null}" class="user-dropdown-wrapper">
-                    <a href="#" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <i class="bi bi-person nav-icon"></i>
-                        <span th:text="${session.userName != null ? session.userName : session.user}"
-                              style="font-weight: 500; font-size: 0.9rem;"></span>
-                    </a>
 
-                    <div class="user-dropdown">
-                        <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item" style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
-                            <i class="bi bi-shield-fill-check"></i>
-                            <span>Admin Panel</span>
+                    <!-- Khi đã login: Hiển thị icon user với dropdown -->
+                    <div th:if="${session.user != null}" class="user-dropdown-wrapper">
+                        <a href="#"
+                            style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                            <i class="bi bi-person nav-icon"></i>
+                            <span th:text="${session.userName != null ? session.userName : session.user}"
+                                style="font-weight: 500; font-size: 0.9rem;"></span>
                         </a>
-                        <div th:if="${session.userRole == 'ADMIN'}" class="user-dropdown-divider"></div>
 
-                        <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item" style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
-                            <i class="bi bi-shield-check"></i>
-                            <span>Staff Panel</span>
-                        </a>
-                        <div th:if="${session.userRole == 'STAFF'}" class="user-dropdown-divider"></div>
+                        <div class="user-dropdown">
+                            <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item"
+                                style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
+                                <i class="bi bi-shield-fill-check"></i>
+                                <span>Admin Panel</span>
+                            </a>
+                            <div th:if="${session.userRole == 'ADMIN'}" class="user-dropdown-divider"></div>
 
-                        <a th:href="@{/profile}" class="user-dropdown-item">
-                            <i class="bi bi-person-circle"></i>
-                            <span>Thông tin tài khoản</span>
-                        </a>
-                        <a th:href="@{/order-history}" class="user-dropdown-item">
-                            <i class="bi bi-box-seam"></i>
-                            <span>Đơn hàng của tôi</span>
-                        </a>
-                        <a th:href="@{/wishlist}" class="user-dropdown-item">
-                            <i class="bi bi-heart"></i>
-                            <span>Sản phẩm yêu thích</span>
-                        </a>
-                        <a th:href="@{/edit-profile}" class="user-dropdown-item">
-                            <i class="bi bi-gear"></i>
-                            <span>Cài đặt</span>
-                        </a>
-                        <div class="user-dropdown-divider"></div>
-                        <a th:href="@{/logout}" class="user-dropdown-item logout">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Đăng xuất</span>
-                        </a>
+                            <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item"
+                                style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
+                                <i class="bi bi-shield-check"></i>
+                                <span>Staff Panel</span>
+                            </a>
+                            <div th:if="${session.userRole == 'STAFF'}" class="user-dropdown-divider"></div>
+
+                            <a th:href="@{/profile}" class="user-dropdown-item">
+                                <i class="bi bi-person-circle"></i>
+                                <span>Thông tin tài khoản</span>
+                            </a>
+                            <a th:href="@{/order-history}" class="user-dropdown-item">
+                                <i class="bi bi-box-seam"></i>
+                                <span>Đơn hàng của tôi</span>
+                            </a>
+                            <a th:href="@{/wishlist}" class="user-dropdown-item">
+                                <i class="bi bi-heart"></i>
+                                <span>Sản phẩm yêu thích</span>
+                            </a>
+                            <a th:href="@{/edit-profile}" class="user-dropdown-item">
+                                <i class="bi bi-gear"></i>
+                                <span>Cài đặt</span>
+                            </a>
+                            <div class="user-dropdown-divider"></div>
+                            <a th:href="@{/logout}" class="user-dropdown-item logout">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Đăng xuất</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- Admin Header Fragment - CSS thuần -->
-<div th:fragment="adminheader">
-    <style>
-        .admin-header-simple {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            padding: 0.8rem 1.5rem;
-            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .admin-header-simple .brand {
-            font-size: 1.3rem; 
-            font-weight: 700;
-            color: white !important;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap; 
-        }
-        .admin-header-simple .brand span, .admin-header-simple .brand i {
-            background: none !important;
-            -webkit-text-fill-color: initial !important;
-            color: white !important;
-        }
-        .admin-header-simple .nav-menu {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 2px; /* Ép khoảng cách giữa các nút sát lại */
-            overflow-x: auto; /* Nếu màn hình bé quá sẽ cho phép trượt ngang thay vì che mất chữ */
-            scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
-        }
-        .admin-header-simple .nav-menu::-webkit-scrollbar {
-            display: none; /* Ẩn thanh cuộn Chrome/Edge */
-        }
-        .admin-header-simple .nav-menu a {
-            color: white;
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        .admin-header-simple .nav-menu a:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: white !important;
-            transform: translateY(-2px);
-        }
-        
-        /* Dropdown Styles */
-        .admin-header-simple .nav-dropdown {
-            position: relative;
-        }
-        
-        .admin-header-simple .dropdown-toggle {
-            color: white;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        
-        .admin-header-simple .dropdown-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .admin-header-simple .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0; /* Đổi thành right để không bị cắt */
-            left: auto; /* Thay vì left */
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            min-width: 200px;
-            max-height: 70vh; /* Giới hạn chiều cao */
-            overflow-y: auto; /* Cho phép cuộn */
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1000;
-            padding: 8px 0;
-            margin-top: 4px;
-        }
-        
-        .admin-header-simple .nav-dropdown.active .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-            display: block !important;
-        }
-        
-        .admin-header-simple .dropdown-menu li {
-            list-style: none;
-        }
-        
-        .admin-header-simple .dropdown-menu li a {
-            color: #2C3E50;
-            text-decoration: none;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-            border-radius: 8px;
-            margin: 2px 8px;
-        }
-        
-        .admin-header-simple .dropdown-menu li a:hover {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            color: white;
-            transform: translateX(4px);
-        }
-        
-        .admin-header-simple .dropdown-menu li a i {
-            font-size: 0.9rem;
-            width: 16px;
-            text-align: center;
-        }
-        
-        .admin-header-simple .dropdown-divider {
-            height: 1px;
-            background: #e0e0e0;
-            margin: 4px 8px;
-        }
-        
-        .admin-header-simple .dropdown-toggle {
-            font-size: 1.2rem;
-            padding: 8px 12px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .admin-header-simple .dropdown-toggle:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.1);
-        }
-    </style>
-    <script>
-        // Handle dropdown toggle clicks
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Admin dropdown script loaded');
-            
-            // Try multiple selectors
-            const dropdownToggles = document.querySelectorAll('.admin-header-simple .dropdown-toggle');
-            console.log('Found dropdown toggles:', dropdownToggles.length);
-            
-            // Also try to find the gear icon directly
-            const gearIcon = document.querySelector('.admin-header-simple .dropdown-toggle i');
-            console.log('Gear icon found:', gearIcon);
-            
-            if (dropdownToggles.length === 0) {
-                console.log('No dropdown toggles found, trying alternative selector');
-                // Try alternative method
-                const navDropdowns = document.querySelectorAll('.admin-header-simple .nav-dropdown');
-                console.log('Nav dropdowns found:', navDropdowns.length);
-                
-                navDropdowns.forEach(function(dropdown, index) {
-                    const toggle = dropdown.querySelector('a');
-                    console.log('Toggle found:', toggle);
-                    
-                    if (toggle) {
-                        toggle.addEventListener('click', function(e) {
+    <!-- Admin Header Fragment - CSS thuần -->
+    <div th:fragment="adminheader">
+        <style>
+            .admin-header-simple {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                padding: 0.8rem 1.5rem;
+                box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .admin-header-simple .brand {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: white !important;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .admin-header-simple .brand span,
+            .admin-header-simple .brand i {
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+                color: white !important;
+            }
+
+            .admin-header-simple .nav-menu {
+                display: flex;
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                gap: 2px;
+                /* Ép khoảng cách giữa các nút sát lại */
+                overflow-x: auto;
+                /* Nếu màn hình bé quá sẽ cho phép trượt ngang thay vì che mất chữ */
+                scrollbar-width: none;
+                /* Ẩn thanh cuộn Firefox */
+            }
+
+            .admin-header-simple .nav-menu::-webkit-scrollbar {
+                display: none;
+                /* Ẩn thanh cuộn Chrome/Edge */
+            }
+
+            .admin-header-simple .nav-menu a {
+                color: white;
+                text-decoration: none;
+                padding: 6px 12px;
+                border-radius: 20px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            .admin-header-simple .nav-menu a:hover {
+                background: rgba(0, 0, 0, 0.1);
+                color: white !important;
+                transform: translateY(-2px);
+            }
+
+            /* Dropdown Styles */
+            .admin-header-simple .nav-dropdown {
+                position: relative;
+            }
+
+            .admin-header-simple .dropdown-toggle {
+                color: white;
+                text-decoration: none;
+                padding: 8px 12px;
+                border-radius: 20px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.85rem;
+                white-space: nowrap;
+                cursor: pointer;
+            }
+
+            .admin-header-simple .dropdown-toggle:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .admin-header-simple .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                /* Đổi thành right để không bị cắt */
+                left: auto;
+                /* Thay vì left */
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                min-width: 200px;
+                max-height: 70vh;
+                /* Giới hạn chiều cao */
+                overflow-y: auto;
+                /* Cho phép cuộn */
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-10px);
+                transition: all 0.3s ease;
+                z-index: 1000;
+                padding: 8px 0;
+                margin-top: 4px;
+            }
+
+            .admin-header-simple .nav-dropdown.active .dropdown-menu {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                display: block !important;
+            }
+
+            .admin-header-simple .dropdown-menu li {
+                list-style: none;
+            }
+
+            .admin-header-simple .dropdown-menu li a {
+                color: #2C3E50;
+                text-decoration: none;
+                padding: 10px 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.85rem;
+                transition: all 0.2s ease;
+                border-radius: 8px;
+                margin: 2px 8px;
+            }
+
+            .admin-header-simple .dropdown-menu li a:hover {
+                background: linear-gradient(135deg, #11998e, #38ef7d);
+                color: white;
+                transform: translateX(4px);
+            }
+
+            .admin-header-simple .dropdown-menu li a i {
+                font-size: 0.9rem;
+                width: 16px;
+                text-align: center;
+            }
+
+            .admin-header-simple .dropdown-divider {
+                height: 1px;
+                background: #e0e0e0;
+                margin: 4px 8px;
+            }
+
+            .admin-header-simple .dropdown-toggle {
+                font-size: 1.2rem;
+                padding: 8px 12px;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .admin-header-simple .dropdown-toggle:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: scale(1.1);
+            }
+        </style>
+        <script>
+            // Handle dropdown toggle clicks
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('Admin dropdown script loaded');
+
+                // Try multiple selectors
+                const dropdownToggles = document.querySelectorAll('.admin-header-simple .dropdown-toggle');
+                console.log('Found dropdown toggles:', dropdownToggles.length);
+
+                // Also try to find the gear icon directly
+                const gearIcon = document.querySelector('.admin-header-simple .dropdown-toggle i');
+                console.log('Gear icon found:', gearIcon);
+
+                if (dropdownToggles.length === 0) {
+                    console.log('No dropdown toggles found, trying alternative selector');
+                    // Try alternative method
+                    const navDropdowns = document.querySelectorAll('.admin-header-simple .nav-dropdown');
+                    console.log('Nav dropdowns found:', navDropdowns.length);
+
+                    navDropdowns.forEach(function (dropdown, index) {
+                        const toggle = dropdown.querySelector('a');
+                        console.log('Toggle found:', toggle);
+
+                        if (toggle) {
+                            toggle.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                console.log('Dropdown clicked via alternative method:', index);
+
+                                const isActive = dropdown.classList.contains('active');
+                                console.log('Current state - active:', isActive);
+
+                                // Close all other dropdowns
+                                navDropdowns.forEach(function (otherDropdown) {
+                                    otherDropdown.classList.remove('active');
+                                });
+
+                                // Toggle current dropdown
+                                if (!isActive) {
+                                    dropdown.classList.add('active');
+                                    console.log('Added active class');
+                                } else {
+                                    console.log('Removed active class');
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    dropdownToggles.forEach(function (toggle, index) {
+                        toggle.addEventListener('click', function (e) {
                             e.preventDefault();
                             e.stopPropagation();
-                            
-                            console.log('Dropdown clicked via alternative method:', index);
-                            
+
+                            console.log('Dropdown clicked:', index);
+
+                            const dropdown = this.closest('.nav-dropdown');
                             const isActive = dropdown.classList.contains('active');
+
                             console.log('Current state - active:', isActive);
-                            
+                            console.log('Dropdown element:', dropdown);
+
                             // Close all other dropdowns
-                            navDropdowns.forEach(function(otherDropdown) {
+                            document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function (otherDropdown) {
                                 otherDropdown.classList.remove('active');
                             });
-                            
+
                             // Toggle current dropdown
                             if (!isActive) {
                                 dropdown.classList.add('active');
@@ -353,257 +430,230 @@
                                 console.log('Removed active class');
                             }
                         });
-                    }
-                });
-            } else {
-                dropdownToggles.forEach(function(toggle, index) {
-                    toggle.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        console.log('Dropdown clicked:', index);
-                        
-                        const dropdown = this.closest('.nav-dropdown');
-                        const isActive = dropdown.classList.contains('active');
-                        
-                        console.log('Current state - active:', isActive);
-                        console.log('Dropdown element:', dropdown);
-                        
-                        // Close all other dropdowns
-                        document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function(otherDropdown) {
-                            otherDropdown.classList.remove('active');
-                        });
-                        
-                        // Toggle current dropdown
-                        if (!isActive) {
-                            dropdown.classList.add('active');
-                            console.log('Added active class');
-                        } else {
-                            console.log('Removed active class');
-                        }
-                    });
-                });
-            }
-            
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.admin-header-simple .nav-dropdown')) {
-                    document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function(dropdown) {
-                        dropdown.classList.remove('active');
                     });
                 }
-            });
-        });
-    </script>
-    <nav class="admin-header-simple">
-        <a class="brand" th:href="@{/admin}">
-            <i class="bi bi-shield-fill-check"></i>
-            <span>Admin Panel</span>
-        </a>
-        
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <ul class="nav-menu">
-                <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> Products</a></li>
-                <li><a th:href="@{/admin/inventory}"><i class="bi bi-box-seam"></i> Inventory</a></li>
-                <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> Orders</a></li>
-                <li><a th:href="@{/admin/customers}"><i class="bi bi-people"></i> Customers</a></li>
-                <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
-                <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-            </ul>
 
-            <!-- Single Admin Dropdown (Gear) moved to the end -->
-            <div class="nav-dropdown">
-                <a href="#" class="dropdown-toggle">
-                    <i class="bi bi-gear-fill"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a th:href="@{/admin}"><i class="bi bi-house-door"></i> Home</a></li>
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', function (e) {
+                    if (!e.target.closest('.admin-header-simple .nav-dropdown')) {
+                        document.querySelectorAll('.admin-header-simple .nav-dropdown').forEach(function (dropdown) {
+                            dropdown.classList.remove('active');
+                        });
+                    }
+                });
+            });
+        </script>
+        <nav class="admin-header-simple">
+            <a class="brand" th:href="@{/admin}">
+                <i class="bi bi-shield-fill-check"></i>
+                <span>Admin Panel</span>
+            </a>
+
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <ul class="nav-menu">
                     <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> All Products</a></li>
-                    <li><a th:href="@{/admin/categories}"><i class="bi bi-tags"></i> Categories</a></li>
+                    <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> Products</a></li>
                     <li><a th:href="@{/admin/inventory}"><i class="bi bi-box-seam"></i> Inventory</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> All Orders</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
-                    <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
-                    <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a th:href="@{/admin/customers}"><i class="bi bi-person"></i> Customers</a></li>
+                    <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> Orders</a></li>
+                    <li><a th:href="@{/admin/customers}"><i class="bi bi-people"></i> Customers</a></li>
                     <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
-                    <li><a th:href="@{/admin/support}"><i class="bi bi-headset"></i> Support</a></li>
-                    <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
-                    <li><a th:href="@{/admin/profile}"><i class="bi bi-gear"></i> Profile</a></li>
-                    <li class="dropdown-divider"></li>
                     <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                 </ul>
-            </div>
-    </nav>
-</div>
-</div>
 
-<!-- Staff Header Fragment -->
-<div th:fragment="staffheader">
-<style>
-    /* Staff Navbar - Phiên bản đẹp hơn với gradient */
-    .staff-navbar {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        padding: 0.8rem 0;
-        transition: all 0.3s ease;
-    }
-    
-    .staff-navbar .navbar-brand {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: white !important;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-    }
-    
-    .staff-navbar .navbar-brand i, .staff-navbar .navbar-brand span {
-        background: none !important;
-        -webkit-text-fill-color: initial !important;
-        color: white !important;
-    }
-    
-    .staff-navbar .nav-link {
-        color: rgba(255, 255, 255, 0.9) !important;
-        margin: 0 5px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        padding: 8px 15px;
-        border-radius: 20px;
-    }
-    
-    .staff-navbar .nav-link i {
-        color: white !important;
-    }
-    
-    .staff-navbar .nav-link:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: white !important;
-        transform: translateY(-2px);
-    }
-    
-    .staff-navbar .nav-link.active {
-        background: rgba(255, 255, 255, 0.25);
-        color: white !important;
-        font-weight: 600;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .staff-navbar .nav-link.active i {
-        color: white !important;
-    }
-</style>
-<nav class="navbar navbar-expand-lg staff-navbar fixed-top">
-    <div class="container">
-        <a class="navbar-brand" th:href="@{/staff}">
-            <i class="bi bi-shield-check"></i>
-            <span>Staff Panel</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#staffNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="staffNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff}">
-                        <i class="bi bi-house-door"></i> Home
+                <!-- Single Admin Dropdown (Gear) moved to the end -->
+                <div class="nav-dropdown">
+                    <a href="#" class="dropdown-toggle">
+                        <i class="bi bi-gear-fill"></i>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/dashboard}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/orders}">
-                        <i class="bi bi-cart-check"></i> Orders
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/support}">
-                        <i class="bi bi-headset"></i> Support
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/inventory}">
-                        <i class="bi bi-box-seam"></i> Inventory
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/products}">
-                        <i class="bi bi-box"></i> Products
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/categories}">
-                        <i class="bi bi-tags"></i> Categories
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/staff/profile}">
-                        <i class="bi bi-globe"></i> Profile
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/logout}">
-                        <i class="bi bi-box-arrow-right"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/admin}"><i class="bi bi-house-door"></i> Home</a></li>
+                        <li><a th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a th:href="@{/admin/products}"><i class="bi bi-box"></i> All Products</a></li>
+                        <li><a th:href="@{/admin/categories}"><i class="bi bi-tags"></i> Categories</a></li>
+                        <li><a th:href="@{/admin/inventory}"><i class="bi bi-box-seam"></i> Inventory</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a th:href="@{/admin/orders}"><i class="bi bi-cart-check"></i> All Orders</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a th:href="@{/admin/vouchers}"><i class="bi bi-ticket-perforated"></i> Vouchers</a></li>
+                        <li><a th:href="@{/admin/banners}"><i class="bi bi-images"></i> Banners</a></li>
+                        <li><a th:href="@{/admin/reviews}"><i class="bi bi-star-half"></i> Reviews</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a th:href="@{/admin/customers}"><i class="bi bi-person"></i> Customers</a></li>
+                        <li><a th:href="@{/admin/staff}"><i class="bi bi-person-badge"></i> Staff</a></li>
+                        <li><a th:href="@{/admin/support}"><i class="bi bi-headset"></i> Support</a></li>
+                        <li><a th:href="@{/admin/reports}"><i class="bi bi-graph-up"></i> Reports</a></li>
+                        <li><a th:href="@{/admin/profile}"><i class="bi bi-gear"></i> Profile</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
+        </nav>
     </div>
-</nav>
-</div>
+    </div>
 
-<style>
-    /* General Navbar - Để đồng nhất màu với Staff */
-    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        padding: 0.8rem 0;
-    }
-    
-    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-link,
-    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .navbar-brand {
-        color: white !important;
-    }
-    
-    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-icon {
-        color: white !important;
-    }
-    
-    .navbar-brand {
-        background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #FF6B9D 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 700 !important;
-    }
-    
-    .header-search-btn i {
-        color: #FF6B9D;
-    }
-    
-    .nav-icon {
-        color: #FF6B9D !important;
-    }
-    
-    .cart-badge {
-        background: #FF6B9D !important;
-    }
-</style>
+    <!-- Staff Header Fragment -->
+    <div th:fragment="staffheader">
+        <style>
+            /* Staff Navbar - Phiên bản đẹp hơn với gradient */
+            .staff-navbar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                padding: 0.8rem 0;
+                transition: all 0.3s ease;
+            }
+
+            .staff-navbar .navbar-brand {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: white !important;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+            }
+
+            .staff-navbar .navbar-brand i,
+            .staff-navbar .navbar-brand span {
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+                color: white !important;
+            }
+
+            .staff-navbar .nav-link {
+                color: rgba(255, 255, 255, 0.9) !important;
+                margin: 0 5px;
+                transition: all 0.3s ease;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                text-decoration: none;
+                padding: 8px 15px;
+                border-radius: 20px;
+            }
+
+            .staff-navbar .nav-link i {
+                color: white !important;
+            }
+
+            .staff-navbar .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: white !important;
+                transform: translateY(-2px);
+            }
+
+            .staff-navbar .nav-link.active {
+                background: rgba(255, 255, 255, 0.25);
+                color: white !important;
+                font-weight: 600;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .staff-navbar .nav-link.active i {
+                color: white !important;
+            }
+        </style>
+        <nav class="navbar navbar-expand-lg staff-navbar fixed-top">
+            <div class="container">
+                <a class="navbar-brand" th:href="@{/staff}">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Staff Panel</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#staffNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="staffNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff}">
+                                <i class="bi bi-house-door"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/dashboard}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/orders}">
+                                <i class="bi bi-cart-check"></i> Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/support}">
+                                <i class="bi bi-headset"></i> Support
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/inventory}">
+                                <i class="bi bi-box-seam"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/products}">
+                                <i class="bi bi-box"></i> Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/categories}">
+                                <i class="bi bi-tags"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/staff/profile}">
+                                <i class="bi bi-globe"></i> Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/logout}">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <style>
+        /* General Navbar - Để đồng nhất màu với Staff */
+        .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            padding: 0.8rem 0;
+        }
+
+        .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-link,
+        .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .navbar-brand {
+            color: white !important;
+        }
+
+        .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-icon {
+            color: white !important;
+        }
+
+        .navbar-brand {
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #FF6B9D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700 !important;
+        }
+
+        .header-search-btn i {
+            color: #FF6B9D;
+        }
+
+        .nav-icon {
+            color: #FF6B9D !important;
+        }
+
+        .cart-badge {
+            background: #FF6B9D !important;
+        }
+    </style>
 </body>
+
 </html>
