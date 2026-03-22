@@ -14,9 +14,9 @@ public interface CustomerReportRepository extends JpaRepository<Customer, Intege
 
        // Get customer summary
        @Query("SELECT COUNT(DISTINCT c), " +
-                     "SUM(CASE WHEN o IS NOT NULL THEN 1 ELSE 0 END), " +
-                     "SUM(CASE WHEN c.createdDate >= :startDate THEN 1 ELSE 0 END), " +
-                     "SUM(CASE WHEN o IS NULL THEN 1 ELSE 0 END) " +
+                     "COUNT(DISTINCT CASE WHEN o IS NOT NULL THEN c.customerId END), " +
+                     "COUNT(DISTINCT CASE WHEN c.createdDate >= :startDate THEN c.customerId END), " +
+                     "COUNT(DISTINCT CASE WHEN o IS NULL THEN c.customerId END) " +
                      "FROM Customer c " +
                      "LEFT JOIN c.account a " +
                      "LEFT JOIN Order o ON a.accountId = o.account.accountId AND o.status IN :statuses")
