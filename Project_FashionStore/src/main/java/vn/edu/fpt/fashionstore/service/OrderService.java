@@ -38,10 +38,10 @@ public class OrderService {
 
     @Transactional
     public long countSuccessfulPurchases(Customer customer, Long productId) {
-        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng COMPLETED và đúng mã sản phẩm
+        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng CONFIRMED và đúng mã sản phẩm
         return orderRepository.findAll().stream()
                 .filter(o -> o.getCustomer().getCustomerId().equals(customer.getCustomerId())
-                        && o.getStatus() == OrderStatus.COMPLETED)
+                        && o.getStatus() == OrderStatus.CONFIRMED)
                 .flatMap(o -> o.getOrderItems().stream())
                 .filter(oi -> oi.getProductVariant().getProduct().getProductId().equals(productId))
                 .count();
@@ -147,10 +147,24 @@ public class OrderService {
             }
             order = orderRepository.save(order);
             
-            // Lưu OrderItem vào database
+            // Lưu OrderItem vào database và giảm stock
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartItem cartItem : buyNowItems) {
-                OrderItem orderItem = new OrderItem(order, cartItem.getProductVariant(), cartItem.getQuantity());
+                ProductVariant variant = cartItem.getProductVariant();
+                
+                // Kiểm tra stock trước khi giảm
+                if (variant.getStock() < cartItem.getQuantity()) {
+                    throw new RuntimeException("Sản phẩm " + variant.getProduct().getProductName() + 
+                                            " (Size: " + variant.getCategorySize().getSizeName() + 
+                                            ", Màu: " + variant.getColor().getColorName() + 
+                                            ") chỉ còn " + variant.getStock() + " sản phẩm. Bạn đã chọn " + cartItem.getQuantity() + " sản phẩm.");
+                }
+                
+                // Giảm stock
+                variant.setStock(variant.getStock() - cartItem.getQuantity());
+                productVariantRepository.save(variant);
+                
+                OrderItem orderItem = new OrderItem(order, variant, cartItem.getQuantity());
                 orderItem = orderItemRepository.save(orderItem);
                 orderItems.add(orderItem);
             }

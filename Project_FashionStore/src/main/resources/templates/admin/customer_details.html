@@ -304,10 +304,7 @@
                         </div>
                         <div class="info-item">
                             <label class="info-label">Customer Status:</label>
-                            <span th:if="${customerDetails.status != null}" 
-                                  th:class="'badge ' + ${customerDetails.status.toLowerCase()}" 
-                                  th:text="${customerDetails.status}">Active</span>
-                            <span th:unless="${customerDetails.status != null}" class="badge inactive">Unknown</span>
+                            <span th:class="'badge ' + ${customerDetails.status.toLowerCase()}" th:text="${customerDetails.status}">Active</span>
                             <small class="text-muted d-block mt-1">Based on account status and order activity</small>
                         </div>
                         <div class="info-item">

@@ -6,6 +6,7 @@ import vn.edu.fpt.fashionstore.repository.*;
 import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,23 +34,18 @@ public class ReportService {
     private ProductReportRepository productReportRepository;
 
     private static final List<OrderStatus> ACTIVE_STATUSES = Arrays.asList(
-            OrderStatus.COMPLETED, OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPING);
-
+            OrderStatus.PENDING, OrderStatus.CONFIRMED);
+    
     private static final List<OrderStatus> REVENUE_STATUSES = Arrays.asList(
-            OrderStatus.COMPLETED);
+            OrderStatus.CONFIRMED);
 
     // Revenue Report Methods
     public Map<String, Object> getRevenueReport(LocalDate startDate, LocalDate endDate) {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            System.out.println("DEBUG: Getting revenue report from " + startDate + " to " + endDate);
-
             // Get daily revenue from database
             List<Object[]> dailyRevenueData = orderRepository.getDailyRevenue(startDate, endDate, REVENUE_STATUSES);
-            System.out.println(
-                    "DEBUG: Daily revenue data size: " + (dailyRevenueData != null ? dailyRevenueData.size() : 0));
-
             List<Map<String, Object>> dailyRevenue = new ArrayList<>();
 
             if (dailyRevenueData != null) {
@@ -64,9 +60,6 @@ public class ReportService {
 
             // Get monthly revenue from database
             List<Object[]> monthlyRevenueData = orderRepository.getMonthlyRevenue(startDate, endDate, REVENUE_STATUSES);
-            System.out.println("DEBUG: Monthly revenue data size: "
-                    + (monthlyRevenueData != null ? monthlyRevenueData.size() : 0));
-
             List<Map<String, Object>> monthlyRevenue = new ArrayList<>();
 
             if (monthlyRevenueData != null) {
@@ -84,8 +77,6 @@ public class ReportService {
             // Calculate totals
             Double totalRevenue = orderRepository.getTotalRevenue(startDate, endDate, REVENUE_STATUSES);
             Long totalOrders = orderRepository.getTotalOrders(startDate, endDate, REVENUE_STATUSES);
-            System.out.println("DEBUG: Total revenue: " + totalRevenue + ", Total orders: " + totalOrders);
-
             Double averageOrderValue = totalOrders != null && totalOrders > 0 ? totalRevenue / totalOrders : 0.0;
 
             report.put("dailyRevenue", dailyRevenue);
@@ -95,8 +86,6 @@ public class ReportService {
             report.put("averageOrderValue", averageOrderValue);
             report.put("startDate", startDate);
             report.put("endDate", endDate);
-
-            System.out.println("DEBUG: Revenue report completed successfully");
 
         } catch (Exception e) {
             System.err.println("ERROR in getRevenueReport: " + e.getMessage());
@@ -111,7 +100,6 @@ public class ReportService {
             report.put("startDate", startDate);
             report.put("endDate", endDate);
         }
-
         return report;
     }
 
@@ -120,8 +108,6 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            System.out.println("DEBUG: Getting best seller report from " + startDate + " to " + endDate);
-
             // Get best selling products
             List<Object[]> bestSellingProducts = orderItemRepository.getBestSellingProducts(startDate, endDate,
                     ACTIVE_STATUSES);
@@ -167,8 +153,6 @@ public class ReportService {
             report.put("startDate", startDate);
             report.put("endDate", endDate);
 
-            System.out.println("DEBUG: Best seller report completed successfully");
-
         } catch (Exception e) {
             System.err.println("ERROR in getBestSellerReport: " + e.getMessage());
             e.printStackTrace();
@@ -179,7 +163,6 @@ public class ReportService {
             report.put("startDate", startDate);
             report.put("endDate", endDate);
         }
-
         return report;
     }
 
@@ -188,12 +171,8 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            System.out.println("DEBUG: Getting inventory report");
-
             // Get complete inventory
             List<Object[]> inventoryData = reportRepository.getInventoryReport(ACTIVE_STATUSES);
-            System.out.println("DEBUG: Inventory data size: " + (inventoryData != null ? inventoryData.size() : 0));
-
             List<Map<String, Object>> inventory = new ArrayList<>();
 
             int totalProducts = 0;
@@ -207,14 +186,12 @@ public class ReportService {
                     item.put("stock", row[1] != null ? row[1] : 0);
                     item.put("categoryName", row[2] != null ? row[2] : "N/A");
                     item.put("soldQuantity", row[3] != null ? row[3] : 0);
-
                     Integer stock = row[1] != null ? (Integer) row[1] : 0;
                     if (stock == 0) {
                         outOfStockCount++;
                     } else if (stock < 10) {
                         lowStockCount++;
                     }
-
                     totalProducts++;
                     inventory.add(item);
                 }
@@ -222,8 +199,6 @@ public class ReportService {
 
             // Get low stock products
             List<Object[]> lowStockData = reportRepository.getLowStockProducts(10, ACTIVE_STATUSES);
-            System.out.println("DEBUG: Low stock data size: " + (lowStockData != null ? lowStockData.size() : 0));
-
             List<Map<String, Object>> lowStockProducts = new ArrayList<>();
 
             if (lowStockData != null) {
@@ -239,8 +214,6 @@ public class ReportService {
 
             // Get inventory by category
             List<Object[]> categoryData = reportRepository.getInventoryByCategory(ACTIVE_STATUSES);
-            System.out.println("DEBUG: Category data size: " + (categoryData != null ? categoryData.size() : 0));
-
             List<Map<String, Object>> categories = new ArrayList<>();
 
             if (categoryData != null) {
@@ -253,7 +226,6 @@ public class ReportService {
                     categories.add(item);
                 }
             }
-
             report.put("inventory", inventory);
             report.put("lowStockProducts", lowStockProducts);
             report.put("categories", categories);
@@ -261,8 +233,6 @@ public class ReportService {
             report.put("lowStockCount", lowStockCount);
             report.put("outOfStockCount", outOfStockCount);
             report.put("categoryCount", categories.size());
-
-            System.out.println("DEBUG: Inventory report completed successfully");
 
         } catch (Exception e) {
             System.err.println("ERROR in getInventoryReport: " + e.getMessage());
@@ -277,7 +247,6 @@ public class ReportService {
             report.put("outOfStockCount", 0);
             report.put("categoryCount", 0);
         }
-
         return report;
     }
 
@@ -286,8 +255,6 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            System.out.println("DEBUG: Getting product report");
-
             // Get product summary from database
             List<Object[]> productSummaryList = productReportRepository.getProductSummary();
             if (productSummaryList != null && !productSummaryList.isEmpty()) {
@@ -301,7 +268,6 @@ public class ReportService {
                             productSummary[2] != null ? ((Number) productSummary[2]).longValue() : 0L);
                     report.put("lowStockProducts",
                             productSummary[3] != null ? ((Number) productSummary[3]).longValue() : 0L);
-                    System.out.println("DEBUG: Using database summary values");
                 }
             } else {
                 // Fallback values if query fails
@@ -309,7 +275,6 @@ public class ReportService {
                 report.put("activeProducts", 0L);
                 report.put("outOfStockProducts", 0L);
                 report.put("lowStockProducts", 0L);
-                System.out.println("DEBUG: Using fallback summary values");
             }
 
             // Products by category
@@ -479,18 +444,8 @@ public class ReportService {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            System.out.println("DEBUG: Getting customer report from " + startDate + " to " + endDate);
-            System.out.println("DEBUG: Active statuses: " + ACTIVE_STATUSES);
-            
-            // Test basic database connection
-            Long totalCustomers = customerReportRepository.getTotalCustomerCount();
-            Long totalOrders = customerReportRepository.getTotalOrderCount();
-            System.out.println("DEBUG: Total customers in database: " + totalCustomers);
-            System.out.println("DEBUG: Total orders in database: " + totalOrders);
-
             // Customer summary with null safety
             List<Object[]> summaryList = customerReportRepository.getCustomerSummary(startDate, ACTIVE_STATUSES);
-            System.out.println("DEBUG: Customer summary list size: " + (summaryList != null ? summaryList.size() : 0));
             if (summaryList != null && !summaryList.isEmpty()) {
                 Object[] summary = summaryList.get(0);
                 if (summary != null && summary.length >= 4) {
@@ -501,7 +456,6 @@ public class ReportService {
                 }
             } else {
                 // Fallback values
-                System.out.println("DEBUG: Using fallback values - no summary data found");
                 report.put("totalCustomers", 0L);
                 report.put("activeCustomers", 0L);
                 report.put("newCustomers", 0L);
@@ -510,7 +464,6 @@ public class ReportService {
 
             // Top customers
             List<Object[]> topCustomersData = customerReportRepository.getTopCustomers(ACTIVE_STATUSES);
-            System.out.println("DEBUG: Top customers data size: " + (topCustomersData != null ? topCustomersData.size() : 0));
             List<Map<String, Object>> topCustomers = new ArrayList<>();
             if (topCustomersData != null) {
                 for (Object[] row : topCustomersData) {
@@ -534,7 +487,6 @@ public class ReportService {
             // Registration summary
             List<Object[]> registrationData = customerReportRepository.getRegistrationSummary(startDate,
                     ACTIVE_STATUSES);
-            System.out.println("DEBUG: Registration summary data size: " + (registrationData != null ? registrationData.size() : 0));
             List<Map<String, Object>> registrationSummary = new ArrayList<>();
             if (registrationData != null) {
                 for (Object[] row : registrationData) {
@@ -551,7 +503,6 @@ public class ReportService {
 
             // All customers
             List<Object[]> allCustomersData = customerReportRepository.getAllCustomersWithOrders(ACTIVE_STATUSES);
-            System.out.println("DEBUG: All customers data size: " + (allCustomersData != null ? allCustomersData.size() : 0));
             List<Map<String, Object>> allCustomers = new ArrayList<>();
             if (allCustomersData != null) {
                 for (Object[] row : allCustomersData) {
@@ -585,7 +536,6 @@ public class ReportService {
             report.put("allCustomers", new ArrayList<>());
             report.put("startDate", startDate);
             report.put("endDate", endDate);
-
             System.err.println("Error in getCustomerReport: " + e.getMessage());
             e.printStackTrace();
         }
@@ -603,12 +553,10 @@ public class ReportService {
         Long totalOrders = orderRepository.getTotalOrders(start, end, ACTIVE_STATUSES);
         long totalCustomers = customerReportRepository.count();
         long totalProducts = productReportRepository.count();
-
         stats.put("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
         stats.put("totalOrders", totalOrders != null ? totalOrders : 0L);
         stats.put("totalCustomers", totalCustomers);
         stats.put("totalProducts", totalProducts);
-
         return stats;
     }
 
@@ -680,7 +628,6 @@ public class ReportService {
         }
         charts.put("categoryLabels", categoryLabels);
         charts.put("categoryValues", categoryValues);
-
         // Order Status Counts
         Map<String, Long> statusCounts = new HashMap<>();
         for (OrderStatus status : OrderStatus.values()) {

@@ -104,7 +104,7 @@ public class AdminController {
         
         // Tính tổng doanh thu
         double totalRevenue = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> OrderStatus.CONFIRMED.equals(order.getStatus()))
             .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
             .sum();
         
@@ -112,11 +112,11 @@ public class AdminController {
         long pendingOrders = orders.stream()
             .filter(order -> OrderStatus.PENDING.equals(order.getStatus()))
             .count();
-        long processingOrders = orders.stream()
-            .filter(order -> OrderStatus.SHIPPING.equals(order.getStatus()))
+        long cancelledOrders = orders.stream()
+            .filter(order -> OrderStatus.CANCELLED.equals(order.getStatus()))
             .count();
-        long completedOrders = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+        long confirmedOrders = orders.stream()
+            .filter(order -> OrderStatus.CONFIRMED.equals(order.getStatus()))
             .count();
         
         // Lấy 5 đơn hàng gần nhất
@@ -127,7 +127,7 @@ public class AdminController {
         
         // Tính doanh thu theo tháng (Revenue Overview)
         Map<Integer, Double> revenueByMonth = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> OrderStatus.CONFIRMED.equals(order.getStatus()))
             .collect(java.util.stream.Collectors.groupingBy(
                 order -> order.getOrderDate().getMonthValue(), // LocalDate.getMonthValue() returns 1-12
                 java.util.stream.Collectors.summingDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
@@ -141,7 +141,7 @@ public class AdminController {
         
         // Tính doanh thu theo danh mục với số lượng (Sales by Category)
         Map<String, Long> salesByCategory = orders.stream()
-            .filter(order -> OrderStatus.COMPLETED.equals(order.getStatus()))
+            .filter(order -> OrderStatus.CONFIRMED.equals(order.getStatus()))
             .flatMap(order -> order.getOrderItems() != null ? order.getOrderItems().stream() : java.util.stream.Stream.empty())
             .collect(java.util.stream.Collectors.groupingBy(
                 item -> {
@@ -166,8 +166,8 @@ public class AdminController {
         model.addAttribute("totalCustomers", totalCustomers);
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("pendingOrders", pendingOrders);
-        model.addAttribute("processingOrders", processingOrders);
-        model.addAttribute("completedOrders", completedOrders);
+        model.addAttribute("cancelledOrders", cancelledOrders);
+        model.addAttribute("confirmedOrders", confirmedOrders);
         model.addAttribute("recentOrders", recentOrders);
         model.addAttribute("salesByCategory", salesByCategory);
         model.addAttribute("monthlyRevenue", monthlyRevenue);

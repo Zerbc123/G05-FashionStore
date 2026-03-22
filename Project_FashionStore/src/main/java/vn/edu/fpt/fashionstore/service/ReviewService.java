@@ -23,8 +23,8 @@ public class ReviewService {
     // 1. Kiểm tra xem khách hàng có được phép đánh giá không?
     public boolean canCustomerReviewProduct(Customer customer, Long productId) {
         if (customer == null || productId == null) return false;
-        // Phải là đơn hàng đã giao thành công (COMPLETED)
-        return orderRepository.hasCustomerBoughtProduct(customer, productId, OrderStatus.COMPLETED);
+        // Phải là đơn hàng đã xác nhận (CONFIRMED)
+        return orderRepository.hasCustomerBoughtProduct(customer, productId, OrderStatus.CONFIRMED);
     }
 
     // 2. Lưu đánh giá của khách hàng vào Database

@@ -65,10 +65,6 @@
                     <div class="avatar-upload">
                         <img th:src="${'https://ui-avatars.com/api/?name=' + account.fullName + '&background=random'}"
                              class="avatar-preview" id="avatarPreview">
-                        <input type="file" id="avatarInput" class="d-none" accept="image/*">
-                        <button class="btn btn-outline-primary" onclick="document.getElementById('avatarInput').click()">
-                            <i class="bi bi-camera me-2"></i>Thay đổi ảnh
-                        </button>
                     </div>
 
                     <form th:action="@{/update-profile}" method="post">

@@ -66,6 +66,15 @@ public class CartController {
                 return "redirect:/login";
             }
             
+            // Xóa trạng thái "Mua ngay" nếu người dùng vào xem giỏ hàng
+            // Để đảm bảo khi họ ấn Thanh toán từ giỏ hàng, hệ thống sẽ lấy đúng sản phẩm trong giỏ
+            session.removeAttribute("isBuyNow");
+            session.removeAttribute("buyNowItems");
+            session.removeAttribute("buyNowProductId");
+            session.removeAttribute("buyNowSizeId");
+            session.removeAttribute("buyNowColorId");
+            session.removeAttribute("buyNowQty");
+            
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
             double total = cartService.getCartTotal(cartItems);
 

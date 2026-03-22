@@ -86,7 +86,6 @@
                         <div class="avatar-wrapper">
                             <img th:src="'https://ui-avatars.com/api/?name=' + ${account.fullName} + '&background=Fce4ec&color=F06292&size=128'"
                                  class="avatar-img" alt="Avatar">
-                            <button class="avatar-edit-btn"><i class="bi bi-camera"></i></button>
                         </div>
                         <h3 class="user-name" th:text="${account.fullName}">Họ và Tên</h3>
                         <p class="member-since" th:text="'Member since ' + ${#temporals.format(customer.createdDate, 'MMM yyyy')}">Member since 2024</p>

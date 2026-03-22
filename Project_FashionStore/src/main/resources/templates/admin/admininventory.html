@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f6fa;
+            background: #FFF9F9;
             min-height: 100vh;
         }
 
@@ -540,7 +540,6 @@
                                 <span th:if="${variant.stock > 20}" class="stock-badge in-stock">Còn hàng</span>
                                 <span th:if="${variant.stock > 0 and variant.stock <= 20}" class="stock-badge low-stock">Sắp hết</span>
                                 <span th:if="${variant.stock == null or variant.stock == 0}" class="stock-badge out-stock">Hết hàng</span>
-                                <span th:if="${variant.stock == 0}" class="stock-badge out-stock">Hết hàng</span>
                             </td>
                             <td>
                                 <form th:action="@{/admin/inventory/update-stock}" method="post" style="display: inline;">

@@ -322,25 +322,10 @@
                         class="filter-btn"
 
                         th:classappend="${status == 'RESOLVED'} ? 'active' : ''">
-
                     <i class="fas fa-circle text-blue-500 text-xs mr-1"></i> Hoàn thành
-
                 </button>
-
-                <button type="submit" name="status" value="CLOSED" 
-
-                        class="filter-btn"
-
-                        th:classappend="${status == 'CLOSED'} ? 'active' : ''">
-
-                    <i class="fas fa-circle text-gray-500 text-xs mr-1"></i> Đóng
-
-                </button>
-
             </form>
-
         </div>
-
     </div>
 
 
@@ -431,13 +416,13 @@
                                 class="px-3 py-1.5 bg-white border border-green-600 text-green-700 text-xs font-bold rounded-lg hover:bg-green-600 hover:text-white transition shadow-sm"
                                 th:if="${request.status == 'IN_PROGRESS'}">Hoàn thành</button>
                     </form>
-
                     <form th:action="@{'/admin/support/update-status/' + ${request.id}}" method="post" style="display: inline;">
                         <input type="hidden" name="status" value="CLOSED">
                         <button type="submit" 
                                 class="px-3 py-1.5 bg-white border border-gray-500 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-500 hover:text-white transition shadow-sm"
                                 th:if="${request.status == 'RESOLVED'}">Đóng</button>
                     </form>
+
 
                     <form th:action="@{'/admin/support/delete/' + ${request.id}}" method="post" style="display: inline;" 
                           onsubmit="return confirm('Bạn có chắc muốn xóa yêu cầu này?');"
