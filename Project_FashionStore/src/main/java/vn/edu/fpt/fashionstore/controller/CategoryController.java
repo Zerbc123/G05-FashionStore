@@ -15,8 +15,13 @@ public class CategoryController {
     private final CategoryService service;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("categories", service.getAllCategories());
+    public String list(@RequestParam(required = false) String keyword, Model model) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            model.addAttribute("categories", service.searchCategories(keyword));
+            model.addAttribute("keyword", keyword);
+        } else {
+            model.addAttribute("categories", service.getAllCategories());
+        }
         return "admin/category-list";
     }
 

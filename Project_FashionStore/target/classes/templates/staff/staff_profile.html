@@ -16,16 +16,17 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #FFF9F9;
             min-height: 100vh;
             padding: 20px;
+            color: #2C3E50;
         }
         .profile-container {
             max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
         .profile-header {
@@ -70,12 +71,13 @@
         }
         .info-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 10px;
             transition: all 0.3s;
             border-left: 3px solid transparent;
+            min-width: 0;
         }
         .info-item:hover {
             background: #e9ecef;
@@ -89,9 +91,11 @@
             margin-right: 15px;
             width: 30px;
             text-align: center;
+            margin-top: 5px;
         }
         .info-content {
             flex: 1;
+            min-width: 0;
         }
         .info-label {
             font-size: 0.9rem;
@@ -126,7 +130,7 @@
             gap: 8px;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
             color: white;
         }
         .btn-primary:hover {
@@ -194,22 +198,38 @@
             transform: translateX(-5px);
         }
         .badge {
-            padding: 6px 12px;
-            border-radius: 15px;
+            padding: 8px 16px;
+            border-radius: 50px;
             font-size: 0.85rem;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-word;
+            text-align: left;
         }
         .badge-success {
-            background: #28a745;
-            color: white;
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border-color: #28a745;
         }
         .badge-danger {
-            background: #dc3545;
-            color: white;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-color: #dc3545;
         }
         .badge-warning {
-            background: #ffc107;
-            color: #212529;
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-color: #ffc107;
+        }
+        .badge-info {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-color: #667eea;
         }
         @media (max-width: 768px) {
             .profile-header h1 {
@@ -286,8 +306,8 @@
                     <div class="info-content">
                         <div class="info-label">Vai trò</div>
                         <div class="info-value">
-                            <span class="badge badge-success">
-                                <i class="bi bi-person-badge-fill"></i> 
+                            <span class="badge badge-info">
+                                <i class="bi bi-person-badge"></i> 
                                 <span th:text="${staff?.role?.roleName ?: 'Staff'}">Staff</span>
                             </span>
                         </div>

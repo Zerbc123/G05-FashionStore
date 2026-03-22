@@ -20,6 +20,13 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
+    public List<Category> searchCategories(String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return categoryRepository.findByCategoryNameContainingIgnoreCase(keyword.trim());
+        }
+        return getAllCategories();
+    }
+
     public Category getByName(String categoryName) {
         return categoryRepository.findByCategoryName(categoryName);
     }

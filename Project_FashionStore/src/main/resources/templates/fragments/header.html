@@ -104,13 +104,13 @@
                     </a>
 
                     <div class="user-dropdown">
-                        <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item" style="background: linear-gradient(135deg, #48BB78, #38A169); color: white;">
+                        <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}" class="user-dropdown-item" style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
                             <i class="bi bi-shield-fill-check"></i>
                             <span>Admin Panel</span>
                         </a>
                         <div th:if="${session.userRole == 'ADMIN'}" class="user-dropdown-divider"></div>
 
-                        <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                        <a th:if="${session.userRole == 'STAFF'}" th:href="@{/staff}" class="user-dropdown-item" style="background: linear-gradient(135deg, #FF6B9D, #C44569); color: white;">
                             <i class="bi bi-shield-check"></i>
                             <span>Staff Panel</span>
                         </a>
@@ -152,23 +152,28 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
-            padding: 0.8rem 1.5rem; /* Thu nhỏ padding trên/dưới một chút */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         .admin-header-simple .brand {
-            font-size: 1.3rem; /* Thu nhỏ font logo một chút */
+            font-size: 1.3rem; 
             font-weight: 700;
-            color: white;
+            color: white !important;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 8px;
-            white-space: nowrap; /* Đảm bảo logo không rớt dòng */
+            white-space: nowrap; 
+        }
+        .admin-header-simple .brand span, .admin-header-simple .brand i {
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            color: white !important;
         }
         .admin-header-simple .nav-menu {
             display: flex;
@@ -185,17 +190,18 @@
         .admin-header-simple .nav-menu a {
             color: white;
             text-decoration: none;
-            padding: 6px 10px; /* Thu gọn khoảng trống bên trong mỗi nút */
-            border-radius: 15px;
+            padding: 6px 12px;
+            border-radius: 20px;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 4px; /* Giảm khoảng cách giữa Icon và Chữ */
-            font-size: 0.85rem; /* Giảm font size xuống để vừa vặn hơn */
-            white-space: nowrap; /* Bắt buộc chữ nằm trên 1 hàng */
+            gap: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
         .admin-header-simple .nav-menu a:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(0, 0, 0, 0.1);
+            color: white !important;
             transform: translateY(-2px);
         }
         
@@ -207,8 +213,8 @@
         .admin-header-simple .dropdown-toggle {
             color: white;
             text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 15px;
+            padding: 8px 12px;
+            border-radius: 20px;
             transition: all 0.3s;
             display: flex;
             align-items: center;
@@ -219,7 +225,7 @@
         }
         
         .admin-header-simple .dropdown-toggle:hover {
-            background: rgba(255,255,255,0.2);
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(196, 69, 105, 0.1));
             transform: translateY(-2px);
         }
         
@@ -268,7 +274,7 @@
         }
         
         .admin-header-simple .dropdown-menu li a:hover {
-            background: linear-gradient(135deg, #48BB78, #38A169);
+            background: linear-gradient(135deg, #FF6B9D, #C44569);
             color: white;
             transform: translateX(4px);
         }
@@ -434,12 +440,73 @@
                     <li><a th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                 </ul>
             </div>
-        </div>
     </nav>
+</div>
 </div>
 
 <!-- Staff Header Fragment -->
-<nav class="navbar navbar-expand-lg staff-navbar fixed-top" th:fragment="staffheader">
+<div th:fragment="staffheader">
+<style>
+    /* Staff Navbar - Phiên bản đẹp hơn với gradient */
+    .staff-navbar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        padding: 0.8rem 0;
+        transition: all 0.3s ease;
+    }
+    
+    .staff-navbar .navbar-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: white !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    
+    .staff-navbar .navbar-brand i, .staff-navbar .navbar-brand span {
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        color: white !important;
+    }
+    
+    .staff-navbar .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+    }
+    
+    .staff-navbar .nav-link i {
+        color: white !important;
+    }
+    
+    .staff-navbar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white !important;
+        transform: translateY(-2px);
+    }
+    
+    .staff-navbar .nav-link.active {
+        background: rgba(255, 255, 255, 0.25);
+        color: white !important;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .staff-navbar .nav-link.active i {
+        color: white !important;
+    }
+</style>
+<nav class="navbar navbar-expand-lg staff-navbar fixed-top">
     <div class="container">
         <a class="navbar-brand" th:href="@{/staff}">
             <i class="bi bi-shield-check"></i>
@@ -499,182 +566,43 @@
         </div>
     </div>
 </nav>
+</div>
 
 <style>
-    /* Staff Navbar - Phiên bản đẹp hơn với gradient */
-    .staff-navbar {
-        background: linear-gradient(135deg, #FFF9F9 0%, #FFE8EE 50%, #FFF3F7 100%);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 30px rgba(255, 107, 157, 0.15);
-        padding: 1rem 0;
-        transition: all 0.3s ease;
-        border-bottom: 2px solid rgba(255, 107, 157, 0.1);
+    /* General Navbar - Để đồng nhất màu với Staff */
+    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        padding: 0.8rem 0;
     }
     
-    .staff-navbar .navbar-brand {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.6rem;
-        font-weight: 700;
+    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-link,
+    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .navbar-brand {
+        color: white !important;
+    }
+    
+    .navbar:not(.admin-header-simple):not(.staff-navbar):not(.admin-navbar) .nav-icon {
+        color: white !important;
+    }
+    
+    .navbar-brand {
         background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #FF6B9D 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        position: relative;
+        font-weight: 700 !important;
     }
     
-    .staff-navbar .navbar-brand i {
-        background: linear-gradient(135deg, #FF6B9D, #C44569);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 1.8rem;
-    }
-    
-    .staff-navbar .navbar-brand:hover {
-        transform: scale(1.05);
-        filter: brightness(1.1);
-    }
-    
-    .staff-navbar .nav-link {
-        color: #2C3E50;
-        margin: 0 10px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        padding: 8px 16px;
-        border-radius: 25px;
-        position: relative;
-    }
-    
-    .staff-navbar .nav-link i {
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
-    }
-    
-    .staff-navbar .nav-link:hover {
-        background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(196, 69, 105, 0.1));
+    .header-search-btn i {
         color: #FF6B9D;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.2);
     }
     
-    .staff-navbar .nav-link:hover i {
-        transform: scale(1.2);
-        color: #C44569;
+    .nav-icon {
+        color: #FF6B9D !important;
     }
     
-    .staff-navbar .nav-link.active {
-        background: linear-gradient(135deg, #FF6B9D, #C44569);
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 5px 20px rgba(255, 107, 157, 0.3);
-    }
-    
-    .staff-navbar .nav-link.active i {
-        color: white;
-    }
-    
-    /* Admin Navbar - Phiên bản đẹp hơn với gradient xanh lá */
-    .admin-navbar {
-        background: linear-gradient(135deg, #F0FFF4 0%, #C6F6D5 50%, #E6FFFA 100%);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 30px rgba(72, 187, 120, 0.15);
-        padding: 1rem 0;
-        transition: all 0.3s ease;
-        border-bottom: 2px solid rgba(72, 187, 120, 0.1);
-    }
-    
-    .admin-navbar .navbar-brand {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.6rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #48BB78 0%, #38A169 50%, #48BB78 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        position: relative;
-    }
-    
-    .admin-navbar .navbar-brand i {
-        background: linear-gradient(135deg, #48BB78, #38A169);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 1.8rem;
-    }
-    
-    .admin-navbar .navbar-brand:hover {
-        transform: scale(1.05);
-        filter: brightness(1.1);
-    }
-    
-    .admin-navbar .nav-link {
-        color: #2C3E50;
-        margin: 0 10px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        padding: 8px 16px;
-        border-radius: 25px;
-        position: relative;
-    }
-    
-    .admin-navbar .nav-link i {
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
-    }
-    
-    .admin-navbar .nav-link:hover {
-        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
-        color: #48BB78;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.2);
-    }
-    
-    .admin-navbar .nav-link:hover i {
-        transform: scale(1.2);
-        color: #38A169;
-    }
-    
-    .admin-navbar .nav-link.active {
-        background: linear-gradient(135deg, #48BB78, #38A169);
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
-    }
-    
-    .admin-navbar .nav-link.active i {
-        color: white;
-    }
-    
-    .admin-navbar .brand-link:hover i {
-        transform: scale(1.2);
-        color: #38A169;
-    }
-        
-    .brand-link.active {
-        background: linear-gradient(135deg, #48BB78, #38A169);
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
-    }
-        
-    .brand-link.active i {
-        color: white;
+    .cart-badge {
+        background: #FF6B9D !important;
     }
 </style>
 </body>

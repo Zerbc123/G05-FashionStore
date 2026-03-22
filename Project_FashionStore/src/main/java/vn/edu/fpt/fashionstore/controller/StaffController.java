@@ -721,11 +721,18 @@ public class StaffController {
     // ======== STAFF CATEGORY MANAGEMENT ========
 
     @GetMapping("/categories")
-    public String listCategories(HttpSession session, Model model) {
+    public String listCategories(@RequestParam(required = false) String keyword, Model model, HttpSession session) {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
-        model.addAttribute("categories", categoryService.getAllCategories());
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            model.addAttribute("categories", categoryService.searchCategories(keyword));
+            model.addAttribute("keyword", keyword);
+        } else {
+            model.addAttribute("categories", categoryService.getAllCategories());
+        }
+        
         model.addAttribute("title", "Category Management");
         return "staff/category-list";
     }
