@@ -1,0 +1,944 @@
+﻿1.01 UC-01_ Login 
+Functional Description
+ID and Name:
+UC-01 Login 
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Staff, Admin, Customer
+Secondary Actors:
+Google Service
+Description:
+This use case describes how an authorized user (Customer, Staff, or Admin) accesses the system by entering valid credentials through the Login page UI. The system authenticates the user, establishes a session, and redirects the user to the appropriate home page based on their role.
+Trigger:
+The user clicks the “Login” button on the Login page after entering credentials, or clicks “Login with Google” on the Login page to authenticate using an external provider.
+Preconditions:
+The user is not currently authenticated in the system.
+The Login page is accessible to the user.
+The Authentication System is operational.
+Postconditions:
+The user is successfully authenticated.
+A valid session or authentication token is created.
+The user is redirected to the role-appropriate landing page (Customer Home, Staff Dashboard, or Admin Dashboard).
+Normal Flow:
+The user navigates to the Login page and enters username/email and password.
+The user clicks the “Login” button on the Login page.
+The System receives the login request and validates the input format.
+The System authenticates the credentials against the Authentication System.
+The System creates a session/token for the authenticated user.
+The System identifies the user role (Customer, Staff, or Admin).
+The System redirects the user to the corresponding home page based on role.
+Alternative Flows:
+Login via external authentication provider:
+   The user clicks “Login with Google” on the Login page.   The System redirects the user to the external authentication provider.   Upon successful authentication, the System retrieves user identity information.
+Exceptions:
+Invalid credentials
+The system detects incorrect username/email or password
+The system displays an authentication error message
+The Use Case terminates
+Authentication service unavailable
+The Authentication System is unreachable or not responding
+The System display a service unavailable message
+The Use Case terminates
+Priority:
+High
+Business Rules:
+BR1, BR2, BR3, BR4, BR5
+Other Information:
+This use case assumes that users already have valid accounts, requires secure encrypted authentication with a response time under 3 seconds, and is fully traceable to the Login UI flow, sequence diagram, and related test cases.
+
+b. Business Rules
+BR1
+Credential Validation
+Username/email and password must be provided and follow defined format rules.
+BR2
+Role-Based Access Control
+Users are granted access based on assigned roles (Customer, Staff, Admin).
+BR3
+Authentication Policy
+Only valid and active accounts can be authenticated.
+BR4
+Session Management 
+A session or token must be created after successful authentication.
+BR5
+Security Constraint
+User credentials must not be stored or transmitted in plain text.
+
+
+
+
+
+1.02 UC-02_ Change Password 
+Functional Description
+ID and Name:
+UC-02 Change Password
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+Authentication System
+Description:
+This use case allows an authenticated Customer to change their account password through the Profile page.
+The Customer must provide their current password, a new password, and confirm the new password. The system validates all inputs before updating the password to ensure security and correctness.
+Trigger:
+The Customer clicks the “Change Password” button on the Profile page.
+Preconditions:
+The Customer is authenticated and has an active session
+The Profile page is accessible
+The system database and authentication system are operational
+Postconditions:
+The Customer’s password is successfully updated
+The system displays a success message
+The Customer remains authenticated (or handled based on security policy) 
+Normal Flow:
+Customer navigates to the Profile page
+Customer clicks “Change Password”
+System displays the Change Password form
+Customer enters:
+Current password
+New password
+Confirm password
+Customer clicks “Save Changes”
+System validates:
+All fields are not empty
+Current password is correct
+New password meets policy requirements
+Confirm password matches new password
+System updates the password (encrypted) in the database
+System displays success message: → “Password changed successfully.”
+Alternative Flows:
+User cancels action:
+Customer clicks “Cancel”
+System returns to Profile page
+Use case ends 
+Exceptions:
+Empty fields:
+System detects missing input
+Displays: “All fields are required.”
+Use case terminates
+Incorrect current password:
+System detects mismatch
+Displays: “Current password is incorrect.”
+Use case terminates
+Password confirmation mismatch:
+System detects mismatch
+Displays: “Passwords do not match.”
+Use case terminates
+Invalid new password:
+System detects invalid format
+Displays validation message
+Use case terminates
+System error:
+System fails to update password
+Displays: “Unable to change password. Please try again later.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4, BR5
+Other Information:
+This use case assumes that users already have valid accounts, requires secure encrypted authentication with a response time under 3 seconds, and is fully traceable to the Login UI flow, sequence diagram, and related test cases.
+
+b. Business Rules
+BR1
+ Required Fields
+All password fields must not be empty
+BR2
+Current Password Validation
+Current password must match stored password
+BR3
+Password Confirmation
+New password and confirm password must match
+BR4
+Password Security
+Password must be stored in encrypted/hashed format
+BR5
+Customer Authorization
+Only authenticated Customers can change password
+
+
+
+
+
+
+
+
+
+
+
+1.03 UC-03_ Logout
+Functional Description
+ID and Name:
+UC-03 Logout 
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Staff, Admin, Customer
+Secondary Actors:
+Authentication System
+Description:
+This use case describes how an authenticated user terminates their active session by logging out of the system to ensure account security and prevent unauthorized access.
+Trigger:
+The user clicks the “Logout” button or menu option on the system navigation bar or user profile menu.
+Preconditions:
+The user is authenticated and has an active session.
+The system navigation menu or profile menu is accessible.
+The Authentication System is operational.
+Postconditions:
+The user session/token is successfully invalidated.
+The user is logged out of the system.
+The user is redirected to the Login page or Public Home page.
+Normal Flow:
+The user clicks the “Logout” option on the system interface.
+The System receives the logout request and validates the active session.
+The System invalidates the user session/token.
+The System clears authentication-related data from the client side.
+The System redirects the user to the Login page.
+Alternative Flows:
+Logout confirmation required:
+The System displays a confirmation dialog asking the user to confirm logout.
+The user clicks “Confirm”.
+The Use Case continues from Step 3 of the Main Flow.
+Automatic logout due to inactivity:
+The System detects session timeout due to inactivity.
+The System automatically invalidates the session.
+The Use Case continues from Step 4 of the Main Flow.
+Exceptions:
+ Invalid or expired session:
+The System detects that the session is already expired or invalid.
+The System redirects the user to the Login page.
+The Use Case terminates.
+Priority:
+High
+Business Rules:
+BR1, BR2, BR3, BR4, BR5
+Other Information:
+This use case assumes an authenticated user, enforces secure session termination with minimal processing time, and is fully traceable to the Logout UI flow, sequence diagram, and related test cases.
+
+b. Business Rules
+BR1
+Active Session Requirement
+Only authenticated users with an active session can perform logout.
+BR2
+Session Invalidation
+Logout must invalidate the session/token immediately.
+BR3
+Role Independence
+Logout behavior is identical for Customer, Staff, and Admin roles.
+BR4
+
+Security Constraint
+All authentication data must be cleared from the client upon logout.
+BR5
+Timeout Policy
+The system may automatically log out users after inactivity.
+
+
+
+
+
+
+
+
+1.04UC-04_ Payment
+Functional Description
+ID and Name:
+UC-04 Payment
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+MoMo Payment Gateway
+Description:
+This use case describes how a Customer completes payment for an order using the MoMo payment gateway.
+The system redirects the Customer to the MoMo platform to complete the transaction and processes the payment result returned from MoMo.
+Trigger:
+The Customer clicks the “Pay with MoMo” or “Proceed to Payment” button on the Checkout page.
+Preconditions:
+The Customer is authenticated
+The order exists and belongs to the Customer
+The order status is Pending Payment
+The total amount is calculated and stored
+MoMo payment service is available 
+Postconditions:
+Payment transaction is completed
+Order status is updated to Paid (or appropriate status)
+Payment result is stored
+Customer is redirected to confirmation page 
+Normal Flow:
+Customer clicks “Pay with MoMo”
+System creates a payment request with order information
+System sends request to MoMo Payment Gateway
+System redirects Customer to MoMo payment page
+Customer completes payment on MoMo interface
+MoMo processes the transaction
+MoMo returns result to system (callback/redirect)
+System verifies the payment result
+System updates order status to Paid
+System displays payment success message
+Customer is redirected to Order Confirmation page 
+Alternative Flows:
+Customer cancels payment on MoMo:
+MoMo returns cancel result
+System keeps order status = Pending Payment
+System displays: “Payment was cancelled.”
+Payment failed:
+MoMo returns failure status
+System displays: “Payment failed. Please try again.”
+Customer can retry 
+Exceptions:
+ Invalid payment request:
+System detects invalid data
+Displays error message 
+ MoMo service unavailable:
+System cannot connect to MoMo
+Displays: “Payment service is unavailable.”
+Callback verification failed:
+System detects invalid signature/data
+Rejects transaction
+Logs error 
+Payment timeout:
+No response from MoMo
+System marks payment as failed 
+Priority:
+High
+Business Rules:
+BR1, BR2, BR3, BR4, BR5,BR6
+Other Information:
+This use case assumes an authenticated Customer, requires secure integration with a Payment Gateway, and ensures that payment transactions are handled reliably and securely. The use case is fully traceable to the Payment UI flow, system sequence diagram, and related test cases.
+
+b. Business Rules
+BR1
+Payment Authorization
+Only authenticated Customers can perform payment
+BR2
+Valid Order Status
+Payment only applies to orders in Pending Payment
+BR3
+Amount Integrity
+Payment amount must match order total
+BR4
+
+Secure Integrity
+All communication with MoMo must be encrypted
+BR5
+Transaction Verification
+Payment result must be verified before updating order
+BR6
+Callback Handling
+System must process MoMo callback to update payment status
+
+
+
+
+
+
+
+1.05 UC-05_ View Order History
+Functional Description
+ID and Name:
+UC-05  View Order History
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows an authenticated Customer to view the list of orders previously placed in the system. The system displays orders associated with the Customer account, including their order information and current status. This functionality enables customers to track their purchase history and monitor the progress of their orders.
+Trigger:
+The Customer clicks the “Order History” option from the user menu on the authenticated Customer dashboard.
+Preconditions:
+The Customer has successfully logged into the system.
+The Customer account is active and not suspended.
+The system database is available.
+The Customer has at least accessed the dashboard page.
+Postconditions:
+The system displays a list of orders belonging to the Customer.
+Each order is shown with basic information such as:
+Order ID
+Order date
+Total amount
+Current order status
+No system data is modified.
+Normal Flow:
+Customer clicks the “Order History” menu item on the dashboard UI.
+System receives the request and verifies the Customer’s authentication session.
+System retrieves all orders associated with the Customer’s account from the database.
+The System filters orders to ensure that only orders belonging to the Customer are retrieved.
+The System sorts the order list by order creation date in descending order (newest first).
+System displays the order history list on the Order History screen.
+Customer views the displayed order history.
+Alternative Flows:
+Customer has no order history:
+System determines that no orders exist for the Customer account.
+System displays an informational message: “You have not placed any orders yet.”
+System displays an empty Order History screen.
+Exceptions:
+ User session expired:
+System detects that the Customer’s authentication session is invalid or expired.
+System redirects the Customer to the Login screen.
+System displays an error message: “Your session has expired. Please log in again.”
+Database retrieval failure:
+System fails to retrieve order data due to a database or connection error.
+System logs the error for technical investigation.
+System displays an error message: “Unable to load order history at this time. Please try again later.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4
+Other Information:
+This use case assumes that each order is assigned a unique Order ID immediately after being created by the Customer, even before confirmation by Admin. The system is required to display only the orders belonging to the authenticated Customer and retrieve the data within acceptable performance limits (response time ≤ 3 seconds under normal conditions). From a non-functional perspective, the system must ensure data confidentiality and prevent unauthorized access to other customers’ order information. This use case is fully traceable to the corresponding sequence diagram, UI flow from Customer Dashboard to Order History screen, and related test cases for validation and verification purposes.
+
+b. Business Rules
+BR1
+Order ownership
+A Customer can only view orders created by their own account.
+BR2
+Order Visibility
+Orders are visible once an Order ID has been generated, regardless of confirmation status.
+BR3
+Access control
+Only authenticated Customers are authorized to access Order History.
+BR4
+
+Data integrity
+Order data displayed must reflect the latest status stored in the system database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+1.06 UC-06_ View Order Detail
+Functional Description
+ID and Name:
+UC-06  View Order Detail
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows a Customer to view the detailed information of a specific order that they have previously placed. The displayed details include order identification, order status, total amount, ordered products with size, quantity, unit price, and the delivery address. The use case supports order tracking and order verification for customers.
+Trigger:
+The Customer clicks on a specific Order ID or the “View Details” button on the Order History screen.
+Preconditions:
+The Customer has successfully logged into the system.
+The Customer has access to the Order History screen.
+The selected Order ID exists in the system.
+The selected order belongs to the authenticated Customer.
+The system database is available.
+Postconditions:
+The system displays complete and accurate order detail information
+No order data is modified during viewing
+The Customer remains authenticated
+If the order is eligible for cancellation, the Cancel button is displayed 
+Normal Flow:
+Customer clicks on “View Details” button on the Order History screen.
+System receives the request and validates the Customer’s authentication session.
+System verifies that the selected Order ID belongs to the authenticated Customer.
+System retrieves detailed order information from the database, including order summary, product list, pricing, and delivery address.
+System calculates and formats the total order amount for display purposes.
+System displays the Order Detail screen with full information of the selected order.
+Customer views the order details.
+Alternative Flows:
+Order contains multiple products
+   System retrieves all products associated with the Order ID
+   System displays each product with:
+Name
+Size
+Quantity
+Unit Price
+Order is not in Pending status
+   System disables or hides the Cancel button
+   Customer can only view the order details
+Exceptions:
+Invalid or expired session:
+System detects that the Customer’s session is invalid or expired.
+System redirects the Customer to the Login screen.
+System displays an error message: “Your session has expired. Please log in again.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4
+Other Information:
+This use case assumes that each order has a unique Order ID and accessible detail data, must display complete and accurate order information within acceptable performance limits, enforce strict customer-level access control, and is fully traceable to its corresponding sequence diagram, UI flow, and test cases for validation.
+
+b. Business Rules
+BR1
+Order ownership validation
+A Customer can only view order details of orders created by their own account.
+BR2
+Order data integrity
+Order details must reflect the latest status and pricing stored in the database.
+BR3
+Access control
+Only authenticated Customers are permitted to access order detail information.
+BR4
+
+Price calculation
+Total order amount is calculated as the sum of all product subtotals and applicable fees.
+
+
+
+
+   
+
+1.07 UC-07_ Track Order Status
+Functional Description
+ID and Name:
+UC-07  Track order status
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows a Customer to track the current status of an order they have placed.
+The system provides real-time status information to help Customers understand the progress of their order. The possible order statuses include:
+Pending (waiting for confirmation)
+Confirmed (approved by Admin/Staff)
+Cancelled (order has been cancelled)
+The status is displayed clearly on the user interface, along with a corresponding message to improve transparency and user experience.
+Trigger:
+The Customer clicks the “Track Status” option or status label associated with a specific Order ID on the Order History or Order Detail screen.
+Preconditions:
+The Customer has successfully logged into the system.
+The Customer has access to Order History or Order Detail screen.
+The selected Order ID exists in the system.
+The selected order belongs to the authenticated Customer.
+The system database is available.
+Postconditions:
+The system displays the latest and accurate status of the selected order
+No order data is modified
+The Customer remains authenticated 
+Normal Flow:
+Customer selects “Track Status” for a specific order
+System validates the Customer’s authentication session
+System verifies that the selected Order ID belongs to the Customer
+System retrieves the latest order status from the database
+System determines the current status value
+System displays the order status clearly on the UI:
+Pending → “Waiting for confirmation”
+Confirmed → “Order confirmed”
+Cancelled → “Order cancelled”
+Customer views the order status
+Alternative Flows:
+Order is Pending
+System displays status: Pending
+Message: “Your order is waiting for confirmation.”
+Order is Confirmed
+System displays status: Confirmed
+Message: “Your order has been confirmed.” 
+Order is Cancelled
+System displays status: Cancelled
+Message: “This order has been cancelled.”
+Exceptions:
+  Invalid or expired session:
+System detects invalid/expired session
+Redirects to Login screen
+Displays message: “Your session has expired. Please log in again.”
+Unauthorized order access:
+System detects order does not belong to Customer
+Denies access
+Displays message: “You are not authorized to view this order.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4
+Other Information:
+Each order has a unique Order ID
+The displayed status must always reflect the latest value stored in the database
+Only authorized Customers can track order status
+Order status is shared with UC-06 (View Order Detail) to ensure consistency
+This use case is traceable to sequence diagrams, UI flows, and test cases
+
+b. Business Rules
+BR1
+Order ownership
+A Customer can only track the status of their own orders.
+BR2
+Status definition
+Order status must be one of the following: Pending, Confirmed, Cancelled
+BR3
+Role responsibility
+Only Admin or Staff is authorized to confirm orders.
+BR4
+
+Status consistency
+The displayed order status must always reflect the latest value stored in the database.
+
+
+
+
+
+
+
+
+
+
+1.08 UC-08_ Cancel Order Request
+Functional Description
+ID and Name:
+UC-08  Cancel Order Request
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows a Customer to cancel an order that they have previously placed, provided that the order is still in Pending status.
+The system ensures that only eligible orders can be cancelled and prevents any modification once the order has been confirmed or cancelled.
+After cancellation:
+The order status is updated to Cancelled
+The order becomes immutable (cannot be confirmed or modified)
+The cancellation action is recorded for auditing purposes
+Trigger:
+The Customer clicks the “Cancel Order” button associated with a specific Order ID on the Order History or Order Detail screen.
+Preconditions:
+The Customer has successfully logged into the system
+The selected Order ID exists in the system
+The selected order belongs to the authenticated Customer
+The order status is Pending
+The system database is available
+Postconditions:
+The order status is updated to Cancelled
+The cancelled order cannot be confirmed or modified afterward
+The system records the cancellation action for auditing purposes
+The Customer remains authenticated 
+Normal Flow:
+Customer clicks the “Cancel Order” button
+System displays a confirmation dialog: “Are you sure you want to cancel this order?”
+Customer confirms the cancellation
+System validates the Customer’s authentication session
+System verifies that the order belongs to the Customer
+System checks that the order status is Pending
+System updates the order status to Cancelled in the database
+System records the cancellation action (for audit/logging)
+System displays a success message: “Your order has been successfully cancelled.”
+Customer views the updated order status 
+Alternative Flows:
+ Customer cancels confirmation dialog
+Customer selects “Cancel” in the confirmation dialog
+System aborts the cancellation process
+Order remains unchanged
+Customer navigates back
+Customer clicks “Back” after viewing result
+System redirects to Order History screen
+Exceptions:
+Invalid or expired session
+System detects invalid/expired session
+Redirects to Login
+Displays: “Your session has expired. Please log in again.”
+Unauthorized access
+Order does not belong to Customer
+System denies request
+Displays: “You are not authorized to cancel this order.”
+Order already confirmed or cancelled
+System detects status is not Pending
+Rejects cancellation
+Displays: “This order cannot be cancelled.”
+System or database error
+System fails to update order
+Logs error for investigation
+Displays: “Unable to cancel the order at this time. Please try again later.”
+
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4
+Other Information:
+Only orders in Pending status are cancellable
+Status updates must be performed immediately and atomically
+Cancelled orders cannot be confirmed or modified
+The use case is fully traceable to sequence diagrams, UI flows, and test cases.
+
+b. Business Rules
+BR1
+Order ownership
+A Customer can only cancel orders created by their own account.
+BR2
+Cancellation condition
+Only orders with status Pending Confirmation can be cancelled.
+BR3
+Order Immutability
+Once an order is cancelled, it cannot be modified or confirmed by any role.
+BR4
+
+Status consistency
+ Order status updates must be performed atomically and must always reflect the latest value in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.09 UC-09_ Forgot Password
+Functional Description
+ID and Name:
+UC-09 Forgot Password
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows a Customer to reset their password using an OTP (One-Time Password) verification mechanism when they forget their password.
+The system sends an OTP to the Customer’s registered email address. The Customer must enter the correct OTP along with a new password to complete the reset process.
+The system enforces security measures such as:
+OTP expiration time
+Resend OTP limitation
+Password validation rules 
+Trigger:
+The actor clicks the “Forgot Password” link on the Login page.
+Preconditions:
+The Customer is not logged into the system
+The Customer has a registered account with a valid email address
+The system database and email service are available
+Postconditions:
+The Customer’s password is successfully updated
+All previous active sessions are invalidated
+The Customer is redirected to the Login page
+The Customer receives confirmation of successful password reset
+Normal Flow:
+Customer clicks “Forgot Password” on Login page
+System displays email input screen
+Customer enters registered email and clicks “Send OTP”
+System validates email format
+System verifies that email exists in the system
+System generates OTP and sends it to the email
+System starts OTP expiration timer (e.g., 5 minutes)
+System redirects to Reset Password screen
+Customer enters: OTP, New Password, Confirm Password
+Customer clicks “Reset Password”
+System validates:
+OTP correctness
+OTP not expired
+Password rules
+Password confirmation
+System updates password in database
+System invalidates all active sessions
+System displays success message
+System redirects to Login page
+Alternative Flows:
+Resend OTP
+    Customer clicks “Resend OTP”
+    System checks resend cooldown time
+    If allowed:
+Generate new OTP
+Send to email
+   If not allowed: Display message: “Please wait before requesting a new OTP.”
+Customer edits input
+Customer modifies OTP or password before submission
+System allows editing until submission 
+Exceptions:
+Invalid email format
+System displays: “Invalid email format.”
+Email not found
+System displays: “Email address not found.”
+Use case terminates
+Invalid OTP
+System displays: “Invalid OTP.”
+OTP expired
+System displays: “OTP has expired. Please request a new one.”
+Password mismatch
+System displays: “Passwords do not match.”
+Password policy violation
+System displays: “Password does not meet security requirements.”
+OTP resend limit exceeded
+System blocks request temporarily
+Displays: “Too many requests. Please try again later.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4,BR5,BR6 
+Other Information:
+OTP is valid for 5 minutes
+OTP resend must follow cooldown to prevent spam
+Password must be securely stored (hashed)
+The system must ensure secure email delivery
+This use case is traceable to UI flows, sequence diagrams, and test cases 
+
+b. Business Rules
+BR1
+Password Policy
+Password must be at least 8-12 characters and include uppercase, lowercase, number, and special character.
+BR2
+Password Confirmation
+New Password and Confirm Password must match exactly.
+BR3
+Account Scope
+Forgot Password applies only to Customer accounts.
+BR4
+
+OTP Validity
+Each OTP is valid for 5 minutes and can only be used once.
+BR5
+Session Security
+All active sessions must be invalidated after password reset.
+BR6
+OTP Resend Control
+The system must enforce a cooldown time between OTP resend requests to prevent abuse.
+
+
+
+
+
+
+
+
+
+1.10 UC-10_ Edit Profile
+Functional Description
+ID and Name:
+UC-10 Edit Profile
+Created By:
+Lâm Trí Thông
+Date Created:
+20/01/26
+Primary Actor:
+Customer
+Secondary Actors:
+None
+Description:
+This use case allows a Customer to update their personal profile information.
+The Customer can modify the following fields:
+Full name
+Phone number
+Date of birth
+Gender
+Address (city, ward, street, house number)
+The email address is displayed but cannot be modified as it is linked to the account created during registration.
+The system validates all input data to ensure correctness and consistency before updating the profile.
+Trigger:
+The Customer clicks the “Edit Profile” button on the Profile page.
+Preconditions:
+The Customer has successfully logged into the system
+The Customer profile exists in the system
+The system database is available 
+Postconditions:
+The Customer’s profile information is updated successfully
+The system stores validated data in the database
+The Customer remains authenticated
+Updated information is reflected immediately on the Profile screen
+Normal Flow:
+Customer accesses the Profile page
+Customer clicks “Edit Profile”
+System displays the Edit Profile form with current user information:
+Name
+Phone number
+Email (read-only)
+Date of birth
+Gender
+Address
+Customer updates desired fields
+Customer clicks “Save Changes”
+System validates input data:
+Name is not empty
+Phone number is valid format
+Date of birth is within valid range
+Address fields are not empty
+System updates the profile information in the database
+System displays success message: “Profile updated successfully.”
+Customer views updated profile
+Alternative Flows:
+Customer selects City from dropdown
+System loads corresponding Wards based on selected City
+Customer selects Ward
+Customer enters street and house number 
+Customer edits data multiple times
+Customer modifies fields before submission
+System allows editing until “Save Changes” is clicked
+Exceptions:
+Empty required fields
+System detects empty Name / Phone / Address
+Displays: “Required fields cannot be empty.”
+Invalid phone number
+System detects invalid phone format
+Displays: “Invalid phone number format.”
+Invalid date of birth
+   System detects:
+Year < 1950
+Year > current year
+   Displays: “Invalid date of birth.”
+System error
+System fails to update data
+Displays: “Unable to update profile. Please try again later.”
+Priority:
+Medium
+Business Rules:
+BR1, BR2, BR3, BR4,BR5 
+Other Information:
+Email is displayed but cannot be edited
+Gender must be selected from predefined values (Male, Female, Other)
+City and Ward must be selected from dropdown lists
+Ward options depend on selected City
+Street and house number must not be empty
+Avatar/image cannot be modified in this use case
+This use case is traceable to UI flows, sequence diagrams, and test cases 
+
+b. Business Rules
+BR1
+Required Fields
+Name, phone number, and address must not be empty.
+BR2
+Phone Validation
+Phone number must follow a valid format (e.g., 10 digits, numeric only).
+BR3
+Date of Birth Validation
+Year must be between 1950 and current year
+Future dates are not allowed
+BR4
+
+OTP Validity
+Each OTP is valid for 5 minutes and can only be used once.
+BR5
+Email Immutability
+Email address cannot be modified after account registration.
+BR6
+ Address Dependency
+Ward selection must depend on the selected City.
+
