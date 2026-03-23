@@ -157,6 +157,42 @@
                 transform: translate(-50%, -50%) scale(0.8);
             }
         }
+
+        /* Out of Stock Overlay */
+        .out-of-stock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .out-of-stock-overlay span {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 10px 25px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            transform: rotate(-15deg);
+            border: 2px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+
+        .product-card.out-of-stock {
+            opacity: 0.8;
+        }
+
+        .product-card.out-of-stock .product-img {
+            filter: grayscale(80%);
+        }
     </style>
 </head>
 <body>
@@ -400,7 +436,11 @@
                 </div>
 
                 <div class="product-grid" id="productGrid" th:if="${products != null and !#lists.isEmpty(products)}">
-                    <div th:each="product : ${products}" class="product-card">
+                    <div th:each="product : ${products}" class="product-card" th:classappend="${product.isOutOfStock()} ? 'out-of-stock' : ''">
+                        <!-- Out of Stock Overlay -->
+                        <div th:if="${product.isOutOfStock()}" class="out-of-stock-overlay">
+                            <span>HẾT HÀNG</span>
+                        </div>
                         <a th:href="@{/products/detail/{id}(id=${product.productId})}" class="product-image-link">
                             <div class="product-image-placeholder">
                                 <img th:if="${product.variants != null and !product.variants.empty}" 

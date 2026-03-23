@@ -106,4 +106,29 @@ public class Product {
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
+
+    public boolean isOutOfStock() {
+        if (variants == null || variants.isEmpty()) {
+            return true;
+        }
+        for (ProductVariant variant : variants) {
+            if (variant.getStock() != null && variant.getStock() > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int getTotalStock() {
+        if (variants == null || variants.isEmpty()) {
+            return 0;
+        }
+        int total = 0;
+        for (ProductVariant variant : variants) {
+            if (variant.getStock() != null) {
+                total += variant.getStock();
+            }
+        }
+        return total;
+    }
 }
