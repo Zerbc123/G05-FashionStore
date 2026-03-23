@@ -35,15 +35,16 @@ public class CartService {
     // Thêm sản phẩm vào giỏ hàng
     @Transactional
     public void addToCart(Customer customer, Integer variantId, int quantity) {
+        if (quantity <= 0) {
+            throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0!");
+        }
         try {
-            // Tìm ProductVariant từ ID
-            ProductVariant productVariant = productVariantRepository.findById(variantId)
-                    .orElseThrow(() -> new RuntimeException("Product variant not found with id: " + variantId));
+        // Tìm ProductVariant từ ID
+        ProductVariant productVariant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể sản phẩm!"));
 
         // Kiểm tra stock trước khi thêm vào giỏ
-        if (productVariant.getStock() < quantity) {
-            throw new RuntimeException("Sản phẩm chỉ còn " + productVariant.getStock() + " sản phẩm. Bạn không thể thêm " + quantity + " sản phẩm vào giỏ hàng.");
-        }
+        validateStock(productVariant, quantity);
 
         // Kiểm tra xem sản phẩm này đã có trong giỏ hàng của khách chưa
         Optional<CartItem> existingCartItem = cartRepository.findByCustomerAndProductVariant(customer, productVariant);
@@ -137,5 +138,18 @@ public class CartService {
     // Lấy cart item theo ID
     public CartItem getCartItemById(Integer cartItemId) {
         return cartRepository.findById(cartItemId).orElse(null);
+    }
+
+    // Kiểm tra tồn kho
+    public void validateStock(Integer variantId, int quantity) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể sản phẩm!"));
+        validateStock(variant, quantity);
+    }
+
+    private void validateStock(ProductVariant variant, int quantity) {
+        if (variant.getStock() < quantity) {
+            throw new RuntimeException("Sản phẩm chỉ còn " + variant.getStock() + " sản phẩm. Bạn không thể mua " + quantity + " sản phẩm.");
+        }
     }
 }

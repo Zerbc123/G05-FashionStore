@@ -198,7 +198,6 @@ public class OrderController {
             @RequestParam(value = "note", required = false) String note,
             @RequestParam(value = "deliveryMethod", required = false) String deliveryMethod,
             @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
-            @RequestParam(value = "totalAmount", defaultValue = "0") Double totalAmount,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -291,15 +290,27 @@ public class OrderController {
         }
 
         try {
+            // Tính toán lại giá tiền trên SERVER để bảo mật (tránh hack giá từ frontend)
+            List<CartItem> cartItemsForCalculation = orderService.getCartItemsForValidation(session, currentCustomer);
+            double serverSubtotal = orderService.calculateCartTotal(cartItemsForCalculation);
+            double serverDiscount = 0.0;
+            Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
+            if (appliedVoucher != null) {
+                if (appliedVoucher.getMinOrderValue() == null || serverSubtotal >= appliedVoucher.getMinOrderValue()) {
+                    serverDiscount = appliedVoucher.getDiscountValue();
+                }
+            }
+            double serverFinalTotal = Math.max(0, serverSubtotal - serverDiscount);
+
             if ("MOMO".equals(paymentMethod)) {
                 session.setAttribute("momo_deliveryAddress", deliveryAddress);
-                session.setAttribute("momo_totalAmount", totalAmount);
+                session.setAttribute("momo_totalAmount", serverFinalTotal);
 
                 String orderIdStr = "ORD-" + System.currentTimeMillis();
                 String orderInfo = "Thanh toan don hang " + fullName;
                 String requestId = vn.edu.fpt.fashionstore.util.MomoUtils.generateRequestId();
 
-                Map<String, Object> response = momoService.createPaymentRequest(orderIdStr, totalAmount, orderInfo, requestId);
+                Map<String, Object> response = momoService.createPaymentRequest(orderIdStr, serverFinalTotal, orderInfo, requestId);
 
                 if (response != null && response.containsKey("payUrl")) {
                     String payUrl = (String) response.get("payUrl");
@@ -312,11 +323,10 @@ public class OrderController {
 
             // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
             Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
-            order.setTotalAmount(totalAmount);
+            order.setTotalAmount(serverFinalTotal);
             order.setPaymentMethod(paymentMethod != null && !paymentMethod.trim().isEmpty() ? paymentMethod : "COD");
             order.setPaymentStatus("COD".equals(order.getPaymentMethod()) ? "UNPAID" : "PAID");
 
-            Voucher appliedVoucher = (Voucher) session.getAttribute("appliedVoucher");
             if (appliedVoucher != null) {
                 order.setVoucher(appliedVoucher);
             }

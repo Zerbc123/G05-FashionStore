@@ -78,8 +78,20 @@ public class CartController {
             List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
             double total = cartService.getCartTotal(cartItems);
 
+            // Kiểm tra xem có sản phẩm nào vượt quá tồn kho không
+            boolean hasOutOfStock = false;
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    if (item.getQuantity() > item.getProductVariant().getStock()) {
+                        hasOutOfStock = true;
+                        break;
+                    }
+                }
+            }
+
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", total);
+            model.addAttribute("hasOutOfStock", hasOutOfStock);
             
             // Cập nhật số lượng giỏ hàng vào session
             session.setAttribute("cartCount", cartItems != null ? cartItems.size() : 0);
@@ -91,7 +103,6 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    @Transactional
     public String addToCart(@RequestParam("productId") Long productId,
                             @RequestParam("sizeId") Integer sizeId,
                             @RequestParam("colorId") Integer colorId,
@@ -120,15 +131,13 @@ public class CartController {
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng!");
         } catch (RuntimeException e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            return "redirect:/login";
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/products/detail/" + productId;
         }
         return "redirect:/cart";
     }
 
     @PostMapping("/buy-now")
-    @Transactional
     public String buyNow(@RequestParam("productId") Long productId,
                          @RequestParam("sizeId") Integer sizeId,
                          @RequestParam("colorId") Integer colorId,
@@ -145,10 +154,12 @@ public class CartController {
             
 
             if (variantId == null) {
-
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
                 return "redirect:/products/detail/" + productId;
             }
+            
+            // Kiểm tra tồn kho trước khi Mua ngay
+            cartService.validateStock(variantId, quantity);
             
             // Tạo giỏ hàng tạm thời chỉ chứa sản phẩm được chọn
             session.setAttribute("buyNowItems", List.of(
@@ -160,9 +171,8 @@ public class CartController {
             return "redirect:/order/checkout";
             
         } catch (RuntimeException e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            return "redirect:/login";
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/products/detail/" + productId;
         }
     }
 
