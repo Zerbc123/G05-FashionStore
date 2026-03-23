@@ -63,8 +63,7 @@ public class StaffController {
         return "Admin".equalsIgnoreCase(role)
                 || role.contains("Nhân viên bán hàng (Sale)")
                 || role.contains("Quản lý kho (Stock)")
-                || role.contains("Hỗ trợ khách hàng (Support)")
-                || role.contains("Quản lý cửa hàng (Manager)");
+                || role.contains("Hỗ trợ khách hàng (Support)");
     }
 
     private boolean isSupport(HttpSession session) {
@@ -190,7 +189,8 @@ public class StaffController {
             @RequestParam(defaultValue = "10") int size,
             HttpSession session, Model model) {
         if (!RoleUtils.canViewInventory(session)) {
-            return "redirect:/login";
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("inventory"));
+            return "staff/access_denied";
         }
 
         // Check if user can manage inventory (Admin, Stock)
@@ -250,9 +250,10 @@ public class StaffController {
                 "Filter inventory called with params: page={}, size={}, search='{}', category='{}', stockStatus='{}'",
                 page, size, search, category, stockStatus);
 
-        if (!isStaff(session)) {
-            logger.warn("User not authenticated as staff, redirecting to login");
-            return "redirect:/login";
+        if (!RoleUtils.canViewInventory(session)) {
+            logger.warn("User not authorized to view inventory, returning access denied");
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("inventory"));
+            return "staff/access_denied";
         }
 
         Pageable pageable = PageRequest.of(page, size);

@@ -43,8 +43,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         else if (
                 authentication.getAuthorities().contains(new SimpleGrantedAuthority("Nhân viên bán hàng (Sale)")) ||
                         authentication.getAuthorities().contains(new SimpleGrantedAuthority("Quản lý kho (Stock)")) ||
-                        authentication.getAuthorities().contains(new SimpleGrantedAuthority("Hỗ trợ khách hàng (Support)")) ||
-                        authentication.getAuthorities().contains(new SimpleGrantedAuthority("Quản lý cửa hàng (Manager)"))
+                        authentication.getAuthorities().contains(new SimpleGrantedAuthority("Hỗ trợ khách hàng (Support)"))
         ) {
             response.sendRedirect("/fashionstore/staff");
         }

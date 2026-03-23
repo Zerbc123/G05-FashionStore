@@ -16,12 +16,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Ensure required roles exist
         String[] requiredRoles = {
             "Nhân viên bán hàng (Sale)",
             "Quản lý kho (Stock)",
-            "Hỗ trợ khách hàng (Support)",
-            "Quản lý cửa hàng (Manager)"
+            "Hỗ trợ khách hàng (Support)"
         };
 
         for (String roleName : requiredRoles) {

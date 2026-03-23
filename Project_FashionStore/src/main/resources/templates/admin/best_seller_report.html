@@ -327,5 +327,57 @@ function createCharts() {
     console.log('Best Seller Report charts created successfully');
 }
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+        
+        if (startDateInput && endDateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Set max attribute to today to disable future dates in the date picker
+            startDateInput.setAttribute('max', today);
+            endDateInput.setAttribute('max', today);
+            
+            const form = startDateInput.closest("form");
+            if (form) {
+                form.addEventListener("submit", function (e) {
+                    const startVal = startDateInput.value;
+                    const endVal = endDateInput.value;
+                    
+                    if (startVal > today || endVal > today) {
+                        e.preventDefault();
+                        alert("Dates cannot be in the future!");
+                        return;
+                    }
+                    
+                    if (startVal && endVal && startVal > endVal) {
+                        e.preventDefault();
+                        alert("Start date cannot be greater than end date!");
+                        return;
+                    }
+                });
+            }
+            
+            // Dynamically update min/max attributes for better UX
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.setAttribute('min', this.value);
+                } else {
+                    endDateInput.removeAttribute('min');
+                }
+            });
+            
+            endDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    startDateInput.setAttribute('max', this.value > today ? today : this.value);
+                } else {
+                    startDateInput.setAttribute('max', today);
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

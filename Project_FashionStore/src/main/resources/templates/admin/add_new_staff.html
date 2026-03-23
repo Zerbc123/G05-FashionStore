@@ -174,7 +174,7 @@
                     <label for="username">Username</label>
                     <input type="text" id="username" class="form-input" 
                            th:classappend="${#fields.hasErrors('username')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
-                           placeholder="Nhập tên đăng nhập" th:field="*{username}" autocomplete="new-password" required>
+                           placeholder="Nhập tên đăng nhập" th:field="*{username}" autocomplete="off" required>
                     <div th:if="${#fields.hasErrors('username')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-times-circle"></i>
                         <span th:errors="*{username}">Error</span>
@@ -201,7 +201,7 @@
                     <label for="email">Email Address</label>
                     <input type="email" id="email" class="form-input" 
                            th:classappend="${#fields.hasErrors('email')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
-                           placeholder="example@fashionstore.com" th:field="*{email}" required>
+                           placeholder="example@fashionstore.com" th:field="*{email}" autocomplete="off" required>
                     <div th:if="${#fields.hasErrors('email')}" class="mt-2 text-red-600 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-times-circle"></i>
                         <span th:errors="*{email}">Error</span>
@@ -226,7 +226,7 @@
                     <div class="relative">
                         <input type="password" id="password" class="form-input pr-12" 
                                th:classappend="${#fields.hasErrors('password')} ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" 
-                               placeholder="Thiết lập mật khẩu ban đầu" th:field="*{password}" required>
+                               placeholder="Thiết lập mật khẩu ban đầu" th:field="*{password}" autocomplete="new-password" required>
                         <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition">
                             <i id="passwordToggle" class="fa-solid fa-eye"></i>
                         </button>

@@ -574,10 +574,9 @@ public class OrderController {
 
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
-            boolean isManager = "Quản lý cửa hàng (Manager)".equals(userRole);
 
             model.addAttribute("isAdmin", isAdmin);
-            model.addAttribute("isManager", isManager);
+            model.addAttribute("isManager", false);
 
             return "order-details";
 
@@ -603,8 +602,8 @@ public class OrderController {
         try {
             String userRole = (String) session.getAttribute("userRole");
 
-            // Chỉ Admin và Staff Quản lý đơn mới được thao tác
-            if (!"Admin".equals(userRole) && !"Quản lý cửa hàng (Manager)".equals(userRole)) {
+            // Chỉ Admin mới được thao tác
+            if (!"Admin".equals(userRole)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thao tác chức năng này!");
                 return "redirect:/order/details/" + orderId;
             }

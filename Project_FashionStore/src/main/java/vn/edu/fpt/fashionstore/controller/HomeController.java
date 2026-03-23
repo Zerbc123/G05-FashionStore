@@ -275,8 +275,7 @@ public class HomeController {
 
             if ("Nhân viên bán hàng (Sale)".equalsIgnoreCase(roleName) ||
                 "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
-                "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName) ||
-                "Quản lý cửa hàng (Manager)".equalsIgnoreCase(roleName)) {
+                "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName)) {
                 return "redirect:/staff";
             }
 

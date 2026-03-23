@@ -38,7 +38,6 @@ public class StaffSupportController {
                 (role.contains("Nhân viên bán hàng (Sale)")
                         || role.contains("Quản lý kho (Stock)")
                         || role.contains("Hỗ trợ khách hàng (Support)")
-                        || role.contains("Quản lý cửa hàng (Manager)")
                         || role.equalsIgnoreCase("Admin"));
     }
 
@@ -79,8 +78,9 @@ public class StaffSupportController {
     public String staffSupportPage(
             @RequestParam(value = "status", required = false) String status,
             HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!vn.edu.fpt.fashionstore.util.RoleUtils.canManageSupport(session)) {
+            model.addAttribute("error", vn.edu.fpt.fashionstore.util.RoleUtils.getAccessDeniedMessage("support"));
+            return "staff/access_denied";
         }
 
         // Lấy danh sách support requests của staff hiện tại
@@ -134,8 +134,9 @@ public class StaffSupportController {
             HttpSession session,
             Model model) {
         
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!vn.edu.fpt.fashionstore.util.RoleUtils.canManageSupport(session)) {
+            model.addAttribute("error", vn.edu.fpt.fashionstore.util.RoleUtils.getAccessDeniedMessage("support"));
+            return "staff/access_denied";
         }
 
         Pageable pageable = PageRequest.of(0, 50);
@@ -165,8 +166,9 @@ public class StaffSupportController {
 
     @GetMapping("/view/{id}")
     public String viewSupportRequest(@PathVariable Long id, HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!vn.edu.fpt.fashionstore.util.RoleUtils.canManageSupport(session)) {
+            model.addAttribute("error", vn.edu.fpt.fashionstore.util.RoleUtils.getAccessDeniedMessage("support"));
+            return "staff/access_denied";
         }
 
         SupportRequest supportRequest = supportRequestService.findById(id);
@@ -198,12 +200,12 @@ public class StaffSupportController {
             @PathVariable Long id,
             @RequestParam SupportStatus status,
             HttpSession session,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        String role = (String) session.getAttribute("userRole");
-
-        if(role == null || !role.contains("Hỗ trợ khách hàng (Support)")){
-            return "redirect:/staff/access-denied";
+        if (!vn.edu.fpt.fashionstore.util.RoleUtils.canManageSupport(session)) {
+            model.addAttribute("error", vn.edu.fpt.fashionstore.util.RoleUtils.getAccessDeniedMessage("support"));
+            return "staff/access_denied";
         }
 
         try {
@@ -233,12 +235,12 @@ public class StaffSupportController {
             @PathVariable Long id,
             @RequestParam String messageContent,
             HttpSession session,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        String role = (String) session.getAttribute("userRole");
-
-        if(role == null || !role.contains("Hỗ trợ khách hàng (Support)")){
-            return "redirect:/staff/access-denied";
+        if (!vn.edu.fpt.fashionstore.util.RoleUtils.canManageSupport(session)) {
+            model.addAttribute("error", vn.edu.fpt.fashionstore.util.RoleUtils.getAccessDeniedMessage("support"));
+            return "staff/access_denied";
         }
 
         try {

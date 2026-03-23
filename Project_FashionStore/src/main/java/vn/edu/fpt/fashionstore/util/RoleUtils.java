@@ -13,7 +13,6 @@ public class RoleUtils {
     public static final String ROLE_SALE = "Nhân viên bán hàng (Sale)";
     public static final String ROLE_STOCK = "Quản lý kho (Stock)";
     public static final String ROLE_SUPPORT = "Hỗ trợ khách hàng (Support)";
-    public static final String ROLE_MANAGER = "Quản lý cửa hàng (Manager)";
     
     /**
      * Get current user role from session
@@ -59,13 +58,6 @@ public class RoleUtils {
     }
     
     /**
-     * Check if current user is Manager
-     */
-    public static boolean isManager(HttpSession session) {
-        return hasRole(session, ROLE_MANAGER);
-    }
-    
-    /**
      * Check if current user can access inventory management
      */
     public static boolean canManageInventory(HttpSession session) {
@@ -76,15 +68,14 @@ public class RoleUtils {
      * Check if current user can view inventory (read-only)
      */
     public static boolean canViewInventory(HttpSession session) {
-        return isAdmin(session) || isStock(session) || isSupport(session) || 
-               isSale(session) || isManager(session);
+        return isAdmin(session) || isStock(session);
     }
     
     /**
      * Check if current user can manage orders
      */
     public static boolean canManageOrders(HttpSession session) {
-        return isAdmin(session) || isSale(session) || isManager(session);
+        return isAdmin(session) || isSale(session);
     }
     
     /**
@@ -92,28 +83,28 @@ public class RoleUtils {
      */
     public static boolean canViewOrders(HttpSession session) {
         return isAdmin(session) || isSale(session) || isSupport(session) || 
-               isStock(session) || isManager(session);
+               isStock(session);
     }
     
     /**
      * Check if current user can manage support
      */
     public static boolean canManageSupport(HttpSession session) {
-        return isAdmin(session) || isSupport(session) || isManager(session);
+        return isAdmin(session) || isSupport(session);
     }
     
     /**
-     * Check if current user can access dashboard (Admin, Manager, Support)
+     * Check if current user can access dashboard (Admin ONLY)
      */
     public static boolean canAccessDashboard(HttpSession session) {
-        return isAdmin(session) || isManager(session) || isSupport(session);
+        return isAdmin(session);
     }
     
     /**
-     * Check if current user can manage dashboard (Admin, Manager only)
+     * Check if current user can manage dashboard (Admin ONLY)
      */
     public static boolean canManageDashboard(HttpSession session) {
-        return isAdmin(session) || isManager(session);
+        return isAdmin(session);
     }
     
     /**
@@ -128,7 +119,7 @@ public class RoleUtils {
             case "support":
                 return "Bạn không có quyền quản lý hỗ trợ khách hàng. Chỉ Admin và Hỗ trợ khách hàng mới có thể thực hiện thao tác này.";
             case "dashboard":
-                return "Bạn không có quyền truy cập Dashboard. Chỉ Admin và Quản lý cửa hàng mới có thể truy cập.";
+                return "Bạn không có quyền truy cập Dashboard. Chỉ Admin mới có thể truy cập.";
             default:
                 return "Bạn không có quyền thực hiện thao tác này.";
         }
