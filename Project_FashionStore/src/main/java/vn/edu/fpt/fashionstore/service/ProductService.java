@@ -49,7 +49,11 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<Product> getAllProducts(Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
-            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            if (query.getResultType() == Long.class) {
+                query.distinct(true);
+            } else {
+                query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            }
             
             // Xử lý sắp xếp theo giá cho SQL Server khi dùng GROUP BY
             Sort sort = pageable.getSort();
@@ -60,7 +64,7 @@ public class ProductService {
                         if (order.getDirection().isAscending()) {
                             query.orderBy(cb.asc(cb.min(variants.get("price"))));
                         } else {
-                            query.orderBy(cb.desc(cb.max(variants.get("price"))));
+                            query.orderBy(cb.desc(cb.min(variants.get("price"))));
                         }
                     }
                 });
@@ -151,8 +155,13 @@ public class ProductService {
                                                  Double minPrice, Double maxPrice, Pageable pageable) {
         
         Specification<Product> spec = (root, query, cb) -> {
-            // Thay DISTINCT bằng GROUP BY để fix lỗi SQL Server
-            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            // Thay DISTINCT bằng GROUP BY để fix lỗi SQL Server cho câu lệnh SELECT
+            // Nhưng vẫn dùng DISTINCT cho câu lệnh COUNT để đếm đúng số lượng sản phẩm
+            if (query.getResultType() == Long.class) {
+                query.distinct(true);
+            } else {
+                query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            }
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Tìm theo tên sản phẩm
@@ -194,7 +203,7 @@ public class ProductService {
                         if (order.getDirection().isAscending()) {
                             query.orderBy(cb.asc(cb.min(finalVariants.get("price"))));
                         } else {
-                            query.orderBy(cb.desc(cb.max(finalVariants.get("price"))));
+                            query.orderBy(cb.desc(cb.min(finalVariants.get("price"))));
                         }
                     }
                 });
@@ -314,7 +323,11 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<Product> filterByCategoryName(String categoryName, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
-            query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            if (query.getResultType() == Long.class) {
+                query.distinct(true);
+            } else {
+                query.groupBy(root.get("productId"), root.get("productName"), root.get("description"), root.get("category"), root.get("accountId"));
+            }
             
             // Xử lý sắp xếp theo giá cho SQL Server khi dùng GROUP BY
             if (pageable.getSort() != null && pageable.getSort().isSorted()) {
@@ -324,7 +337,7 @@ public class ProductService {
                         if (order.getDirection().isAscending()) {
                             query.orderBy(cb.asc(cb.min(variants.get("price"))));
                         } else {
-                            query.orderBy(cb.desc(cb.max(variants.get("price"))));
+                            query.orderBy(cb.desc(cb.min(variants.get("price"))));
                         }
                     }
                 });
