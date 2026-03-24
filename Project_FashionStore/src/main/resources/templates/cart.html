@@ -614,7 +614,7 @@
                         <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
                     </div>
                     <a th:href="@{/order/checkout}" 
-                       class="btn btn-primary w-100" 
+                       class="btn btn-primary w-100 checkout-btn" 
                        th:classappend="${hasOutOfStock} ? 'disabled opacity-50' : ''"
                        style="background: var(--primary-color); border: none;">
                         <i class="bi bi-credit-card me-2"></i> Thanh Toán
@@ -631,5 +631,59 @@
 
 <!-- Bootstrap JS (required for responsive navigation) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', function(e) {
+                // Nếu nút đang bị disabled bởi class (do hết hàng) thì không làm gì thêm
+                if (this.classList.contains('disabled')) {
+                    return;
+                }
+
+                const quantityInputs = document.querySelectorAll('.quantity-input');
+                let hasInvalidQuantity = false;
+                
+                quantityInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    if (isNaN(quantity) || quantity < 1) {
+                        hasInvalidQuantity = true;
+                        input.style.borderColor = '#e74c3c';
+                        input.style.boxShadow = '0 0 0 0.25rem rgba(231, 76, 60, 0.25)';
+                        
+                        // Scroll đến phần tử lỗi
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        input.style.borderColor = '#eee';
+                        input.style.boxShadow = 'none';
+                    }
+                });
+
+                if (hasInvalidQuantity) {
+                    e.preventDefault();
+                    
+                    // Tạo một toast hoặc alert thông báo
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
+                    alertDiv.style.zIndex = '9999';
+                    alertDiv.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Số lượng sản phẩm không hợp lệ! Vui lòng kiểm tra lại (tối thiểu là 1).
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.body.appendChild(alertDiv);
+                    
+                    // Tự động xóa alert sau 5 giây
+                    setTimeout(() => {
+                        const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+                        if (alert) alert.close();
+                    }, 5000);
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

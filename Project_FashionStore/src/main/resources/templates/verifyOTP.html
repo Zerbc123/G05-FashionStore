@@ -72,8 +72,24 @@
         .btn-verify:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
         .alert { padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; }
         .alert-danger { background: #fee; color: #c33; border: 1px solid #fcc; }
+        .alert-success { background: #efe; color: #3c3; border: 1px solid #cfc; }
         .resend-link { text-align: center; margin-top: 25px; color: #666; font-size: 0.9rem; }
         .resend-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .btn-resend {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+        .btn-resend:disabled {
+            color: #999;
+            text-decoration: none;
+            cursor: not-allowed;
+        }
 
         @media (max-width: 768px) {
             .register-container { grid-template-columns: 1fr; }
@@ -110,6 +126,10 @@
             <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
         </div>
 
+        <div class="alert alert-success" th:if="${success}">
+            <i class="bi bi-check-circle"></i> <span th:text="${success}"></span>
+        </div>
+
         <form th:action="@{/verify-otp}" method="post">
             <div class="form-group">
                 <label for="otp"><i class="bi bi-shield-check"></i> One-Time Password</label>
@@ -130,7 +150,10 @@
         </form>
 
         <div class="resend-link">
-            Didn't receive the code? <a href="#" onclick="alert('Please go back to Register to get a new code!')">Try again</a>
+            Didn't receive the code? 
+            <form th:action="@{/resend-register-otp}" method="post" style="display: inline;" id="resendForm">
+                <button type="submit" class="btn-resend" id="resendBtn">Try again</button>
+            </form>
         </div>
 
         <div class="resend-link" style="margin-top: 10px;">
@@ -140,6 +163,41 @@
         </div>
     </div>
 </div>
+
+<script th:inline="javascript">
+    (function() {
+        const lastOtpTime = /*[[${lastOtpTime}]]*/ 0;
+        const otpCount    = /*[[${otpCount}]]*/ 1;
+        const waitSeconds = (otpCount === 1) ? 30 : otpCount * 60;
+
+        const resendBtn = document.getElementById('resendBtn');
+
+        function startCountdown() {
+            const elapsed = Math.floor((Date.now() - lastOtpTime) / 1000);
+            let remaining = Math.max(0, waitSeconds - elapsed);
+
+            if (remaining <= 0) return;
+
+            resendBtn.disabled = true;
+            const originalText = "Try again";
+
+            const timer = setInterval(function() {
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = originalText;
+                    return;
+                }
+                resendBtn.textContent = 'Try again (' + remaining + 's)';
+                remaining--;
+            }, 1000);
+
+            resendBtn.textContent = 'Try again (' + remaining + 's)';
+        }
+
+        if (lastOtpTime > 0) startCountdown();
+    })();
+</script>
 
 </body>
 </html>

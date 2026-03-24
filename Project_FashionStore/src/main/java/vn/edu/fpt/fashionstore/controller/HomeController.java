@@ -63,7 +63,8 @@ public class HomeController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public HomeController(AccountService accountService, ProductService productService, ProductRepository productRepository) {
+    public HomeController(AccountService accountService, ProductService productService,
+            ProductRepository productRepository) {
         this.accountService = accountService;
         this.productService = productService;
         this.productRepository = productRepository;
@@ -79,11 +80,13 @@ public class HomeController {
     public String homePage(Model model, @AuthenticationPrincipal OAuth2User principal, HttpSession session) {
 
         // 1. Tìm cái hàm @GetMapping("/home") của bạn, và dán 2 dòng này vào bên trong:
-        List<vn.edu.fpt.fashionstore.entity.Banner> banners = bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc();
+        List<vn.edu.fpt.fashionstore.entity.Banner> banners = bannerRepository
+                .findByIsActiveTrueOrderByDisplayOrderAsc();
         model.addAttribute("banners", banners);
 
         // 2. TẠO LOGIC LẤY 4 SẢN PHẨM BÁN CHẠY NHẤT
-        // PageRequest.of(0, 4) nghĩa là lấy trang đầu tiên (index 0), và chỉ lấy tối đa 4 phần tử
+        // PageRequest.of(0, 4) nghĩa là lấy trang đầu tiên (index 0), và chỉ lấy tối đa
+        // 4 phần tử
         Pageable topFour = PageRequest.of(0, 4);
         List<ProductRepository.ProductHomeInfo> bestSellingProducts = productRepository.findTopSellingProducts(topFour);
 
@@ -161,7 +164,8 @@ public class HomeController {
     @Transactional(readOnly = true)
     public String viewProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
-        if (email == null) return "redirect:/login";
+        if (email == null)
+            return "redirect:/login";
 
         Account acc = accountService.findByEmail(email).orElse(null);
 
@@ -174,7 +178,7 @@ public class HomeController {
                 cus = new Customer();
             }
             model.addAttribute("customer", cus);
-            
+
             // Lấy số lượng wishlist cho customer
             long wishlistCount = 0;
             if (cus.getCustomerId() != null) {
@@ -191,7 +195,8 @@ public class HomeController {
     @Transactional(readOnly = true)
     public String editProfilePage(HttpSession session, Model model) {
         String email = (String) session.getAttribute("user");
-        if (email == null) return "redirect:/login";
+        if (email == null)
+            return "redirect:/login";
 
         Optional<Account> accountOpt = accountService.findByEmail(email);
 
@@ -200,7 +205,8 @@ public class HomeController {
             model.addAttribute("account", acc);
 
             Customer customer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
-                    ? acc.getCustomers().get(0) : new Customer();
+                    ? acc.getCustomers().get(0)
+                    : new Customer();
             model.addAttribute("customer", customer);
         } else {
             return "redirect:/login?error=account_not_found";
@@ -215,30 +221,31 @@ public class HomeController {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
-        
+
         try {
             // Lấy customer hiện tại - dùng logic giống profile method
             String email = (String) session.getAttribute("user");
             Account acc = accountService.findByEmail(email).orElse(null);
-            
+
             Customer currentCustomer = null;
             if (acc != null) {
                 currentCustomer = (acc.getCustomers() != null && !acc.getCustomers().isEmpty())
-                        ? acc.getCustomers().get(0) : new Customer();
+                        ? acc.getCustomers().get(0)
+                        : new Customer();
             }
-            
+
             // Kiểm tra nếu customer không tồn tại
             if (currentCustomer == null) {
                 return "redirect:/login";
             }
-            
+
             // Lấy danh sách đơn hàng của customer
             List<Order> customerOrders = orderService.getOrdersByCustomer(currentCustomer);
-            
+
             // Thêm vào model
             model.addAttribute("orders", customerOrders);
             model.addAttribute("customerName", currentCustomer.getFullName());
-            
+
             return "viewhistory";
         } catch (Exception e) {
             return "redirect:/login";
@@ -248,13 +255,14 @@ public class HomeController {
     @PostMapping("/login")
     @Transactional(readOnly = true)
     public String handleLogin(@RequestParam String username,
-                              @RequestParam String password,
-                              HttpSession session,
-                              RedirectAttributes ra) {
+            @RequestParam String password,
+            HttpSession session,
+            RedirectAttributes ra) {
 
         // Validate password format for existing users login (as requested)
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số!");
+            ra.addFlashAttribute("error",
+                    "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số!");
             return "redirect:/login";
         }
 
@@ -274,8 +282,8 @@ public class HomeController {
             }
 
             if ("Nhân viên bán hàng (Sale)".equalsIgnoreCase(roleName) ||
-                "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
-                "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName)) {
+                    "Quản lý kho (Stock)".equalsIgnoreCase(roleName) ||
+                    "Hỗ trợ khách hàng (Support)".equalsIgnoreCase(roleName)) {
                 return "redirect:/staff";
             }
 
@@ -285,9 +293,11 @@ public class HomeController {
         // Check specific account status for better error messages
         String accountStatus = accountService.getAccountStatus(username);
         if ("INACTIVE".equalsIgnoreCase(accountStatus)) {
-            ra.addFlashAttribute("error", "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
+            ra.addFlashAttribute("error",
+                    "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
         } else if ("LOCKED".equalsIgnoreCase(accountStatus)) {
-            ra.addFlashAttribute("error", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
+            ra.addFlashAttribute("error",
+                    "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ!");
         } else {
             ra.addFlashAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
         }
@@ -309,13 +319,13 @@ public class HomeController {
 
     @PostMapping("/register")
     public String handleRegister(@RequestParam String firstName,
-                                 @RequestParam String lastName,
-                                 @RequestParam String email,
-                                 @RequestParam String phone,
-                                 @RequestParam String password,
-                                 @RequestParam String confirmPassword,
-                                 jakarta.servlet.http.HttpSession session,
-                                 RedirectAttributes ra) {
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam String phone,
+            @RequestParam String password,
+            @RequestParam String confirmPassword,
+            jakarta.servlet.http.HttpSession session,
+            RedirectAttributes ra) {
 
         // Luôn trả lại các giá trị đã nhập vào form nếu có lỗi (ngoại trừ mật khẩu)
         ra.addFlashAttribute("enteredFirstName", firstName);
@@ -329,7 +339,8 @@ public class HomeController {
         }
 
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(password)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error",
+                    "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/register";
         }
 
@@ -339,8 +350,27 @@ public class HomeController {
         }
 
         if (!PhoneUtils.isValid(phone)) {
-            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
+            ra.addFlashAttribute("error",
+                    "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
             return "redirect:/register";
+        }
+
+        // Kiểm tra chống spam OTP cho Đăng ký
+        Long lastOtpRequestTime = (Long) session.getAttribute("registerLastOtpTime");
+        Integer otpRequestCount = (Integer) session.getAttribute("registerOtpCount");
+
+        if (lastOtpRequestTime != null && otpRequestCount != null) {
+            long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
+
+            // Tính thời gian chờ: lần đầu 30s, các lần sau: số lần * 60s
+            long waitTimeSeconds = (otpRequestCount == 1) ? 30 : (long) otpRequestCount * 60;
+
+            if (timeSinceLastRequest < waitTimeSeconds * 1000) {
+                long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
+                ra.addFlashAttribute("error",
+                        "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP đăng ký!");
+                return "redirect:/register";
+            }
         }
 
         String otp = String.valueOf((int) ((Math.random() * 899999) + 100000));
@@ -352,6 +382,14 @@ public class HomeController {
         session.setAttribute("tempPass", password);
         session.setAttribute("otpCode", otp);
         session.setAttribute("otpTimestamp", System.currentTimeMillis());
+
+        // Cập nhật thông tin chống spam Đăng ký
+        session.setAttribute("registerLastOtpTime", System.currentTimeMillis());
+        if (otpRequestCount == null) {
+            session.setAttribute("registerOtpCount", 1);
+        } else {
+            session.setAttribute("registerOtpCount", otpRequestCount + 1);
+        }
 
         try {
             org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
@@ -378,10 +416,12 @@ public class HomeController {
             RedirectAttributes ra) {
 
         String email = (String) session.getAttribute("user");
-        if (email == null) return "redirect:/login";
+        if (email == null)
+            return "redirect:/login";
 
         if (!PhoneUtils.isValid(phone)) {
-            ra.addFlashAttribute("error", "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
+            ra.addFlashAttribute("error",
+                    "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0.");
             return "redirect:/edit-profile";
         }
 
@@ -443,6 +483,8 @@ public class HomeController {
                 session.removeAttribute("tempEmail");
                 session.removeAttribute("tempPhone");
                 session.removeAttribute("tempPass");
+                session.removeAttribute("registerLastOtpTime");
+                session.removeAttribute("registerOtpCount");
 
                 return "redirect:/home";
             } else {
@@ -456,10 +498,16 @@ public class HomeController {
     }
 
     @GetMapping("/verify-otp")
-    public String viewOtpPage(HttpSession session) {
+    public String viewOtpPage(HttpSession session, Model model) {
         if (session.getAttribute("otpCode") == null) {
             return "redirect:/register";
         }
+        
+        Long lastOtpTime = (Long) session.getAttribute("registerLastOtpTime");
+        Integer otpCount = (Integer) session.getAttribute("registerOtpCount");
+        model.addAttribute("lastOtpTime", lastOtpTime != null ? lastOtpTime : 0L);
+        model.addAttribute("otpCount", otpCount != null ? otpCount : 1);
+        
         return "verifyOTP";
     }
 
@@ -492,10 +540,10 @@ public class HomeController {
             // Kiểm tra chống spam OTP
             Long lastOtpRequestTime = (Long) session.getAttribute("lastOtpRequestTime");
             Integer otpRequestCount = (Integer) session.getAttribute("otpRequestCount");
-            
+
             if (lastOtpRequestTime != null && otpRequestCount != null) {
                 long timeSinceLastRequest = System.currentTimeMillis() - lastOtpRequestTime;
-                
+
                 // Tính thời gian chờ: 30s, 1p, 2p, 3p, 4p, 5p...
                 long waitTimeSeconds;
                 if (otpRequestCount == 1) {
@@ -503,10 +551,11 @@ public class HomeController {
                 } else {
                     waitTimeSeconds = otpRequestCount * 60; // Các lần sau: 1p, 2p, 3p...
                 }
-                
+
                 if (timeSinceLastRequest < waitTimeSeconds * 1000) {
                     long remainingSeconds = (waitTimeSeconds * 1000 - timeSinceLastRequest) / 1000;
-                    ra.addFlashAttribute("error", "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
+                    ra.addFlashAttribute("error",
+                            "Vui lòng đợi " + remainingSeconds + " giây nữa trước khi gửi lại OTP!");
                     return "redirect:/forgot-password";
                 }
             }
@@ -518,7 +567,7 @@ public class HomeController {
             session.setAttribute("resetEmail", email);
             session.setAttribute("resetOtpCode", otp);
             session.setAttribute("resetOtpTimestamp", System.currentTimeMillis());
-            
+
             // Cập nhật thông tin chống spam
             session.setAttribute("lastOtpRequestTime", System.currentTimeMillis());
             if (otpRequestCount == null) {
@@ -604,11 +653,11 @@ public class HomeController {
     }
 
     @PostMapping("/reset-password")
-    public String handleResetPassword(@RequestParam String otp, 
-                                     @RequestParam String newPassword, 
-                                     @RequestParam String confirmPassword,
-                                     HttpSession session, 
-                                     RedirectAttributes ra) {
+    public String handleResetPassword(@RequestParam String otp,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            HttpSession session,
+            RedirectAttributes ra) {
         String serverOtp = (String) session.getAttribute("resetOtpCode");
         Long otpTimestamp = (Long) session.getAttribute("resetOtpTimestamp");
         String email = (String) session.getAttribute("resetEmail");
@@ -638,7 +687,8 @@ public class HomeController {
 
         // Kiểm tra định dạng mật khẩu
         if (!vn.edu.fpt.fashionstore.util.PasswordUtils.isValid(newPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
+            ra.addFlashAttribute("error",
+                    "Mật khẩu phải từ 8-12 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số, có thể chứa ký tự đặc biệt!");
             return "redirect:/reset-password";
         }
 
@@ -697,13 +747,14 @@ public class HomeController {
     private Customer getCurrentCustomer(HttpSession session) {
         try {
             String email = (String) session.getAttribute("user");
-            if (email == null) return null;
-            
+            if (email == null)
+                return null;
+
             Account account = accountService.findByEmail(email).orElse(null);
             if (account == null || account.getCustomers() == null || account.getCustomers().isEmpty()) {
                 return null;
             }
-            
+
             return account.getCustomers().get(0);
         } catch (Exception e) {
             return null;

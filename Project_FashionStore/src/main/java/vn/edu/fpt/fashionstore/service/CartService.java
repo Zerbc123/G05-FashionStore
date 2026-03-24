@@ -148,6 +148,9 @@ public class CartService {
     }
 
     private void validateStock(ProductVariant variant, int quantity) {
+        if (quantity <= 0) {
+            throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0!");
+        }
         if (variant.getStock() < quantity) {
             throw new RuntimeException("Sản phẩm chỉ còn " + variant.getStock() + " sản phẩm. Bạn không thể mua " + quantity + " sản phẩm.");
         }

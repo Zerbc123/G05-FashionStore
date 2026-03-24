@@ -152,12 +152,12 @@ public class CartController {
             // Tìm variant dựa trên productId, sizeId và colorId
             Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
             
-
-            if (variantId == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
-                return "redirect:/products/detail/" + productId;
-            }
             
+            // Kiểm tra số lượng hợp lệ
+            if (quantity <= 0) {
+                throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0!");
+            }
+
             // Kiểm tra tồn kho trước khi Mua ngay
             cartService.validateStock(variantId, quantity);
             
