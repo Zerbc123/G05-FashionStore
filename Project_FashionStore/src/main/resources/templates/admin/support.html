@@ -346,7 +346,7 @@
 
                 <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Tiêu đề</th>
 
-                <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Loại</th>
+
 
                 <th class="px-6 py-5 text-sm font-bold text-text-main uppercase tracking-wider">Trạng thái</th>
 
@@ -381,9 +381,7 @@
                     <div class="text-xs text-text-muted mt-1" th:text="${#strings.abbreviate(request.description, 50)}">Mô tả ngắn...</div>
                 </td>
 
-                <td class="px-6 py-4">
-                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">Hỗ trợ</span>
-                </td>
+
 
                 <td class="px-6 py-4 text-center">
     <span class="status-badge"
@@ -440,7 +438,7 @@
 
 
         <!-- Pagination Section -->
-        <div class="px-6 py-5 flex items-center justify-center bg-white">
+        <div class="px-6 py-5 flex items-center justify-center bg-white" th:if="${totalPages > 0}">
 
             <div class="flex items-center gap-2">
 

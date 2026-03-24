@@ -97,6 +97,24 @@ public class HomeController {
         model.addAttribute("products", products);
 
         String email = (String) session.getAttribute("user");
+        if (email == null && principal != null) {
+            email = principal.getAttribute("email");
+            if (email != null) {
+                session.setAttribute("user", email);
+            }
+        }
+        
+        // 3. Lấy danh sách ID sản phẩm trong wishlist (nếu đã login)
+        if (email != null) {
+            Customer customer = accountService.findCustomerByEmail(email);
+            if (customer != null) {
+                List<Wishlist> wishlist = wishlistService.getWishlistByCustomer(customer);
+                java.util.Set<Long> wishlistProductIds = wishlist.stream()
+                        .map(w -> w.getProduct().getProductId())
+                        .collect(java.util.stream.Collectors.toSet());
+                model.addAttribute("wishlistProductIds", wishlistProductIds);
+            }
+        }
 
         if (email == null && principal != null) {
             email = principal.getAttribute("email");

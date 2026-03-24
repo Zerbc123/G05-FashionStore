@@ -410,8 +410,9 @@
             </div>
             <div class="col-md-2">
                 <div class="form-floating mb-3">
-                    <input type="file" class="form-control" name="variantImages" 
-                           accept="image/*" required>
+                    <input type="file" class="form-control" name="variantImages"
+                           accept=".jpg,.jpeg,.png" required
+                           onchange="validateImageFile(this)">
                     <label>Image *</label>
                 </div>
             </div>
@@ -571,20 +572,14 @@
             
             if (imageInput.files.length === 0) {
                 e.preventDefault();
-                showFieldError(imageInput, 'Image is required');
+                showFieldError(imageInput, 'Vui lòng chọn ảnh cho biến thể này');
                 hasError = true;
                 if (!firstErrorField) firstErrorField = imageInput;
             } else {
-                // Validate image file type
-                const file = imageInput.files[0];
-                if (!file.type.startsWith('image/')) {
+                const imgErr = getImageFileError(imageInput.files[0]);
+                if (imgErr) {
                     e.preventDefault();
-                    showFieldError(imageInput, 'Only image files are allowed');
-                    hasError = true;
-                    if (!firstErrorField) firstErrorField = imageInput;
-                } else if (file.size > 5 * 1024 * 1024) {
-                    e.preventDefault();
-                    showFieldError(imageInput, 'Image size must be less than 5MB');
+                    showFieldError(imageInput, imgErr);
                     hasError = true;
                     if (!firstErrorField) firstErrorField = imageInput;
                 }
@@ -671,6 +666,43 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
+    // -------------------------------------------------------
+    // Validate ảnh: chỉ cho phép .jpg / .jpeg / .png
+    // -------------------------------------------------------
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+    const ALLOWED_MIME      = ['image/jpeg', 'image/png'];
+    const MAX_SIZE_MB       = 5;
+
+    function getImageFileError(file) {
+        // 1. Kiểm tra đuôi file (không tin vào MIME type vì dễ giả mạo)
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            return 'Chỉ chấp nhận file .jpg, .jpeg hoặc .png';
+        }
+        // 2. Kiểm tra thêm MIME type (lớp bảo vệ thứ hai)
+        if (!ALLOWED_MIME.includes(file.type)) {
+            return 'File ảnh không hợp lệ (MIME type không được chấp nhận)';
+        }
+        // 3. Kiểm tra dung lượng
+        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+            return `Ảnh quá lớn. Vui lòng chọn file nhỏ hơn ${MAX_SIZE_MB}MB`;
+        }
+        return null; // hợp lệ
+    }
+
+    function validateImageFile(input) {
+        if (input.files.length === 0) return;
+        const err = getImageFileError(input.files[0]);
+        if (err) {
+            showFieldError(input, err);
+            input.value = ''; // reset input để user phải chọn lại
+        } else {
+            input.classList.remove('is-invalid');
+            const fb = input.parentNode.querySelector('.invalid-feedback');
+            if (fb) fb.remove();
+        }
+    }
+
     // Real-time validation for product name
     document.getElementById('productName').addEventListener('input', function() {
         const value = this.value.trim();

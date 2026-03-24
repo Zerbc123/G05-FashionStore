@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -183,43 +184,50 @@ public class AdminController {
     @Transactional(readOnly = true)
     public String products(HttpSession session, Model model,
                        @RequestParam(required = false) String search,
-                       @RequestParam(required = false) String category) {
+                       @RequestParam(required = false) String category,
+                       @RequestParam(required = false) String stockStatus,
+                       @RequestParam(defaultValue = "0") int page,
+                       @RequestParam(defaultValue = "10") int size) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
 
-        // Lấy danh sách sản phẩm từ database
-        List<vn.edu.fpt.fashionstore.entity.Product> products = productService.getAllProductsWithVariants();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("productId").ascending());
+        
+        // Sử dụng service để lọc
+        Page<vn.edu.fpt.fashionstore.entity.Product> productPage = productService.searchAndFilterProducts(search, null, category, null, null, stockStatus, null, null, pageable);
 
-        // Tính toán thống kê
-        long totalProducts = products.size();
-        long inStockCount = 0;
-        long lowStockCount = 0;
-        long outOfStockCount = 0;
+        // Lấy danh sách sản phẩm đầy đủ để tính thống kê
+        List<vn.edu.fpt.fashionstore.entity.Product> allProducts = productService.getAllProductsWithVariants();
+        long totalProducts = allProducts.size();
+        long inStockCount = allProducts.stream().filter(p -> p.getTotalStock() > 20).count();
+        long lowStockCount = allProducts.stream().filter(p -> p.getTotalStock() > 0 && p.getTotalStock() <= 20).count();
+        long outOfStockCount = allProducts.stream().filter(p -> p.getTotalStock() == 0).count();
         
-        for (vn.edu.fpt.fashionstore.entity.Product product : products) {
-            if (product.getVariants() != null && !product.getVariants().isEmpty()) {
-                int stock = product.getVariants().get(0).getStock();
-                if (stock > 20) {
-                    inStockCount++;
-                } else if (stock > 0) {
-                    lowStockCount++;
-                } else {
-                    outOfStockCount++;
-                }
-            } else {
-                // Không có variant = hết hàng
-                outOfStockCount++;
-            }
-        }
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("totalItems", productPage.getTotalElements());
+        model.addAttribute("pageSize", size);
         
-        model.addAttribute("products", products);
+        // Stats
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("inStockCount", inStockCount);
         model.addAttribute("lowStockCount", lowStockCount);
         model.addAttribute("outOfStockCount", outOfStockCount);
-        model.addAttribute("search", search != null ? search : "");
-        model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
+        
+        // Filters
+        model.addAttribute("search", search);
+        model.addAttribute("category", category);
+        model.addAttribute("stockStatus", (stockStatus != null && !stockStatus.isEmpty()) ? stockStatus : "all");
+        
+        // DỰNG DANH MỤC CHO FILTER (Lỗi user báo: thiếu danh mục)
+        model.addAttribute("categories", categoryService.getAllCategories().stream()
+                .map(vn.edu.fpt.fashionstore.entity.Category::getCategoryName)
+                .distinct()
+                .collect(Collectors.toList()));
+        
         model.addAttribute("title", "Product Management");
         
         return "admin/adminproduct";

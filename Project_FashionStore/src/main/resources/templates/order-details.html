@@ -167,18 +167,105 @@
             color: white;
             padding: 30px;
             border-radius: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-top: 30px;
+            text-align: center;
         }
         .total-label {
             font-size: 1.2rem;
             font-weight: 500;
+            margin-bottom: 10px;
         }
         .total-amount {
             font-size: 2rem;
             font-weight: 700;
+        }
+        
+        /* Breakdown Styles */
+        .breakdown-wrapper {
+            max-width: 480px;
+            margin: 0 auto 25px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .breakdown-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+        }
+        
+        .breakdown-line:hover {
+            padding-left: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 0 -8px;
+            padding-right: 8px;
+        }
+        
+        .breakdown-line:last-child {
+            border-bottom: none;
+        }
+        
+        .breakdown-line-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .breakdown-line-label i {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .breakdown-line-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .breakdown-discount-row {
+            background: rgba(255, 215, 0, 0.15);
+            border-radius: 8px;
+            margin: 0 -8px;
+            padding: 14px 8px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .breakdown-discount-row .breakdown-line-label,
+        .breakdown-discount-row .breakdown-line-value {
+            color: #ffd700;
+        }
+        
+        .breakdown-total-row {
+            padding: 20px 0 0;
+            margin-top: 12px;
+            border-top: 2px solid rgba(255, 255, 255, 0.35);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .breakdown-total-row .breakdown-line-label {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+        
+        .breakdown-total-row .breakdown-line-value {
+            font-size: 1.6rem;
+            color: #ffd700;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
         }
         .action-buttons {
             display: flex;
@@ -433,8 +520,46 @@
 
             <!-- 4. TỔNG THANH TOÁN -->
             <div class="order-total">
-                <div class="total-label">Tổng thanh toán</div>
-                <div class="total-amount" th:text="${totalAmount + 'đ'}">1,250,000đ</div>
+                <!-- Breakdown chi tiết (chỉ hiện khi có subTotal từ model) -->
+                <div th:if="${subTotal != null}" class="breakdown-wrapper">
+                    <div class="breakdown-line">
+                        <span class="breakdown-line-label">
+                            <i class="bi bi-cart-check"></i>
+                            Tạm tính sản phẩm:
+                        </span>
+                        <span class="breakdown-line-value" th:text="${#numbers.formatDecimal(subTotal, 0, 'COMMA', 0, 'POINT')} + 'đ'">450,000đ</span>
+                    </div>
+                    
+                    <div th:if="${discountAmount != null and discountAmount > 0}" class="breakdown-line breakdown-discount-row">
+                        <span class="breakdown-line-label">
+                            <i class="bi bi-tag-fill"></i>
+                            Giảm giá:
+                        </span>
+                        <span class="breakdown-line-value" th:text="'-' + ${#numbers.formatDecimal(discountAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">-100,000đ</span>
+                    </div>
+                    
+                    <div class="breakdown-line">
+                        <span class="breakdown-line-label">
+                            <i class="bi bi-truck"></i>
+                            Phí vận chuyển:
+                        </span>
+                        <span class="breakdown-line-value" th:text="${#numbers.formatDecimal(shippingFee, 0, 'COMMA', 0, 'POINT')} + 'đ'">30,000đ</span>
+                    </div>
+                    
+                    <div class="breakdown-line breakdown-total-row">
+                        <span class="breakdown-line-label">
+                            <i class="bi bi-receipt"></i>
+                            Tổng thanh toán:
+                        </span>
+                        <span class="breakdown-line-value" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">380,000đ</span>
+                    </div>
+                </div>
+                
+                <!-- Fallback khi không có subTotal -->
+                <div th:unless="${subTotal != null}">
+                    <div class="total-label">Tổng thanh toán</div>
+                    <div class="total-amount" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">1,250,000đ</div>
+                </div>
             </div>
 
             <!-- 5. NÚT HỦY ĐƠN HÀNG VÀ HOÀN TRẢ HÀNG-->

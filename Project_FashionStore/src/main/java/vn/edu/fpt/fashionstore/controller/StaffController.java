@@ -91,20 +91,6 @@ public class StaffController {
         return "staff/staffview";
     }
 
-    @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
-        if (!RoleUtils.canAccessDashboard(session)) {
-            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("dashboard"));
-            return "staff/access_denied";
-        }
-
-        // Add permission attributes for UI control
-        boolean canManage = RoleUtils.canManageDashboard(session);
-        model.addAttribute("canManageDashboard", canManage);
-
-        model.addAttribute("title", "Staff Dashboard");
-        return "staff/staffdashboard";
-    }
 
     // Quản lý đơn hàng (Confirm Orders)
     @GetMapping("/orders")

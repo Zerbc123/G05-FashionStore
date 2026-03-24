@@ -66,6 +66,9 @@ public class ProductController {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private WishlistService wishlistService;
+
     // ========================================================================
     // 1. DANH SÁCH SẢN PHẨM (LIST)
     // URL: /products
@@ -85,6 +88,8 @@ public class ProductController {
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
+            jakarta.servlet.http.HttpSession session,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.core.user.OAuth2User principal,
             Model model) {
 
         // Xử lý priceRange để chuyển thành minPrice và maxPrice
@@ -123,16 +128,10 @@ public class ProductController {
                 minPrice != null ||
                 maxPrice != null) {
             
-            // Nếu có categoryName, ưu tiên lọc theo categoryName trước
-            if (categoryName != null && !categoryName.isBlank()) {
-                productPage = productService.filterByCategoryName(categoryName, pageable);
-            } else {
-                productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
-            }
+            productPage = productService.searchAndFilterProducts(keyword, categoryId, categoryName, size, color, stockStatus, minPrice, maxPrice, pageable);
         } else {
             productPage = productService.getAllProducts(pageable);
         }
-
 
         // 3. Xử lý trường hợp trang trống (khi đang ở trang 2 mà lọc ra ít kết quả)
         if (page > 0 && productPage.isEmpty() && productPage.getTotalElements() > 0) {
@@ -142,13 +141,10 @@ public class ProductController {
                     (categoryName != null && !categoryName.isBlank()) ||
                     (size != null && !size.isBlank()) ||
                     (color != null && !color.isBlank()) ||
+                    stockStatus != null ||
                     minPrice != null ||
                     maxPrice != null) {
-                if (categoryName != null && !categoryName.isBlank()) {
-                    productPage = productService.filterByCategoryName(categoryName, pageable);
-                } else {
-                    productPage = productService.searchAndFilterProducts(keyword, categoryId, size, color, minPrice, maxPrice, pageable);
-                }
+                productPage = productService.searchAndFilterProducts(keyword, categoryId, categoryName, size, color, stockStatus, minPrice, maxPrice, pageable);
             } else {
                 productPage = productService.getAllProducts(pageable);
             }
@@ -182,6 +178,26 @@ public class ProductController {
         model.addAttribute("startItem", start);
         model.addAttribute("endItem", end);
 
+        // 5. Lấy danh sách ID sản phẩm trong wishlist (nếu đã login)
+        String email = (String) session.getAttribute("user");
+        if (email == null && principal != null) {
+            email = principal.getAttribute("email");
+            if (email != null) {
+                session.setAttribute("user", email);
+            }
+        }
+        
+        if (email != null) {
+            Customer customer = accountService.findCustomerByEmail(email);
+            if (customer != null) {
+                List<Wishlist> wishlist = wishlistService.getWishlistByCustomer(customer);
+                java.util.Set<Long> wishlistProductIds = wishlist.stream()
+                        .map(w -> w.getProduct().getProductId())
+                        .collect(java.util.stream.Collectors.toSet());
+                model.addAttribute("wishlistProductIds", wishlistProductIds);
+            }
+        }
+
         return "list";
     }
 
@@ -196,6 +212,7 @@ public class ProductController {
             @RequestParam(name = "colorId", required = false) Integer colorId,
             @RequestParam(name = "sizeId", required = false) Integer sizeId,
             jakarta.servlet.http.HttpSession session,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.core.user.OAuth2User principal,
             Model model) {
 
         Product product = productService.getProductById(id);
@@ -248,10 +265,11 @@ public class ProductController {
         List<vn.edu.fpt.fashionstore.entity.Review> reviews = reviewService.getActiveReviewsByProduct(product);
         model.addAttribute("reviews", reviews);
 
-        // 2. Tính trung bình sao (nếu có đánh giá)
+        // 2. Tính trung bình sao (nếu có đánh giá), làm tròn 1 chữ số thập phân
         double averageRating = 0;
         if (!reviews.isEmpty()) {
-            averageRating = reviews.stream().mapToInt(vn.edu.fpt.fashionstore.entity.Review::getRating).average().orElse(0.0);
+            double raw = reviews.stream().mapToInt(vn.edu.fpt.fashionstore.entity.Review::getRating).average().orElse(0.0);
+            averageRating = Math.round(raw * 10.0) / 10.0;
         }
         model.addAttribute("averageRating", averageRating);
 
@@ -270,6 +288,25 @@ public class ProductController {
             model.addAttribute("hasReviewed", false);
         }
 
+        // --- WISHLIST TRÊN TRANG DETAIL ---
+        String email = (String) session.getAttribute("user");
+        if (email == null && principal != null) {
+            email = principal.getAttribute("email");
+            if (email != null) {
+                session.setAttribute("user", email);
+            }
+        }
+        
+        if (email != null) {
+            Customer customer = accountService.findCustomerByEmail(email);
+            if (customer != null) {
+                List<Wishlist> wishlist = wishlistService.getWishlistByCustomer(customer);
+                java.util.Set<Long> wishlistProductIds = wishlist.stream()
+                        .map(w -> w.getProduct().getProductId())
+                        .collect(java.util.stream.Collectors.toSet());
+                model.addAttribute("wishlistProductIds", wishlistProductIds);
+            }
+        }
 
         return "productdetails";
     }
@@ -371,13 +408,17 @@ public class ProductController {
     // 4. ADMIN - LIST PRODUCT
     // ========================================================================
     @GetMapping("/admin/products")
-    public String adminShowProducts(Model model) {
-
-        List<Product> products = productService.getAllProductsWithVariants();
-
-        model.addAttribute("products", products);
-
-        return "admin/adminproduct";
+    public String adminShowProducts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String stockStatus,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        return "redirect:/admin/products?search=" + (search != null ? search : "") + 
+               "&category=" + (category != null ? category : "") + 
+               "&stockStatus=" + (stockStatus != null ? stockStatus : "") + 
+               "&page=" + page + "&size=" + size;
     }
 
     // ========================================================================
@@ -493,20 +534,35 @@ public class ProductController {
                     return showAddProductForm(model);
                 }
                 if (variantImages.get(i) == null || variantImages.get(i).isEmpty()) {
-                    model.addAttribute("error", "Image is required for variant " + (i + 1));
+                    model.addAttribute("error", "Vui lòng chọn ảnh cho biến thể " + (i + 1));
                     return showAddProductForm(model);
                 }
                 
-                // Validate image file type
+                // Validate đuôi file (lớp bảo vệ 1: kiểm tra tên file)
+                String originalFilename = variantImages.get(i).getOriginalFilename();
+                if (originalFilename == null || originalFilename.isBlank()) {
+                    model.addAttribute("error", "Tên file ảnh không hợp lệ cho biến thể " + (i + 1));
+                    return showAddProductForm(model);
+                }
+                String ext = originalFilename.contains(".")
+                        ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase()
+                        : "";
+                if (!ext.equals("jpg") && !ext.equals("jpeg") && !ext.equals("png")) {
+                    model.addAttribute("error", "Biến thể " + (i + 1) + ": Chỉ chấp nhận file .jpg, .jpeg hoặc .png");
+                    return showAddProductForm(model);
+                }
+                
+                // Validate MIME type (lớp bảo vệ 2: kiểm tra nội dung file)
                 String contentType = variantImages.get(i).getContentType();
-                if (contentType == null || !contentType.startsWith("image/")) {
-                    model.addAttribute("error", "Only image files are allowed for variant " + (i + 1));
+                if (contentType == null
+                        || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+                    model.addAttribute("error", "Biến thể " + (i + 1) + ": File ảnh không hợp lệ (chỉ jpeg/png được chấp nhận)");
                     return showAddProductForm(model);
                 }
                 
-                // Validate image file size (max 5MB)
+                // Validate dung lượng (tối đa 5MB)
                 if (variantImages.get(i).getSize() > 5 * 1024 * 1024) {
-                    model.addAttribute("error", "Image size must be less than 5MB for variant " + (i + 1));
+                    model.addAttribute("error", "Biến thể " + (i + 1) + ": Ảnh quá lớn, vui lòng chọn file nhỏ hơn 5MB");
                     return showAddProductForm(model);
                 }
             }

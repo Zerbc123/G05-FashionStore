@@ -93,35 +93,6 @@ public class StaffAccountController {
         }
     }
 
-    // Khóa tài khoản
-    @GetMapping("/lock/{id}")
-    public String lock(@PathVariable Integer id) {
-        if (id == null || id <= 0) {
-            return "redirect:/admin/staff?error=Invalid staff ID";
-        }
-        accountService.lockAccount(id);
-        return "redirect:/admin/staff";
-    }
-
-    // Mở khóa
-    @GetMapping("/unlock/{id}")
-    public String unlock(@PathVariable Integer id) {
-        if (id == null || id <= 0) {
-            return "redirect:/admin/staff?error=Invalid staff ID";
-        }
-        accountService.unlockAccount(id);
-        return "redirect:/admin/staff";
-    }
-
-    // Đặt trạng thái nghỉ phép
-    @GetMapping("/leave/{id}")
-    public String leave(@PathVariable Integer id) {
-        if (id == null || id <= 0) {
-            return "redirect:/admin/staff?error=Invalid staff ID";
-        }
-        accountService.leaveAccount(id);
-        return "redirect:/admin/staff";
-    }
 
     // Xem chi tiết staff
     @GetMapping("/details/{id}")

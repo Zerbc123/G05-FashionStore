@@ -153,7 +153,9 @@ public class OrderController {
             if (deliveryMethod != null) session.setAttribute("selectedDeliveryMethod", deliveryMethod);
             if (paymentMethod != null) session.setAttribute("selectedPaymentMethod", paymentMethod);
             Customer currentCustomer = getCurrentCustomer(session);
-            List<CartItem> cartItems = cartService.getCartItems(currentCustomer);
+            
+            // SỬA TẠI ĐÂY: Sử dụng orderService để lấy đúng danh sách sản phẩm (Checkout thường hoặc Mua ngay)
+            List<CartItem> cartItems = orderService.getCartItemsForCheckout(session, currentCustomer);
             double cartTotal = cartService.getCartTotal(cartItems);
 
             if (voucherCode == null || voucherCode.trim().isEmpty()) {
@@ -302,15 +304,21 @@ public class OrderController {
             }
             double serverFinalTotal = Math.max(0, serverSubtotal - serverDiscount);
 
+            // Tính phí ship từ deliveryMethod (server-side, không tin frontend)
+            double shippingFee = "express".equals(deliveryMethod) ? 50000.0 : 30000.0;
+            double serverFinalWithShip = serverFinalTotal + shippingFee;
+
             if ("MOMO".equals(paymentMethod)) {
                 session.setAttribute("momo_deliveryAddress", deliveryAddress);
-                session.setAttribute("momo_totalAmount", serverFinalTotal);
+                session.setAttribute("momo_totalAmount", serverFinalWithShip);
+                session.setAttribute("momo_shippingFee", shippingFee);
+                session.setAttribute("momo_discountAmount", serverDiscount);
 
                 String orderIdStr = "ORD-" + System.currentTimeMillis();
                 String orderInfo = "Thanh toan don hang " + fullName;
                 String requestId = vn.edu.fpt.fashionstore.util.MomoUtils.generateRequestId();
 
-                Map<String, Object> response = momoService.createPaymentRequest(orderIdStr, serverFinalTotal, orderInfo, requestId);
+                Map<String, Object> response = momoService.createPaymentRequest(orderIdStr, serverFinalWithShip, orderInfo, requestId);
 
                 if (response != null && response.containsKey("payUrl")) {
                     String payUrl = (String) response.get("payUrl");
@@ -323,7 +331,7 @@ public class OrderController {
 
             // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
             Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
-            order.setTotalAmount(serverFinalTotal);
+            order.setTotalAmount(serverFinalWithShip);
             order.setPaymentMethod(paymentMethod != null && !paymentMethod.trim().isEmpty() ? paymentMethod : "COD");
             order.setPaymentStatus("COD".equals(order.getPaymentMethod()) ? "UNPAID" : "PAID");
 
@@ -347,6 +355,9 @@ public class OrderController {
             model.addAttribute("deliveryAddress", deliveryAddress);
             model.addAttribute("orderStatus", order.getStatus());
             model.addAttribute("totalAmount", order.getTotalAmount());
+            model.addAttribute("subTotal", serverSubtotal);
+            model.addAttribute("discountAmount", serverDiscount);
+            model.addAttribute("shippingFee", shippingFee);
             model.addAttribute("paymentMethod", order.getPaymentMethod());
             model.addAttribute("customerName", currentCustomer.getFullName());
             model.addAttribute("customerPhone", currentCustomer.getPhone());
@@ -401,6 +412,8 @@ public class OrderController {
 
             session.removeAttribute("momo_deliveryAddress");
             session.removeAttribute("momo_totalAmount");
+            session.removeAttribute("momo_shippingFee");
+            session.removeAttribute("momo_discountAmount");
             session.removeAttribute("deliveryAddress");
             session.removeAttribute("appliedVoucher");
             session.removeAttribute("isBuyNow");
@@ -508,9 +521,29 @@ public class OrderController {
                 model.addAttribute("deliveryAddress", order.getCustomer().getAddress());
                 model.addAttribute("orderStatus", order.getStatus());
                 model.addAttribute("totalAmount", order.getTotalAmount());
-            model.addAttribute("paymentMethod", order.getPaymentMethod());
-
+                model.addAttribute("paymentMethod", order.getPaymentMethod());
+                
+                // Tính breakdown từ voucher và order items
                 List<OrderItem> orderItems = orderService.getOrderItemsByOrder(order);
+                double productTotal = 0.0;
+                for (OrderItem item : orderItems) {
+                    productTotal += (item.getTotalPrice() != null ? item.getTotalPrice() : 0.0);
+                }
+                
+                // Lấy discount từ voucher nếu có
+                double discountAmount = 0.0;
+                if (order.getVoucher() != null) {
+                    discountAmount = order.getVoucher().getDiscountValue() != null ? order.getVoucher().getDiscountValue() : 0.0;
+                }
+                
+                // Tính shipping fee: totalAmount = productTotal - discount + shipping
+                // => shipping = totalAmount - productTotal + discount
+                double shippingFee = order.getTotalAmount() - productTotal + discountAmount;
+                if (shippingFee < 0) shippingFee = 0.0;
+                
+                model.addAttribute("shippingFee", shippingFee);
+                model.addAttribute("discountAmount", discountAmount);
+                model.addAttribute("subTotal", productTotal);
                 model.addAttribute("orderItems", orderItems);
 
                 return "order-confirmation";
@@ -581,6 +614,27 @@ public class OrderController {
             model.addAttribute("orderItems", orderItems);
             model.addAttribute("totalAmount", order.getTotalAmount());
             model.addAttribute("paymentMethod", order.getPaymentMethod());
+            
+            // Tính breakdown từ voucher và order items
+            double productTotal = 0.0;
+            for (OrderItem item : orderItems) {
+                productTotal += (item.getTotalPrice() != null ? item.getTotalPrice() : 0.0);
+            }
+            
+            // Lấy discount từ voucher nếu có
+            double discountAmount = 0.0;
+            if (order.getVoucher() != null) {
+                discountAmount = order.getVoucher().getDiscountValue() != null ? order.getVoucher().getDiscountValue() : 0.0;
+            }
+            
+            // Tính shipping fee: totalAmount = productTotal - discount + shipping
+            // => shipping = totalAmount - productTotal + discount
+            double shippingFee = order.getTotalAmount() - productTotal + discountAmount;
+            if (shippingFee < 0) shippingFee = 0.0;
+            
+            model.addAttribute("shippingFee", shippingFee);
+            model.addAttribute("discountAmount", discountAmount);
+            model.addAttribute("subTotal", productTotal);
 
             String userRole = (String) session.getAttribute("userRole");
             boolean isAdmin = "Admin".equals(userRole);
@@ -703,7 +757,29 @@ public class OrderController {
 
         try {
             Customer currentCustomer = getCurrentCustomer(session);
+            
+            // Tìm variant dựa trên productId, sizeId và colorId
+            Integer variantId = cartService.findVariantByProductSizeColor(productId, sizeId, colorId);
+            if (variantId == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm với size và màu đã chọn!");
+                return "redirect:/products/detail/" + productId;
+            }
+
+            // Kiểm tra số lượng hợp lệ
+            if (quantity <= 0) {
+                throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0!");
+            }
+
+            // Kiểm tra tồn kho
+            cartService.validateStock(variantId, quantity);
+
+            // Cập nhật session đồng nhất với CartController.buyNow
             session.setAttribute("isBuyNow", true);
+            session.setAttribute("buyNowItems", List.of(
+                Map.of("variantId", variantId, "quantity", quantity)
+            ));
+            
+            // Các thuộc tính cũ (giữ lại nếu cần thiết cho các phần khác, nhưng buyNowItems là quan trọng nhất)
             session.setAttribute("buyNowProductId", productId);
             session.setAttribute("buyNowSizeId", sizeId);
             session.setAttribute("buyNowColorId", colorId);

@@ -58,33 +58,60 @@
         .color-selector input:checked + .color-label { border-color: #2d3436; transform: scale(1.1); }
 
         /* Quantity Selector */
-        .quantity-selector { 
-            display: flex; 
-            align-items: center; 
-            gap: 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            max-width: 150px;
+        .quantity-wrapper {
+            display: inline-flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 50px;
+            padding: 4px;
+            gap: 4px;
+            transition: border-color 0.3s;
+        }
+        .quantity-wrapper:hover {
+            border-color: var(--primary-color);
         }
         .btn-quantity-minus, .btn-quantity-plus {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
             border: none;
-            background: #f8f9fa;
-            padding: 8px 12px;
+            background: white;
+            color: #555;
+            font-size: 18px;
+            line-height: 1;
             cursor: pointer;
-            transition: all 0.3s;
-            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            flex-shrink: 0;
         }
         .btn-quantity-minus:hover, .btn-quantity-plus:hover {
             background: var(--primary-color);
             color: white;
+            box-shadow: 0 4px 12px rgba(255,107,157,0.35);
+            transform: scale(1.08);
+        }
+        .btn-quantity-minus:active, .btn-quantity-plus:active {
+            transform: scale(0.95);
         }
         .quantity-input {
             border: none;
             text-align: center;
-            font-weight: 600;
-            width: 50px;
-            background: white;
+            font-weight: 700;
+            font-size: 17px;
+            width: 56px;
+            background: transparent;
+            color: #2d3436;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         .quantity-input:focus {
             outline: none;
@@ -165,9 +192,13 @@
 
             <div class="col-lg-6 ps-lg-5">
                 <h1 class="product-name" th:text="${product.productName}">Product Name</h1>
-                <div class="d-flex align-items-center mb-4 text-warning">
-                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                    <span class="text-muted small ms-2">(128 reviews)</span>
+                <div class="d-flex align-items-center mb-4" th:if="${reviews != null and !reviews.empty}">
+                    <div class="text-warning me-1">
+                        <i th:each="i : ${#numbers.sequence(1, 5)}"
+                           th:class="${averageRating != null and i <= averageRating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                    </div>
+                    <span class="fw-semibold me-1" th:text="${averageRating}">0</span>
+                    <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'"></span>
                 </div>
 
                 <div class="mb-4">
@@ -201,11 +232,11 @@
 
                     <div class="mb-4">
                         <label class="option-title">SỐ LƯỢNG:</label>
-                        <div class="quantity-selector d-flex align-items-center gap-3">
+                        <div class="quantity-wrapper">
                             <button type="button" class="btn-quantity-minus" onclick="decreaseQuantity()">
                                 <i class="bi bi-dash"></i>
                             </button>
-                            <input type="number" name="quantity" class="form-control quantity-input" value="1" min="1" max="99" readonly>
+                            <input type="number" name="quantity" id="quantityInput" class="quantity-input" value="1" min="1" max="99" readonly>
                             <button type="button" class="btn-quantity-plus" onclick="increaseQuantity()">
                                 <i class="bi bi-plus"></i>
                             </button>
@@ -296,7 +327,14 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <textarea name="comment" class="form-control" rows="3" placeholder="Nhập cảm nhận của bạn về chất liệu, kiểu dáng..." required></textarea>
+                                    <textarea name="comment" id="reviewComment" class="form-control" rows="3"
+                                              placeholder="Nhập cảm nhận của bạn về chất liệu, kiểu dáng... (tối thiểu 10 ký tự)"
+                                              minlength="10" maxlength="500" required
+                                              oninput="updateReviewCounter()"></textarea>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <small class="text-muted">Tối thiểu 10 ký tự</small>
+                                        <small id="reviewCounter" class="text-muted">0 / 500</small>
+                                    </div>
                                 </div>
 
                                 <div class="text-end">
@@ -350,11 +388,66 @@
     <input type="hidden" name="quantity" value="1">
 </form>
 
+<!-- Variant stock data encoded as data-attributes (safe, no inline JS issues) -->
+<div id="variant-stock-data" style="display:none">
+    <span th:each="v : ${variants}"
+          th:if="${v.categorySize != null and v.color != null}"
+          th:attr="data-key=${v.categorySize.categorySizeId + '_' + v.color.colorId}, data-stock=${v.stock}"></span>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Build stock map from hidden data-attributes (safe Thymeleaf approach)
+const variantStockMap = {};
+
+function getSelectedStock() {
+    const selectedSize  = document.querySelector('input[name="sizeId"]:checked');
+    const selectedColor = document.querySelector('input[name="colorId"]:checked');
+    if (!selectedSize || !selectedColor) return null;
+    const key = selectedSize.value + '_' + selectedColor.value;
+    return (variantStockMap[key] !== undefined) ? variantStockMap[key] : null;
+}
+
+function updateQuantityLimit() {
+    const stock = getSelectedStock();
+    const quantityInput = document.getElementById('quantityInput');
+    if (stock !== null) {
+        quantityInput.max = stock;
+        // Nếu giá trị hiện tại vượt stock thì kéo về bằng stock
+        if (parseInt(quantityInput.value) > stock) {
+            quantityInput.value = Math.max(1, stock);
+            updateBuyNowFormQuantity();
+        }
+    } else {
+        quantityInput.max = 99;
+    }
+}
+
+// Gắn sự kiện cho tất cả radio size & color
+document.addEventListener('DOMContentLoaded', function() {
+    // Đọc dữ liệu stock từ data-attributes
+    document.querySelectorAll('#variant-stock-data span').forEach(function(span) {
+        variantStockMap[span.dataset.key] = parseInt(span.dataset.stock);
+    });
+
+    // Set giới hạn ban đầu chỉ khi đã có variant được chọn sẵn
+    const quantityInput = document.getElementById('quantityInput');
+    const initialStock = getSelectedStock();
+    if (initialStock !== null) {
+        quantityInput.max = initialStock;
+    }
+    // Nếu chưa chọn size/color thì giữ max=99 mặc định,
+    // sẽ được cập nhật khi user chọn size+color
+
+    // Gắn listener khi thay đổi size hoặc color
+    document.querySelectorAll('input[name="sizeId"], input[name="colorId"]').forEach(function(radio) {
+        radio.addEventListener('change', updateQuantityLimit);
+    });
+});
+
 function decreaseQuantity() {
-    const quantityInput = document.querySelector('input[name="quantity"]');
+    const quantityInput = document.getElementById('quantityInput');
     let currentValue = parseInt(quantityInput.value);
     if (currentValue > 1) {
         quantityInput.value = currentValue - 1;
@@ -363,20 +456,20 @@ function decreaseQuantity() {
 }
 
 function increaseQuantity() {
-    const quantityInput = document.querySelector('input[name="quantity"]');
+    const quantityInput = document.getElementById('quantityInput');
     let currentValue = parseInt(quantityInput.value);
-    if (currentValue < 99) {
+    // Luôn dùng thuộc tính max hiện tại của input (đã được set theo stock)
+    const maxQty = parseInt(quantityInput.max) || 99;
+    if (currentValue < maxQty) {
         quantityInput.value = currentValue + 1;
         updateBuyNowFormQuantity();
     }
 }
 
 function updateBuyNowFormQuantity() {
-    const quantityInput = document.querySelector('input[name="quantity"]');
-    const buyNowQuantityInput = document.querySelector('input[name="quantity"][value="1"]');
-    if (buyNowQuantityInput) {
-        buyNowQuantityInput.value = quantityInput.value;
-    }
+    const qty = document.getElementById('quantityInput').value;
+    const buyNowQty = document.querySelector('#directCheckoutForm input[name="quantity"]');
+    if (buyNowQty) buyNowQty.value = qty;
 }
 
 function addToCart() {
@@ -419,6 +512,22 @@ function buyNow() {
     
     // Submit form MUA NGAY
     document.getElementById('directCheckoutForm').submit();
+}
+function updateReviewCounter() {
+    const textarea = document.getElementById('reviewComment');
+    const counter  = document.getElementById('reviewCounter');
+    if (!textarea || !counter) return;
+    const len = textarea.value.length;
+    const max = 500;
+    counter.textContent = len + ' / ' + max;
+    // Đổi màu khi gần đạt giới hạn
+    if (len >= max) {
+        counter.className = 'text-danger fw-bold';
+    } else if (len >= max * 0.8) {
+        counter.className = 'text-warning fw-bold';
+    } else {
+        counter.className = 'text-muted';
+    }
 }
 </script>
 

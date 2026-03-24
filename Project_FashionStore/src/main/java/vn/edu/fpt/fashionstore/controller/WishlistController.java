@@ -111,4 +111,47 @@ public class WishlistController {
         
         return "redirect:/wishlist";
     }
+
+    @PostMapping("/toggle")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> toggleWishlist(@RequestParam Long productId, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        String email = (String) session.getAttribute("user");
+        
+        if (email == null) {
+            response.put("success", false);
+            response.put("message", "Bạn cần đăng nhập để thực hiện hành động này");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        Customer customer = accountService.findCustomerByEmail(email);
+        if (customer == null) {
+            response.put("success", false);
+            response.put("message", "Không tìm thấy thông tin khách hàng");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Optional<Product> productOpt = productRepository.findById(productId);
+        if (productOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Sản phẩm không tồn tại");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Product product = productOpt.get();
+        boolean isInWishlist = wishlistService.isInWishlist(customer, product);
+        
+        if (isInWishlist) {
+            wishlistService.removeFromWishlist(customer, product);
+            response.put("status", "removed");
+            response.put("message", "Đã xóa khỏi danh sách yêu thích");
+        } else {
+            wishlistService.addToWishlist(customer, product);
+            response.put("status", "added");
+            response.put("message", "Đã thêm vào danh sách yêu thích");
+        }
+        
+        response.put("success", true);
+        return ResponseEntity.ok(response);
+    }
 }

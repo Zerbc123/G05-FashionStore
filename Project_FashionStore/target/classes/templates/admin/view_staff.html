@@ -301,11 +301,7 @@
 
                     <a th:href="@{'/admin/staff/details/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm inline-block no-underline">Chi tiết</a>
 
-                    <a th:if="${s.status}=='ACTIVE'" th:href="@{'/admin/staff/lock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-yellow-500 text-yellow-600 text-xs font-bold rounded-lg hover:bg-yellow-500 hover:text-white transition shadow-sm inline-block no-underline">Khoá</a>
-
-                    <a th:if="${s.status}=='ACTIVE'" th:href="@{'/admin/staff/leave/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-blue-500 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-500 hover:text-white transition shadow-sm inline-block no-underline">Nghỉ phép</a>
-
-                    <a th:if="${s.status}=='LOCKED' or ${s.status}=='LEAVE'" th:href="@{'/admin/staff/unlock/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-green-600 text-green-700 text-xs font-bold rounded-lg hover:bg-green-600 hover:text-white transition shadow-sm inline-block no-underline">Mở khoá</a>
+                    <a th:href="@{'/admin/staff/edit/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-blue-500 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-500 hover:text-white transition shadow-sm inline-block no-underline">Sửa</a>
 
                     <a th:href="@{'/admin/staff/delete/' + ${s.accountId}}" class="px-3 py-1.5 bg-white border border-red-500 text-red-600 text-xs font-bold rounded-lg hover:bg-red-500 hover:text-white transition shadow-sm inline-block no-underline" onclick="return confirm('Xác nhận xóa nhân viên này?');">Xóa</a>
 
@@ -351,8 +347,7 @@
                 
 
                 <!-- Page Numbers -->
-
-                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <th:block th:if="${totalPages > 0}" th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
 
                     <a th:if="${i != currentPage}"
                        th:href="@{/admin/staff(page=${i}, keyword=${keyword})}"
