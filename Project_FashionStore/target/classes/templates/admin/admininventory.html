@@ -469,24 +469,25 @@
             <div class="row align-items-end">
                 <div class="col-md-3">
                     <label class="form-label"><i class="bi bi-search"></i> Tìm Kiếm</label>
-                    <input type="text" class="form-control" placeholder="Tìm theo tên sản phẩm..." id="searchInput">
+                    <input type="text" class="form-control" placeholder="Tìm theo tên sản phẩm..." id="searchInput" th:value="${search}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label"><i class="bi bi-funnel"></i> Danh Mục</label>
                     <select class="form-select" id="categoryFilter">
-                        <option value="all">Tất cả danh mục</option>
-                        <option th:each="category : ${categories}" 
-                                th:value="${category}" 
-                                th:text="${category}">Category Name</option>
+                        <option value="all" th:selected="${category == null or category == 'all'}">Tất cả danh mục</option>
+                        <option th:each="cat : ${categories}" 
+                                th:value="${cat}" 
+                                th:text="${cat}"
+                                th:selected="${category != null and category == cat}">Category Name</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-filter"></i> Trạng Thái</label>
                     <select class="form-select" id="stockFilter">
-                        <option value="all">Tất cả</option>
-                        <option value="in-stock">Còn hàng</option>
-                        <option value="low-stock">Sắp hết</option>
-                        <option value="out-stock">Hết hàng</option>
+                        <option value="all" th:selected="${stockStatus == null or stockStatus == 'all'}">Tất cả</option>
+                        <option value="in-stock" th:selected="${stockStatus == 'in-stock'}">Còn hàng</option>
+                        <option value="low-stock" th:selected="${stockStatus == 'low-stock'}">Sắp hết</option>
+                        <option value="out-stock" th:selected="${stockStatus == 'out-stock'}">Hết hàng</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -514,52 +515,44 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="variant : ${productVariants}">
+                        <tr th:each="product : ${products}">
                             <td>
-                                <img th:src="${variant.imageUrl != null ? variant.imageUrl : '/images/placeholder-product.jpg'}" 
-                                     th:alt="${variant.product.productName}" class="product-image">
+                                <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/placeholder-product.jpg'}" 
+                                     th:alt="${product.productName}" class="product-image">
                             </td>
                             <td>
-                                <strong th:text="${variant.product.productName}">Tên sản phẩm</strong><br>
-                                <small class="text-muted" th:text="'SKU: ' + ${variant.variantId}">SKU</small>
+                                <strong th:text="${product.productName}">Tên sản phẩm</strong>
                             </td>
                             <td>
-                                <span th:if="${variant.product.category != null}" 
-                                      th:text="${variant.product.category.categoryName}" 
+                                <span th:if="${product.categoryName != null}" 
+                                      th:text="${product.categoryName}" 
                                       class="badge bg-secondary">Danh mục</span>
-                                <span th:unless="${variant.product.category != null}" class="text-muted">-</span>
+                                <span th:unless="${product.categoryName != null}" class="text-muted">-</span>
                             </td>
                             <td>
-                                <strong th:text="${#numbers.formatDecimal(variant.price, 0, 0) + ' VNĐ'}">0 VNĐ</strong>
+                                <strong th:text="${#numbers.formatDecimal(product.minPrice, 0, 0) + ' VNĐ'}">0 VNĐ</strong>
                             </td>
                             <td>
-                                <span th:text="${variant.stock != null ? variant.stock : 0}" 
-                                      th:classappend="${variant.stock > 20 ? 'text-success' : (variant.stock > 0 ? 'text-warning' : 'text-danger')}">0</span>
+                                <span th:text="${product.totalStock}" 
+                                      th:classappend="${product.totalStock > 20 ? 'text-success' : (product.totalStock > 0 ? 'text-warning' : 'text-danger')}">0</span>
                             </td>
                             <td>
-                                <span th:if="${variant.stock > 20}" class="stock-badge in-stock">Còn hàng</span>
-                                <span th:if="${variant.stock > 0 and variant.stock <= 20}" class="stock-badge low-stock">Sắp hết</span>
-                                <span th:if="${variant.stock == null or variant.stock == 0}" class="stock-badge out-stock">Hết hàng</span>
+                                <span th:if="${product.status == 'in-stock'}" class="stock-badge in-stock">Còn hàng</span>
+                                <span th:if="${product.status == 'low-stock'}" class="stock-badge low-stock">Sắp hết</span>
+                                <span th:if="${product.status == 'out-stock'}" class="stock-badge out-stock">Hết hàng</span>
                             </td>
                             <td>
-                                <form th:action="@{/admin/inventory/update-stock}" method="post" style="display: inline;">
-                                    <input type="hidden" name="variantId" th:value="${variant.variantId}">
-                                    <div class="input-group">
-                                        <input type="number" name="newStock" class="form-control" 
-                                               th:value="${variant.stock != null ? variant.stock : 0}" 
-                                               min="0" style="width: 80px;">
-                                        <button type="submit" class="btn btn-update-stock">
-                                            <i class="bi bi-arrow-repeat"></i> Cập nhật
-                                        </button>
-                                    </div>
-                                </form>
+                                <a th:href="@{/products/variants(productId=${product.productId})}" 
+                                   class="btn btn-update-stock">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
                             </td>
                         </tr>
                     </tbody>
                 </table>
                 
                 <!-- Empty State -->
-                <div th:if="${productVariantPage != null and productVariantPage.totalElements == 0}" class="empty-state">
+                <div th:if="${productPage != null and productPage.totalElements == 0}" class="empty-state">
                     <div class="empty-state-icon">
                         <i class="bi bi-box-seam"></i>
                     </div>
@@ -573,12 +566,11 @@
         </div>
 
         <!-- Pagination -->
-        <nav th:if="${productVariantPage != null and productVariantPage.totalElements > 0}">
-        <nav th:if="${totalPages > 0}">
+        <nav th:if="${productPage != null and productPage.totalElements > 0 and totalPages > 0}">
             <ul class="pagination">
                 <!-- Previous -->
                 <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${currentPage - 1}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
+                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${currentPage - 1}, size=${pageSize}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
                        th:attr="aria-label='Previous'">
                         <i class="bi bi-chevron-left"></i>
                     </a>
@@ -587,13 +579,13 @@
                 <!-- Page numbers -->
                 <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
                     class="page-item" th:classappend="${i == currentPage ? 'active' : ''}">
-                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${i}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
+                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${i}, size=${pageSize}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
                        th:text="${i + 1}">1</a>
                 </li>
                 
                 <!-- Next -->
                 <li class="page-item" th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${currentPage + 1}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
+                    <a class="page-link" th:href="@{/admin/inventory/filter(page=${currentPage + 1}, size=${pageSize}, search=${search != null ? search : ''}, category=${category != null ? category : 'all'}, stockStatus=${stockStatus != null ? stockStatus : 'all'})}" 
                        th:attr="aria-label='Next'">
                         <i class="bi bi-chevron-right"></i>
                     </a>
@@ -651,21 +643,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 applyFilters();
             }
         });
-    }
-    
-    // Set current filter values from server-side variables
-    const currentSearch = /*[[${search != null ? search : ''}]]*/ '';
-    const currentCategory = /*[[${category != null ? category : 'all'}]]*/ 'all';
-    const currentStockStatus = /*[[${stockStatus != null ? stockStatus : 'all'}]]*/ 'all';
-    
-    if (currentSearch) {
-        document.getElementById('searchInput').value = currentSearch;
-    }
-    if (currentCategory && currentCategory !== 'all') {
-        document.getElementById('categoryFilter').value = currentCategory;
-    }
-    if (currentStockStatus && currentStockStatus !== 'all') {
-        document.getElementById('stockFilter').value = currentStockStatus;
     }
 });
 </script>

@@ -322,25 +322,25 @@ public class AdminController {
         
         // Fetch paginated data from database
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductVariant> productVariantPage;
+        Page<InventoryService.ProductInventoryDTO> productPage;
         InventoryService.InventoryStats stats;
         
         try {
-            productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
+            productPage = inventoryService.getAllProductsGrouped(pageable);
             stats = inventoryService.getInventoryStats();
             
-            logger.info("Admin inventory - Total variants found: {}", productVariantPage.getTotalElements());
-            logger.info("Admin inventory - Page {} of {}, total pages: {}", page, productVariantPage.getTotalPages());
+            logger.info("Admin inventory - Total products found: {}", productPage.getTotalElements());
+            logger.info("Admin inventory - Page {} of {}, total pages: {}", page, productPage.getTotalPages());
             
             // Add message if no data found
-            if (productVariantPage.getTotalElements() == 0) {
+            if (productPage.getTotalElements() == 0) {
                 model.addAttribute("emptyMessage", "Không có sản phẩm nào trong kho. Vui lòng thêm sản phẩm trước.");
                 logger.warn("Admin inventory - No products found in database");
             }
         } catch (Exception e) {
             logger.error("Admin inventory - Error fetching data: {}", e.getMessage(), e);
             // Create empty page to avoid template errors
-            productVariantPage = Page.empty(pageable);
+            productPage = Page.empty(pageable);
             stats = new InventoryService.InventoryStats(0, 0, 0, 0);
             model.addAttribute("errorMessage", "Có lỗi xảy ra khi tải dữ liệu: " + e.getMessage());
         }
@@ -349,14 +349,14 @@ public class AdminController {
         List<String> categories = inventoryService.getAllCategories();
         
         model.addAttribute("title", "Inventory Management");
-        model.addAttribute("productVariantPage", productVariantPage);
-        model.addAttribute("productVariants", productVariantPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("products", productPage.getContent());
         model.addAttribute("stats", stats);
         model.addAttribute("categories", categories);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
-        model.addAttribute("totalPages", productVariantPage.getTotalPages());
-        model.addAttribute("totalElements", productVariantPage.getTotalElements());
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("totalElements", productPage.getTotalElements());
         
         // Add filter attributes for pagination consistency
         model.addAttribute("search", null);
@@ -364,7 +364,7 @@ public class AdminController {
         model.addAttribute("stockStatus", "all");
         
         logger.info("Returning admin inventory view with {} items, total pages: {}", 
-                   productVariantPage.getContent().size(), productVariantPage.getTotalPages());
+                   productPage.getContent().size(), productPage.getTotalPages());
         
         return "admin/admininventory";
     }
@@ -404,25 +404,23 @@ public class AdminController {
         logger.info("Stock Status: '{}'", stockStatus);
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductVariant> productVariantPage;
+        Page<InventoryService.ProductInventoryDTO> productPage;
         
         try {
-            // Get all variants with JOIN FETCH to avoid lazy loading
-            List<ProductVariant> allVariants = inventoryService.getAllVariantsWithProductAndCategory();
+            // Get all products grouped
+            Page<InventoryService.ProductInventoryDTO> allProductsPage = inventoryService.getAllProductsGrouped(PageRequest.of(0, Integer.MAX_VALUE));
+            List<InventoryService.ProductInventoryDTO> allProducts = allProductsPage.getContent();
             
             // Apply filters sequentially
-            List<ProductVariant> filteredVariants = allVariants;
+            List<InventoryService.ProductInventoryDTO> filteredProducts = allProducts;
             
             // Apply search filter if provided
             if (search != null && !search.trim().isEmpty()) {
                 logger.info("Applying search filter for: '{}'", search.trim());
                 String searchTrim = search.trim().toLowerCase();
-                filteredVariants = filteredVariants.stream()
-                    .filter(variant -> variant.getProduct() != null &&
-                        variant.getProduct().getProductName() != null &&
-                        (variant.getProduct().getProductName().toLowerCase().contains(searchTrim) ||
-                         (variant.getProduct().getDescription() != null &&
-                          variant.getProduct().getDescription().toLowerCase().contains(searchTrim))))
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getProductName() != null &&
+                        product.getProductName().toLowerCase().contains(searchTrim))
                     .collect(Collectors.toList());
             }
             
@@ -430,11 +428,9 @@ public class AdminController {
             if (category != null && !category.equals("all")) {
                 logger.info("Applying category filter for: '{}'", category);
                 final String categoryFilter = category;
-                filteredVariants = filteredVariants.stream()
-                    .filter(variant -> variant.getProduct() != null && 
-                        variant.getProduct().getCategory() != null &&
-                        variant.getProduct().getCategory().getCategoryName() != null &&
-                        variant.getProduct().getCategory().getCategoryName().equalsIgnoreCase(categoryFilter))
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getCategoryName() != null &&
+                        product.getCategoryName().equalsIgnoreCase(categoryFilter))
                     .collect(Collectors.toList());
             }
             
@@ -442,39 +438,28 @@ public class AdminController {
             if (stockStatus != null && !stockStatus.equals("all")) {
                 logger.info("Applying stock status filter for: '{}'", stockStatus);
                 final String stockStatusFilter = stockStatus;
-                filteredVariants = filteredVariants.stream()
-                    .filter(variant -> {
-                        if (variant.getStock() == null) return false;
-                        switch (stockStatusFilter.toLowerCase()) {
-                            case "in-stock":
-                                return variant.getStock() > 20;
-                            case "low-stock":
-                                return variant.getStock() > 0 && variant.getStock() <= 20;
-                            case "out-stock":
-                                return variant.getStock() == null || variant.getStock() == 0;
-                            default:
-                                return true;
-                        }
-                    })
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getStatus() != null &&
+                        product.getStatus().equals(stockStatusFilter))
                     .collect(Collectors.toList());
             }
             
             // Apply pagination
             int start = (int) pageable.getOffset();
-            int end = Math.min((start + pageable.getPageSize()), filteredVariants.size());
+            int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
             
-            List<ProductVariant> pageContent = start < filteredVariants.size() ? 
-                filteredVariants.subList(start, end) : Collections.emptyList();
+            List<InventoryService.ProductInventoryDTO> pageContent = start < filteredProducts.size() ? 
+                filteredProducts.subList(start, end) : Collections.emptyList();
             
-            productVariantPage = new PageImpl<>(pageContent, pageable, filteredVariants.size());
+            productPage = new PageImpl<>(pageContent, pageable, filteredProducts.size());
             
             logger.info("Filter result: {} items found (from {} total after filtering)", 
-                       productVariantPage.getTotalElements(), filteredVariants.size());
+                       productPage.getTotalElements(), filteredProducts.size());
             
         } catch (Exception e) {
             logger.error("Error in filterInventory: {}", e.getMessage(), e);
-            // Fallback to all products with JOIN FETCH
-            productVariantPage = inventoryService.getAllProductVariantsWithProductAndCategory(pageable);
+            // Fallback to all products
+            productPage = inventoryService.getAllProductsGrouped(pageable);
         }
         
         InventoryService.InventoryStats stats = inventoryService.getInventoryStats();
@@ -483,8 +468,8 @@ public class AdminController {
         List<String> categories = inventoryService.getAllCategories();
         
         model.addAttribute("title", "Inventory Management");
-        model.addAttribute("productVariantPage", productVariantPage);
-        model.addAttribute("productVariants", productVariantPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("products", productPage.getContent());
         model.addAttribute("stats", stats);
         model.addAttribute("categories", categories);
         model.addAttribute("search", search);
@@ -492,20 +477,20 @@ public class AdminController {
         model.addAttribute("stockStatus", stockStatus);
         
         // Only add pagination attributes if there are results
-        if (productVariantPage.getTotalElements() > 0) {
+        if (productPage.getTotalElements() > 0) {
             model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", productVariantPage.getTotalPages());
-            model.addAttribute("totalItems", productVariantPage.getTotalElements());
+            model.addAttribute("totalPages", productPage.getTotalPages());
+            model.addAttribute("totalElements", productPage.getTotalElements());
             model.addAttribute("pageSize", size);
         } else {
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
-            model.addAttribute("totalItems", 0);
+            model.addAttribute("totalElements", 0);
             model.addAttribute("pageSize", size);
         }
         
         logger.info("Returning admin inventory view with {} items, total pages: {}", 
-                   productVariantPage.getContent().size(), productVariantPage.getTotalPages());
+                   productPage.getContent().size(), productPage.getTotalPages());
         
         return "admin/admininventory";
     }

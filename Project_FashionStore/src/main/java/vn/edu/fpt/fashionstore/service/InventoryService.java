@@ -8,11 +8,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
+import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +23,9 @@ public class InventoryService {
 
     @Autowired
     private ProductVariantRepository productVariantRepository;
+    
+    @Autowired
+    private ProductRepository productRepository;
 
     public List<ProductVariant> getAllProductVariants() {
         return productVariantRepository.findAll();
@@ -190,18 +194,90 @@ public class InventoryService {
     public InventoryStats getInventoryStats() {
         List<ProductVariant> allVariants = productVariantRepository.findAll();
         
-        long totalProducts = allVariants.size();
+        // Tính tổng số lượng sản phẩm (tổng stock của tất cả variants)
+        long totalProducts = allVariants.stream()
+                .filter(variant -> variant.getStock() != null)
+                .mapToLong(ProductVariant::getStock)
+                .sum();
+        
+        // Tính tổng stock của các variants còn hàng (stock > 20)
         long inStockCount = allVariants.stream()
                 .filter(variant -> variant.getStock() != null && variant.getStock() > 20)
-                .count();
+                .mapToLong(ProductVariant::getStock)
+                .sum();
+        
+        // Tính tổng stock của các variants sắp hết (0 < stock <= 20)
         long lowStockCount = allVariants.stream()
                 .filter(variant -> variant.getStock() != null && variant.getStock() > 0 && variant.getStock() <= 20)
-                .count();
+                .mapToLong(ProductVariant::getStock)
+                .sum();
+        
+        // Đếm số variants hết hàng (stock = 0)
         long outOfStockCount = allVariants.stream()
                 .filter(variant -> variant.getStock() != null && variant.getStock() == 0)
                 .count();
 
         return new InventoryStats(totalProducts, inStockCount, lowStockCount, outOfStockCount);
+    }
+
+    // Method to get products grouped with inventory info
+    public Page<ProductInventoryDTO> getAllProductsGrouped(Pageable pageable) {
+        List<Product> allProducts = productRepository.findAll();
+        
+        List<ProductInventoryDTO> productInventoryList = allProducts.stream()
+                .map(product -> {
+                    List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(product.getProductId());
+                    
+                    // Calculate total stock
+                    int totalStock = variants.stream()
+                            .filter(v -> v.getStock() != null)
+                            .mapToInt(ProductVariant::getStock)
+                            .sum();
+                    
+                    // Get min price
+                    Double minPrice = variants.stream()
+                            .filter(v -> v.getPrice() != null)
+                            .mapToDouble(ProductVariant::getPrice)
+                            .min()
+                            .orElse(0.0);
+                    
+                    // Determine status
+                    String status;
+                    if (totalStock == 0) {
+                        status = "out-stock";
+                    } else if (totalStock <= 20) {
+                        status = "low-stock";
+                    } else {
+                        status = "in-stock";
+                    }
+                    
+                    // Get first variant image
+                    String imageUrl = variants.stream()
+                            .filter(v -> v.getImageUrl() != null && !v.getImageUrl().isEmpty())
+                            .map(ProductVariant::getImageUrl)
+                            .findFirst()
+                            .orElse(null);
+                    
+                    return new ProductInventoryDTO(
+                            product.getProductId(),
+                            product.getProductName(),
+                            product.getCategory() != null ? product.getCategory().getCategoryName() : null,
+                            minPrice,
+                            totalStock,
+                            variants.size(),
+                            status,
+                            imageUrl
+                    );
+                })
+                .collect(Collectors.toList());
+        
+        // Apply pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), productInventoryList.size());
+        List<ProductInventoryDTO> pageContent = start < productInventoryList.size() ? 
+            productInventoryList.subList(start, end) : Collections.emptyList();
+        
+        return new PageImpl<>(pageContent, pageable, productInventoryList.size());
     }
 
     public static class InventoryStats {
@@ -222,5 +298,40 @@ public class InventoryService {
         public long getInStockCount() { return inStockCount; }
         public long getLowStockCount() { return lowStockCount; }
         public long getOutOfStockCount() { return outOfStockCount; }
+    }
+    
+    // DTO for product inventory display
+    public static class ProductInventoryDTO {
+        private Long productId;
+        private String productName;
+        private String categoryName;
+        private Double minPrice;
+        private Integer totalStock;
+        private Integer variantCount;
+        private String status;
+        private String imageUrl;
+        
+        public ProductInventoryDTO(Long productId, String productName, String categoryName, 
+                                  Double minPrice, Integer totalStock, Integer variantCount, 
+                                  String status, String imageUrl) {
+            this.productId = productId;
+            this.productName = productName;
+            this.categoryName = categoryName;
+            this.minPrice = minPrice;
+            this.totalStock = totalStock;
+            this.variantCount = variantCount;
+            this.status = status;
+            this.imageUrl = imageUrl;
+        }
+        
+        // Getters
+        public Long getProductId() { return productId; }
+        public String getProductName() { return productName; }
+        public String getCategoryName() { return categoryName; }
+        public Double getMinPrice() { return minPrice; }
+        public Integer getTotalStock() { return totalStock; }
+        public Integer getVariantCount() { return variantCount; }
+        public String getStatus() { return status; }
+        public String getImageUrl() { return imageUrl; }
     }
 }
