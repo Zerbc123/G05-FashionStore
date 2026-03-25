@@ -248,26 +248,16 @@
                                     </strong>
                                 </td>
 
-                                <td th:if="${product.variants != null and !product.variants.empty}" 
-                                    th:text="${product.variants[0].stock}"></td>
-                                <td th:unless="${product.variants != null and !product.variants.empty}">0</td>
-
-                                <td th:if="${product.variants != null and !product.variants.empty}">
-                                    <span th:if="${product.variants[0].stock > 20}" class="badge-stock badge-in-stock">
+                                <td th:text="${product.getTotalStock()}">0</td>
+                                <td>
+                                    <span th:if="${product.getTotalStock() > 20}" class="badge-stock badge-in-stock">
                                         Còn hàng
                                     </span>
-
-                                    <span th:if="${product.variants[0].stock <= 20 and product.variants[0].stock > 0}"
+                                    <span th:if="${product.getTotalStock() <= 20 and product.getTotalStock() > 0}"
                                         class="badge-stock badge-low-stock">
                                         Sắp hết
                                     </span>
-
-                                    <span th:if="${product.variants[0].stock == 0}" class="badge-stock badge-out-stock">
-                                        Hết hàng
-                                    </span>
-                                </td>
-                                <td th:unless="${product.variants != null and !product.variants.empty}">
-                                    <span class="badge-stock badge-out-stock">
+                                    <span th:if="${product.getTotalStock() == 0}" class="badge-stock badge-out-stock">
                                         Hết hàng
                                     </span>
                                 </td>

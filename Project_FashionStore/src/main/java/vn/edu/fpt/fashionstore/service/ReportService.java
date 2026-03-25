@@ -251,11 +251,11 @@ public class ReportService {
     }
 
     // Product Report Methods
-    public Map<String, Object> getProductReport() {
+    public Map<String, Object> getProductReport(LocalDate startDate, LocalDate endDate) {
         Map<String, Object> report = new HashMap<>();
 
         try {
-            // Get product summary from database
+            // Get product summary from database (Always current status)
             List<Object[]> productSummaryList = productReportRepository.getProductSummary();
             if (productSummaryList != null && !productSummaryList.isEmpty()) {
                 Object[] productSummary = productSummaryList.get(0);
@@ -310,8 +310,9 @@ public class ReportService {
                         "activeCount", 2));
             }
 
-            // Top selling products
-            List<Object[]> topSellingData = productReportRepository.getTopSellingProducts(ACTIVE_STATUSES);
+            // Top selling products (DATE BASED)
+            List<Object[]> topSellingData = productReportRepository.getTopSellingProducts(ACTIVE_STATUSES, startDate,
+                    endDate);
             List<Map<String, Object>> topSellingProducts = new ArrayList<>();
             if (topSellingData != null && !topSellingData.isEmpty()) {
                 for (Object[] row : topSellingData) {
@@ -330,36 +331,11 @@ public class ReportService {
                         topSellingProducts.add(item);
                     }
                 }
-            } else {
-                // Fallback top selling products
-                topSellingProducts.add(Map.of(
-                        "productName", "Summer Floral Dress",
-                        "categoryName", "Dresses",
-                        "price", 199.99,
-                        "stock", 25,
-                        "soldQuantity", 15,
-                        "revenue", 2998.85,
-                        "stockStatus", "In Stock"));
-                topSellingProducts.add(Map.of(
-                        "productName", "Classic White Shirt",
-                        "categoryName", "Shirts",
-                        "price", 89.99,
-                        "stock", 50,
-                        "soldQuantity", 22,
-                        "revenue", 1979.78,
-                        "stockStatus", "In Stock"));
-                topSellingProducts.add(Map.of(
-                        "productName", "Denim Jacket",
-                        "categoryName", "Jackets",
-                        "price", 149.99,
-                        "stock", 5,
-                        "soldQuantity", 8,
-                        "revenue", 1199.92,
-                        "stockStatus", "Low Stock"));
             }
 
-            // All products with sales
-            List<Object[]> allProductsData = productReportRepository.getAllProductsWithSales(ACTIVE_STATUSES);
+            // All products with sales (DATE BASED)
+            List<Object[]> allProductsData = productReportRepository.getAllProductsWithSales(ACTIVE_STATUSES, startDate,
+                    endDate);
             List<Map<String, Object>> allProducts = new ArrayList<>();
             if (allProductsData != null && !allProductsData.isEmpty()) {
                 for (Object[] row : allProductsData) {
@@ -379,58 +355,29 @@ public class ReportService {
                         allProducts.add(item);
                     }
                 }
-            } else {
-                // Fallback all products
-                allProducts.addAll(topSellingProducts);
-                allProducts.add(Map.of(
-                        "productName", "Wool Sweater",
-                        "categoryName", "Sweaters",
-                        "price", 79.99,
-                        "stock", 0,
-                        "soldQuantity", 5,
-                        "revenue", 399.95,
-                        "totalSold", 5,
-                        "stockStatus", "Out of Stock"));
-                allProducts.add(Map.of(
-                        "productName", "Cotton T-Shirt",
-                        "categoryName", "Shirts",
-                        "price", 39.99,
-                        "stock", 75,
-                        "soldQuantity", 12,
-                        "revenue", 479.88,
-                        "totalSold", 12,
-                        "stockStatus", "In Stock"));
             }
 
             report.put("productsByCategory", productsByCategory);
             report.put("topSellingProducts", topSellingProducts);
             report.put("allProducts", allProducts);
+            report.put("startDate", startDate);
+            report.put("endDate", endDate);
+
+            // Calculate total revenue for this period
+            Double periodRevenue = allProducts.stream()
+                    .mapToDouble(p -> (Double) p.get("revenue"))
+                    .sum();
+            report.put("periodRevenue", periodRevenue);
 
         } catch (Exception e) {
-            // Fallback data in case of any errors
-            report.put("totalProducts", 10L);
-            report.put("activeProducts", 7L);
-            report.put("outOfStockProducts", 1L);
-            report.put("lowStockProducts", 2L);
-
-            List<Map<String, Object>> fallbackCategories = new ArrayList<>();
-            fallbackCategories
-                    .add(Map.of("categoryName", "Dresses", "productCount", 5, "totalStock", 45, "activeCount", 4));
-            fallbackCategories
-                    .add(Map.of("categoryName", "Shirts", "productCount", 8, "totalStock", 120, "activeCount", 7));
-            fallbackCategories
-                    .add(Map.of("categoryName", "Jackets", "productCount", 3, "totalStock", 13, "activeCount", 2));
-            report.put("productsByCategory", fallbackCategories);
-
-            List<Map<String, Object>> fallbackTopProducts = new ArrayList<>();
-            fallbackTopProducts.add(Map.of("productName", "Summer Floral Dress", "categoryName", "Dresses", "price",
-                    199.99, "stock", 25, "soldQuantity", 15, "revenue", 2998.85, "stockStatus", "In Stock"));
-            fallbackTopProducts.add(Map.of("productName", "Classic White Shirt", "categoryName", "Shirts", "price",
-                    89.99, "stock", 50, "soldQuantity", 22, "revenue", 1979.78, "stockStatus", "In Stock"));
-            fallbackTopProducts.add(Map.of("productName", "Denim Jacket", "categoryName", "Jackets", "price", 149.99,
-                    "stock", 5, "soldQuantity", 8, "revenue", 1199.92, "stockStatus", "Low Stock"));
-            report.put("topSellingProducts", fallbackTopProducts);
-            report.put("allProducts", fallbackTopProducts);
+            // No fallback data for errors either - let it be empty or handle in catch
+            report.put("totalProducts", 0L);
+            report.put("activeProducts", 0L);
+            report.put("outOfStockProducts", 0L);
+            report.put("lowStockProducts", 0L);
+            report.put("productsByCategory", new ArrayList<>());
+            report.put("topSellingProducts", new ArrayList<>());
+            report.put("allProducts", new ArrayList<>());
 
             System.err.println("Error in getProductReport: " + e.getMessage());
             e.printStackTrace();

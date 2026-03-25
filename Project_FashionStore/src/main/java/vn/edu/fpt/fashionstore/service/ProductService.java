@@ -185,13 +185,14 @@ public class ProductService {
             }
 
             // 4. Lọc biến thể bằng Subquery để tránh nhân bản dữ liệu (DISTINCT)
-            boolean hasVariantFilter = (size != null && !size.isBlank()) || 
-                                     (color != null && !color.isBlank()) || 
-                                     (minPrice != null && minPrice > 0) || 
-                                     (maxPrice != null && maxPrice > 0) ||
-                                     (stockStatus != null && !stockStatus.isBlank() && !stockStatus.equals("all"));
+            boolean hasOtherVariantFilter = (size != null && !size.isBlank()) || 
+                                          (color != null && !color.isBlank()) || 
+                                          (minPrice != null && minPrice > 0) || 
+                                          (maxPrice != null && maxPrice > 0);
+            
+            boolean hasStockStatusFilter = (stockStatus != null && !stockStatus.isBlank() && !stockStatus.equals("all"));
 
-            if (hasVariantFilter) {
+            if (hasOtherVariantFilter) {
                 jakarta.persistence.criteria.Subquery<Integer> subquery = query.subquery(Integer.class);
                 Root<ProductVariant> subRoot = subquery.from(ProductVariant.class);
                 subquery.select(cb.literal(1));
@@ -211,17 +212,23 @@ public class ProductService {
                 if (maxPrice != null && maxPrice > 0) {
                     subPredicates.add(cb.lessThanOrEqualTo(subRoot.get("price"), maxPrice));
                 }
-                if (stockStatus != null && !stockStatus.isBlank() && !stockStatus.equals("all")) {
-                    if (stockStatus.equalsIgnoreCase("in-stock")) {
-                        subPredicates.add(cb.greaterThan(subRoot.get("stock"), 20));
-                    } else if (stockStatus.equalsIgnoreCase("low-stock")) {
-                        subPredicates.add(cb.and(cb.greaterThan(subRoot.get("stock"), 0), cb.lessThanOrEqualTo(subRoot.get("stock"), 20)));
-                    } else if (stockStatus.equalsIgnoreCase("out-stock")) {
-                        subPredicates.add(cb.or(cb.isNull(subRoot.get("stock")), cb.equal(subRoot.get("stock"), 0)));
-                    }
-                }
                 subquery.where(cb.and(subPredicates.toArray(new Predicate[0])));
                 predicates.add(cb.exists(subquery));
+            }
+
+            if (hasStockStatusFilter) {
+                Subquery<Long> sumSubquery = query.subquery(Long.class);
+                Root<ProductVariant> sumRoot = sumSubquery.from(ProductVariant.class);
+                sumSubquery.select(cb.sum(sumRoot.get("stock")));
+                sumSubquery.where(cb.equal(sumRoot.get("product"), root));
+                
+                if (stockStatus.equalsIgnoreCase("in-stock")) {
+                    predicates.add(cb.greaterThan(sumSubquery, 20L));
+                } else if (stockStatus.equalsIgnoreCase("low-stock")) {
+                    predicates.add(cb.and(cb.greaterThan(sumSubquery, 0L), cb.lessThanOrEqualTo(sumSubquery, 20L)));
+                } else if (stockStatus.equalsIgnoreCase("out-stock")) {
+                    predicates.add(cb.or(cb.isNull(sumSubquery), cb.equal(sumSubquery, 0L)));
+                }
             }
 
             // 5. Sắp xếp theo giá (cần Join nhưng chỉ cho orderBy)

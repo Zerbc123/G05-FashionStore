@@ -21,31 +21,37 @@ public interface ProductReportRepository extends JpaRepository<Product, Long> {
                      "GROUP BY c.categoryName")
        List<Object[]> getProductsByCategory();
 
-       // Get top selling products
+       // Get top selling products within a date range
        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
-                     "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                     "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
+                     "COALESCE(SUM(CASE WHEN o.orderId IS NOT NULL THEN oi.quantity ELSE 0 END), 0) as soldQuantity, " +
+                     "COALESCE(SUM(CASE WHEN o.orderId IS NOT NULL THEN oi.quantity * oi.price ELSE 0 END), 0) as revenue " +
                      "FROM Product p " +
                      "JOIN p.category c " +
                      "JOIN p.variants pv " +
                      "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
                      "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
+                     "AND o.orderDate BETWEEN :startDate AND :endDate " +
                      "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
                      "ORDER BY soldQuantity DESC")
-       List<Object[]> getTopSellingProducts(@Param("statuses") List<OrderStatus> statuses);
+       List<Object[]> getTopSellingProducts(@Param("statuses") List<OrderStatus> statuses,
+                                           @Param("startDate") java.time.LocalDate startDate,
+                                           @Param("endDate") java.time.LocalDate endDate);
 
-       // Get all products with sales info
+       // Get all products with sales info within a date range
        @Query("SELECT p.productName, c.categoryName, pv.price, pv.stock, " +
-                     "COALESCE(SUM(oi.quantity), 0) as soldQuantity, " +
-                     "COALESCE(SUM(oi.quantity * oi.price), 0) as revenue " +
+                     "COALESCE(SUM(CASE WHEN o.orderId IS NOT NULL THEN oi.quantity ELSE 0 END), 0) as soldQuantity, " +
+                     "COALESCE(SUM(CASE WHEN o.orderId IS NOT NULL THEN oi.quantity * oi.price ELSE 0 END), 0) as revenue " +
                      "FROM Product p " +
                      "JOIN p.category c " +
                      "JOIN p.variants pv " +
                      "LEFT JOIN OrderItem oi ON pv.variantId = oi.productVariant.variantId " +
                      "LEFT JOIN Order o ON oi.order = o AND o.status IN :statuses " +
+                     "AND o.orderDate BETWEEN :startDate AND :endDate " +
                      "GROUP BY p.productName, c.categoryName, pv.price, pv.stock " +
                      "ORDER BY p.productName")
-       List<Object[]> getAllProductsWithSales(@Param("statuses") List<OrderStatus> statuses);
+       List<Object[]> getAllProductsWithSales(@Param("statuses") List<OrderStatus> statuses,
+                                             @Param("startDate") java.time.LocalDate startDate,
+                                             @Param("endDate") java.time.LocalDate endDate);
 
        // Get product summary statistics
        @Query("SELECT COUNT(DISTINCT p), " +

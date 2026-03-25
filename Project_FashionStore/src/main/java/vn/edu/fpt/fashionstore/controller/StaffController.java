@@ -390,17 +390,12 @@ public class StaffController {
         long outOfStockCount = 0;
 
         for (vn.edu.fpt.fashionstore.entity.Product product : products) {
-            if (product.getVariants() != null && !product.getVariants().isEmpty()) {
-                int stock = product.getVariants().get(0).getStock();
-                if (stock > 20) {
-                    inStockCount++;
-                } else if (stock > 0) {
-                    lowStockCount++;
-                } else {
-                    outOfStockCount++;
-                }
+            int stock = product.getTotalStock();
+            if (stock > 20) {
+                inStockCount++;
+            } else if (stock > 0) {
+                lowStockCount++;
             } else {
-                // Không có variant = hết hàng
                 outOfStockCount++;
             }
         }

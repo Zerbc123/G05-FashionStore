@@ -407,40 +407,44 @@ public class AdminController {
         Page<InventoryService.ProductInventoryDTO> productPage;
         
         try {
-            // Get all products grouped
-            Page<InventoryService.ProductInventoryDTO> allProductsPage = inventoryService.getAllProductsGrouped(PageRequest.of(0, Integer.MAX_VALUE));
-            List<InventoryService.ProductInventoryDTO> allProducts = allProductsPage.getContent();
+            // 1. Lấy dữ liệu nguồn (Source Data)
+            // Nếu người dùng chọn lọc Hết hàng hoặc Sắp hết, ta sẽ hiển thị theo Biến thể (để quản lý chính xác)
+            // Nếu lọc Tất cả hoặc Còn hàng, ta giữ nguyên hiển thị theo Sản phẩm (để có cái nhìn tổng quát)
+            boolean useVariantView = "out-stock".equals(stockStatus) || "low-stock".equals(stockStatus);
+            List<InventoryService.ProductInventoryDTO> sourceList;
             
-            // Apply filters sequentially
-            List<InventoryService.ProductInventoryDTO> filteredProducts = allProducts;
+            if (useVariantView) {
+                logger.info("Using VARIANT view for inventory filtering (Status: {})", stockStatus);
+                sourceList = inventoryService.getAllVariantsAsDTO();
+            } else {
+                logger.info("Using PRODUCT view for inventory filtering (Status: {})", stockStatus);
+                Page<InventoryService.ProductInventoryDTO> allProductsPage = inventoryService.getAllProductsGrouped(PageRequest.of(0, Integer.MAX_VALUE));
+                sourceList = allProductsPage.getContent();
+            }
             
-            // Apply search filter if provided
+            List<InventoryService.ProductInventoryDTO> filteredProducts = sourceList;
+            
+            // 2. Lọc theo Tìm kiếm (Search)
             if (search != null && !search.trim().isEmpty()) {
-                logger.info("Applying search filter for: '{}'", search.trim());
                 String searchTrim = search.trim().toLowerCase();
                 filteredProducts = filteredProducts.stream()
-                    .filter(product -> product.getProductName() != null &&
-                        product.getProductName().toLowerCase().contains(searchTrim))
+                    .filter(p -> p.getProductName().toLowerCase().contains(searchTrim))
                     .collect(Collectors.toList());
             }
             
-            // Apply category filter if provided
+            // 3. Lọc theo Danh mục (Category)
             if (category != null && !category.equals("all")) {
-                logger.info("Applying category filter for: '{}'", category);
                 final String categoryFilter = category;
                 filteredProducts = filteredProducts.stream()
-                    .filter(product -> product.getCategoryName() != null &&
-                        product.getCategoryName().equalsIgnoreCase(categoryFilter))
+                    .filter(p -> p.getCategoryName() != null && p.getCategoryName().equalsIgnoreCase(categoryFilter))
                     .collect(Collectors.toList());
             }
             
-            // Apply stock status filter if provided
+            // 4. Lọc theo Trạng thái (Stock Status) - đã thực hiện ở bước 1 nhưng vẫn cần filter lại nếu query rông
             if (stockStatus != null && !stockStatus.equals("all")) {
-                logger.info("Applying stock status filter for: '{}'", stockStatus);
-                final String stockStatusFilter = stockStatus;
+                final String statusFilter = stockStatus;
                 filteredProducts = filteredProducts.stream()
-                    .filter(product -> product.getStatus() != null &&
-                        product.getStatus().equals(stockStatusFilter))
+                    .filter(p -> p.getStatus().equals(statusFilter))
                     .collect(Collectors.toList());
             }
             
@@ -580,8 +584,14 @@ public class AdminController {
         }
 
         try {
-            Map<String, Object> reportData = reportService.getProductReport();
+            // Use a wide date range for all-time stats since filter is removed
+            java.time.LocalDate start = java.time.LocalDate.of(2000, 1, 1);
+            java.time.LocalDate end = java.time.LocalDate.now();
+
+            Map<String, Object> reportData = reportService.getProductReport(start, end);
             model.addAttribute("report", reportData);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
             model.addAttribute("title", "Product Report");
             
             return "admin/product_report";

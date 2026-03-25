@@ -341,128 +341,144 @@
                     </div>
                 </div>
 
-                <!-- Charts -->
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <i class="bi bi-bar-chart text-primary"></i> Products by Category
-                                </div>
-                                <div class="chart-badge">Distribution</div>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="categoryChart"></canvas>
-                            </div>
-                        </div>
+                <!-- No Sales Data Notification -->
+                <div th:if="${report.periodRevenue == null or report.periodRevenue == 0}" 
+                     class="alert alert-light border shadow-sm mb-5 py-5 text-center" 
+                     style="background: rgba(255, 255, 255, 0.95); border-radius: 20px; border-left: 5px solid #30cfd0 !important;">
+                    <div class="mb-4">
+                        <i class="bi bi-cart-x text-info" style="font-size: 4rem; opacity: 0.8;"></i>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <i class="bi bi-pie-chart text-success"></i> Stock Status
-                                </div>
-                                <div class="chart-badge">Overview</div>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="stockStatusChart"></canvas>
-                            </div>
-                        </div>
+                    <h4 class="fw-bold text-dark mb-2">Không có dữ liệu kinh doanh</h4>
+                    <p class="text-muted fs-5 mb-0">Hệ thống không ghi nhận bất kỳ sản phẩm nào được bán trong lịch sử.</p>
+                    <div class="mt-4">
+                        <small class="text-muted fst-italic"><i class="bi bi-info-circle me-1"></i> Gợi ý: Các số liệu tồn kho và phân bổ danh mục vẫn hiển thị trạng thái hiện tại của cửa hàng.</small>
                     </div>
                 </div>
 
-                <!-- Top Selling Products -->
-                <div class="data-table">
-                    <div class="table-header">
-                        <h6><i class="bi bi-trophy"></i> Top Selling Products</h6>
+                <div th:if="${report.periodRevenue != null and report.periodRevenue > 0}">
+                    <!-- Charts -->
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <i class="bi bi-bar-chart text-primary"></i> Products by Category
+                                    </div>
+                                    <div class="chart-badge">Distribution</div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <i class="bi bi-pie-chart text-success"></i> Stock Status
+                                    </div>
+                                    <div class="chart-badge">Overview</div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="stockStatusChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Product Name</th>
-                                    <th>Category</th>
-                                    <th>Total Sold</th>
-                                    <th>Revenue</th>
-                                    <th>Stock Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    th:each="item : ${report.topSellingProducts != null ? report.topSellingProducts : empty}">
-                                    <td class="product-name"
-                                        th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name
-                                    </td>
-                                    <td><span class="category-badge"
-                                            th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span>
-                                    </td>
-                                    <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
-                                    <td
-                                        th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
-                                        0 VND</td>
-                                    <td>
-                                        <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
-                                            <i class="bi bi-check"></i> In Stock
-                                        </span>
-                                        <span class="stock-badge low-stock" th:if="${item.stockStatus == 'Low Stock'}">
-                                            <i class="bi bi-exclamation"></i> Low Stock
-                                        </span>
-                                        <span class="stock-badge out-stock"
-                                            th:if="${item.stockStatus == 'Out of Stock'}">
-                                            <i class="bi bi-x"></i> Out of Stock
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                <!-- All Products -->
-                <div class="data-table">
-                    <div class="table-header">
-                        <h6><i class="bi bi-list"></i> All Products</h6>
+                    <!-- Top Selling Products -->
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h6><i class="bi bi-trophy"></i> Top Selling Products</h6>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Category</th>
+                                        <th>Total Sold</th>
+                                        <th>Revenue</th>
+                                        <th>Stock Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        th:each="item : ${report.topSellingProducts}">
+                                        <td class="product-name"
+                                            th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name
+                                        </td>
+                                        <td><span class="category-badge"
+                                                th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span>
+                                        </td>
+                                        <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
+                                        <td
+                                            th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
+                                            0 VND</td>
+                                        <td>
+                                            <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
+                                                <i class="bi bi-check"></i> In Stock
+                                            </span>
+                                            <span class="stock-badge low-stock" th:if="${item.stockStatus == 'Low Stock'}">
+                                                <i class="bi bi-exclamation"></i> Low Stock
+                                            </span>
+                                            <span class="stock-badge out-stock"
+                                                th:if="${item.stockStatus == 'Out of Stock'}">
+                                                <i class="bi bi-x"></i> Out of Stock
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Product Name</th>
-                                    <th>Category</th>
-                                    <th>Stock</th>
-                                    <th>Total Sold</th>
-                                    <th>Revenue</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${report.allProducts != null ? report.allProducts : empty}">
-                                    <td class="product-name"
-                                        th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name
-                                    </td>
-                                    <td><span class="category-badge"
-                                            th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span>
-                                    </td>
-                                    <td th:text="${item.stock != null ? item.stock : 0}">0</td>
-                                    <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
-                                    <td
-                                        th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
-                                        0 VND</td>
-                                    <td>
-                                        <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
-                                            <i class="bi bi-check"></i> In Stock
-                                        </span>
-                                        <span class="stock-badge low-stock" th:if="${item.stockStatus == 'Low Stock'}">
-                                            <i class="bi bi-exclamation"></i> Low Stock
-                                        </span>
-                                        <span class="stock-badge out-stock"
-                                            th:if="${item.stockStatus == 'Out of Stock'}">
-                                            <i class="bi bi-x"></i> Out of Stock
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- All Products -->
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h6><i class="bi bi-list"></i> All Products</h6>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Category</th>
+                                        <th>Stock</th>
+                                        <th>Total Sold</th>
+                                        <th>Revenue</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${report.allProducts}">
+                                        <td class="product-name"
+                                            th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name
+                                        </td>
+                                        <td><span class="category-badge"
+                                                th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</span>
+                                        </td>
+                                        <td th:text="${item.stock != null ? item.stock : 0}">0</td>
+                                        <td th:text="${item.soldQuantity != null ? item.soldQuantity : 0}">0</td>
+                                        <td
+                                            th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
+                                            0 VND</td>
+                                        <td>
+                                            <span class="stock-badge in-stock" th:if="${item.stockStatus == 'In Stock'}">
+                                                <i class="bi bi-check"></i> In Stock
+                                            </span>
+                                            <span class="stock-badge low-stock" th:if="${item.stockStatus == 'Low Stock'}">
+                                                <i class="bi bi-exclamation"></i> Low Stock
+                                            </span>
+                                            <span class="stock-badge out-stock"
+                                                th:if="${item.stockStatus == 'Out of Stock'}">
+                                                <i class="bi bi-x"></i> Out of Stock
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -527,45 +543,45 @@
                                 x: {
                                     grid: { display: false }
                                 }
+                              }
                             }
-                        }
-                    });
-                }
-
-                // Stock Status Pie Chart
-                const stockStatusCtx = document.getElementById('stockStatusChart');
-                if (stockStatusCtx) {
-                    new Chart(stockStatusCtx.getContext('2d'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: stockStatusData.map(item => item.label),
-                            datasets: [{
-                                data: stockStatusData.map(item => item.value),
-                                backgroundColor: stockStatusData.map(item => item.color),
-                                borderWidth: 2,
-                                borderColor: '#fff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: { padding: 15, font: { size: 11 } }
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(0,0,0,0.8)',
-                                    padding: 12
+                        });
+                    }
+    
+                    // Stock Status Pie Chart
+                    const stockStatusCtx = document.getElementById('stockStatusChart');
+                    if (stockStatusCtx) {
+                        new Chart(stockStatusCtx.getContext('2d'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: stockStatusData.map(item => item.label),
+                                datasets: [{
+                                    data: stockStatusData.map(item => item.value),
+                                    backgroundColor: stockStatusData.map(item => item.color),
+                                    borderWidth: 2,
+                                    borderColor: '#fff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: { padding: 15, font: { size: 11 } }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                        padding: 12
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
+    
+                    console.log('Product Report charts created successfully');
                 }
-
-                console.log('Product Report charts created successfully');
-            }
-        </script>
+            </script>
 </body>
 
 </html>

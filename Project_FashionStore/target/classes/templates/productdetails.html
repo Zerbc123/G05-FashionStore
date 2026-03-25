@@ -411,16 +411,41 @@ function getSelectedStock() {
 
 function updateQuantityLimit() {
     const stock = getSelectedStock();
-    const quantityInput = document.getElementById('quantityInput');
+    const qInput = document.getElementById('quantityInput');
+    const btnAddCart = document.querySelector('.btn-add-cart');
+    const btnBuyNow = document.querySelector('.btn-buy-now');
+    
     if (stock !== null) {
-        quantityInput.max = stock;
-        // Nếu giá trị hiện tại vượt stock thì kéo về bằng stock
-        if (parseInt(quantityInput.value) > stock) {
-            quantityInput.value = Math.max(1, stock);
-            updateBuyNowFormQuantity();
+        if (stock <= 0) {
+            qInput.max = 0;
+            qInput.value = 0;
+            btnAddCart.disabled = true;
+            btnAddCart.innerHTML = '<i class="bi bi-x-circle me-2"></i> HẾT HÀNG';
+            btnAddCart.style.opacity = '0.6';
+            btnAddCart.style.cursor = 'not-allowed';
+            
+            btnBuyNow.disabled = true;
+            btnBuyNow.innerHTML = '<i class="bi bi-slash-circle me-2"></i> HẾT HÀNG';
+            btnBuyNow.style.opacity = '0.6';
+            btnBuyNow.style.cursor = 'not-allowed';
+        } else {
+            qInput.max = stock;
+            if (parseInt(qInput.value) > stock) {
+                qInput.value = stock;
+            } else if (parseInt(qInput.value) <= 0) {
+                qInput.value = 1;
+            }
+            btnAddCart.disabled = false;
+            btnAddCart.innerHTML = '<i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG';
+            btnAddCart.style.opacity = '1';
+            btnAddCart.style.cursor = 'pointer';
+            
+            btnBuyNow.disabled = false;
+            btnBuyNow.innerHTML = '<i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY';
+            btnBuyNow.style.opacity = '1';
+            btnBuyNow.style.cursor = 'pointer';
         }
-    } else {
-        quantityInput.max = 99;
+        updateBuyNowFormQuantity();
     }
 }
 
@@ -431,19 +456,13 @@ document.addEventListener('DOMContentLoaded', function() {
         variantStockMap[span.dataset.key] = parseInt(span.dataset.stock);
     });
 
-    // Set giới hạn ban đầu chỉ khi đã có variant được chọn sẵn
-    const quantityInput = document.getElementById('quantityInput');
-    const initialStock = getSelectedStock();
-    if (initialStock !== null) {
-        quantityInput.max = initialStock;
-    }
-    // Nếu chưa chọn size/color thì giữ max=99 mặc định,
-    // sẽ được cập nhật khi user chọn size+color
-
     // Gắn listener khi thay đổi size hoặc color
     document.querySelectorAll('input[name="sizeId"], input[name="colorId"]').forEach(function(radio) {
         radio.addEventListener('change', updateQuantityLimit);
     });
+    
+    // Kiểm tra trạng thái ban đầu if any
+    updateQuantityLimit();
 });
 
 function decreaseQuantity() {

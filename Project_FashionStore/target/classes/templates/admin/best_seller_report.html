@@ -141,69 +141,89 @@
             </div>
         </div>
 
-        <!-- Top Products Table -->
-        <div class="data-table">
-            <div class="table-header">
-                <h6><i class="bi bi-trophy"></i> Top Selling Products</h6>
+        <!-- No Data Notification -->
+        <div th:if="${#lists.isEmpty(report.products)}" 
+             class="alert alert-light border shadow-sm mb-5 py-5 text-center" 
+             style="background: rgba(255, 255, 255, 0.95); border-radius: 20px; border-left: 5px solid #f5576c !important;">
+            <div class="mb-4">
+                <i class="bi bi-star-half text-danger" style="font-size: 4rem; opacity: 0.8;"></i>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Category</th>
-                            <th>Units Sold</th>
-                            <th>Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="item : ${report.products != null ? report.products : empty}">
-                            <td>
-                                <div class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</div>
-                            </td>
-                            <td>
-                                <div class="category-name" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</div>
-                            </td>
-                            <td>
-                                <span class="quantity" th:text="${item.totalSold != null ? item.totalSold : 0}">0</span>
-                            </td>
-                            <td>
-                                <span class="revenue" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <h4 class="fw-bold text-dark mb-2">Báo cáo bán chạy trống</h4>
+            <p class="text-muted fs-5 mb-0">Không có dữ liệu bán hàng được ghi nhận trong khoảng thời gian từ <br>
+                <span class="badge bg-danger px-3 py-2 mt-2" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}"></span> 
+                <span class="mx-2 text-dark">đến</span> 
+                <span class="badge bg-danger px-3 py-2 mt-2" th:text="${#temporals.format(endDate, 'dd/MM/yyyy')}"></span>
+            </p>
+            <div class="mt-4">
+                <small class="text-muted fst-italic"><i class="bi bi-info-circle me-1"></i> Gợi ý: Hãy thử chọn khoảng thời gian rộng hơn để xem danh sách sản phẩm bán chạy.</small>
             </div>
         </div>
 
-        <!-- Top Categories Table -->
-        <div class="data-table">
-            <div class="table-header">
-                <h6><i class="bi bi-tags"></i> Top Selling Categories</h6>
+        <div th:if="${not #lists.isEmpty(report.products)}">
+            <!-- Top Products Table -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h6><i class="bi bi-trophy"></i> Top Selling Products</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${report.products}">
+                                <td>
+                                    <div class="product-name" th:text="${item.productName != null ? item.productName : 'N/A'}">Product Name</div>
+                                </td>
+                                <td>
+                                    <div class="category-name" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category</div>
+                                </td>
+                                <td>
+                                    <span class="quantity" th:text="${item.totalSold != null ? item.totalSold : 0}">0</span>
+                                </td>
+                                <td>
+                                    <span class="revenue" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Category Name</th>
-                            <th>Units Sold</th>
-                            <th>Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="item : ${report.categories != null ? report.categories : empty}">
-                            <td>
-                                <div class="product-name" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category Name</div>
-                            </td>
-                            <td>
-                                <span class="quantity" th:text="${item.totalSold != null ? item.totalSold : 0}">0</span>
-                            </td>
-                            <td>
-                                <span class="revenue" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- Top Categories Table -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h6><i class="bi bi-tags"></i> Top Selling Categories</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${report.categories}">
+                                <td>
+                                    <div class="product-name" th:text="${item.categoryName != null ? item.categoryName : 'N/A'}">Category Name</div>
+                                </td>
+                                <td>
+                                    <span class="quantity" th:text="${item.totalSold != null ? item.totalSold : 0}">0</span>
+                                </td>
+                                <td>
+                                    <span class="revenue" th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

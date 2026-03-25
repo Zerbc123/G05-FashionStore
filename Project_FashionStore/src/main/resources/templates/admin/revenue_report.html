@@ -382,75 +382,95 @@
                     </div>
                 </div>
 
-                <!-- Charts -->
-                <div class="row">
-                    <div class="col-lg-7">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <i class="bi bi-graph-up text-primary"></i> Daily Revenue Trend
-                                </div>
-                                <div class="chart-badge">Last 30 days</div>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="dailyChart"></canvas>
-                            </div>
-                        </div>
+                <!-- No Data Notification -->
+                <div th:if="${report.totalOrders == null or report.totalOrders == 0}" 
+                     class="alert alert-light border shadow-sm mb-5 py-5 text-center" 
+                     style="background: rgba(255, 255, 255, 0.95); border-radius: 20px; border-left: 5px solid #667eea !important;">
+                    <div class="mb-4">
+                        <i class="bi bi-calendar-x text-primary" style="font-size: 4rem; opacity: 0.8;"></i>
                     </div>
-                    <div class="col-lg-5">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <i class="bi bi-bar-chart text-success"></i> Monthly Comparison
-                                </div>
-                                <div class="chart-badge">YTD</div>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="monthlyChart"></canvas>
-                            </div>
-                        </div>
+                    <h4 class="fw-bold text-dark mb-2">Không có dữ liệu doanh thu</h4>
+                    <p class="text-muted fs-5 mb-0">Hệ thống không tìm thấy bất kỳ đơn hàng nào hoàn thành trong khoảng thời gian từ <br>
+                        <span class="badge bg-primary px-3 py-2 mt-2" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}"></span> 
+                        <span class="mx-2 text-dark">đến</span> 
+                        <span class="badge bg-primary px-3 py-2 mt-2" th:text="${#temporals.format(endDate, 'dd/MM/yyyy')}"></span>
+                    </p>
+                    <div class="mt-4">
+                        <small class="text-muted fst-italic"><i class="bi bi-info-circle me-1"></i> Gợi ý: Hãy thử chọn một khoảng thời gian khác hoặc kiểm tra lại trạng thái đơn hàng.</small>
                     </div>
                 </div>
 
-                <!-- Detailed Data Table -->
-                <div class="data-table">
-                    <div class="table-header">
-                        <h6><i class="bi bi-table"></i> Daily Revenue Details</h6>
+                <div th:if="${report.totalOrders != null and report.totalOrders > 0}">
+                    <!-- Charts -->
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <i class="bi bi-graph-up text-primary"></i> Daily Revenue Trend
+                                    </div>
+                                    <div class="chart-badge">Last 30 days</div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dailyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <i class="bi bi-bar-chart text-success"></i> Monthly Comparison
+                                    </div>
+                                    <div class="chart-badge">YTD</div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="monthlyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Revenue</th>
-                                    <th>Orders</th>
-                                    <th>Avg Order Value</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${report.dailyRevenue != null ? report.dailyRevenue : empty}">
-                                    <td th:text="${item.date}">2024-01-01</td>
-                                    <td class="revenue-amount"
-                                        th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 0) + ' VND' : '0 VND'}">
-                                        0 VND</td>
-                                    <td th:text="${item.orders != null ? item.orders : 0}">0</td>
-                                    <td
-                                        th:text="${item.revenue != null and item.orders != null and item.orders > 0 ? #numbers.formatDecimal(item.revenue / item.orders, 0, 0) + ' VND' : '0 VND'}">
-                                        0 VND</td>
-                                    <td>
-                                        <span class="badge bg-success"
-                                            th:if="${item.revenue != null and item.revenue > 0}">
-                                            <i class="bi bi-arrow-up"></i> Good
-                                        </span>
-                                        <span class="badge bg-warning"
-                                            th:if="${item.revenue == null or item.revenue == 0}">
-                                            <i class="bi bi-dash"></i> No Sales
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Detailed Data Table -->
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h6><i class="bi bi-table"></i> Daily Revenue Details</h6>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Revenue</th>
+                                        <th>Orders</th>
+                                        <th>Avg Order Value</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${report.dailyRevenue}">
+                                        <td th:text="${item.date}">2024-01-01</td>
+                                        <td class="revenue-amount"
+                                            th:text="${item.revenue != null ? #numbers.formatDecimal(item.revenue, 0, 0) + ' VND' : '0 VND'}">
+                                            0 VND</td>
+                                        <td th:text="${item.orders != null ? item.orders : 0}">0</td>
+                                        <td
+                                            th:text="${item.revenue != null and item.orders != null and item.orders > 0 ? #numbers.formatDecimal(item.revenue / item.orders, 0, 0) + ' VND' : '0 VND'}">
+                                            0 VND</td>
+                                        <td>
+                                            <span class="badge bg-success"
+                                                th:if="${item.revenue != null and item.revenue > 0}">
+                                                <i class="bi bi-arrow-up"></i> Good
+                                            </span>
+                                            <span class="badge bg-warning"
+                                                th:if="${item.revenue == null or item.revenue == 0}">
+                                                <i class="bi bi-dash"></i> No Sales
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

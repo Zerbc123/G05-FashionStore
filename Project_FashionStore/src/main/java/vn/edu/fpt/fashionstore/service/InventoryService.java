@@ -241,7 +241,7 @@ public class InventoryService {
                             .min()
                             .orElse(0.0);
                     
-                    // Determine status
+                    // Determine status for Product-level is still based on totalStock
                     String status;
                     if (totalStock == 0) {
                         status = "out-stock";
@@ -251,33 +251,60 @@ public class InventoryService {
                         status = "in-stock";
                     }
                     
-                    // Get first variant image
-                    String imageUrl = variants.stream()
-                            .filter(v -> v.getImageUrl() != null && !v.getImageUrl().isEmpty())
-                            .map(ProductVariant::getImageUrl)
-                            .findFirst()
-                            .orElse(null);
+                    String imageUrl = (variants != null && !variants.isEmpty()) ? variants.get(0).getImageUrl() : null;
                     
                     return new ProductInventoryDTO(
-                            product.getProductId(),
-                            product.getProductName(),
-                            product.getCategory() != null ? product.getCategory().getCategoryName() : null,
-                            minPrice,
-                            totalStock,
-                            variants.size(),
-                            status,
-                            imageUrl
+                        product.getProductId(),
+                        product.getProductName(),
+                        product.getCategory() != null ? product.getCategory().getCategoryName() : "Khác",
+                        minPrice,
+                        totalStock,
+                        variants.size(),
+                        status,
+                        imageUrl
                     );
                 })
                 .collect(Collectors.toList());
-        
-        // Apply pagination
+                
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), productInventoryList.size());
-        List<ProductInventoryDTO> pageContent = start < productInventoryList.size() ? 
-            productInventoryList.subList(start, end) : Collections.emptyList();
         
+        if (start > productInventoryList.size()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, productInventoryList.size());
+        }
+        
+        List<ProductInventoryDTO> pageContent = productInventoryList.subList(start, end);
         return new PageImpl<>(pageContent, pageable, productInventoryList.size());
+    }
+
+    public List<ProductInventoryDTO> getAllVariantsAsDTO() {
+        List<ProductVariant> allVariants = productVariantRepository.findAllWithProductAndCategory();
+        
+        return allVariants.stream().map(v -> {
+            String fullName = v.getProduct().getProductName() + 
+                            " (" + v.getColor().getColorName() + " - " + v.getCategorySize().getSizeName() + ")";
+            
+            String status;
+            int stock = (v.getStock() != null) ? v.getStock() : 0;
+            if (stock == 0) {
+                status = "out-stock";
+            } else if (stock <= 20) {
+                status = "low-stock";
+            } else {
+                status = "in-stock";
+            }
+            
+            return new ProductInventoryDTO(
+                v.getProduct().getProductId(),
+                fullName,
+                v.getProduct().getCategory() != null ? v.getProduct().getCategory().getCategoryName() : "Khác",
+                v.getPrice(),
+                stock,
+                1,
+                status,
+                v.getImageUrl()
+            );
+        }).collect(Collectors.toList());
     }
 
     public static class InventoryStats {

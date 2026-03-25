@@ -457,7 +457,6 @@
                                 <tr>
                                     <th>Product Name</th>
                                     <th>Category</th>
-                                    <th>SKU</th>
                                     <th>Current Stock</th>
                                     <th>Reorder Level</th>
                                     <th>Status</th>
@@ -468,7 +467,6 @@
                                 <tr th:each="item : ${report.inventory}">
                                     <td class="product-name" th:text="${item.productName}">Product Name</td>
                                     <td><span class="category-badge" th:text="${item.categoryName}">Category</span></td>
-                                    <td th:text="'VAR-' + ${itemStat.index + 1}">SKU</td>
                                     <td th:class="${item.stock == 0 ? 'stock-low' : (item.stock < 10 ? 'stock-medium' : 'stock-high')}"
                                         th:text="${item.stock}">0</td>
                                     <td>10</td>
