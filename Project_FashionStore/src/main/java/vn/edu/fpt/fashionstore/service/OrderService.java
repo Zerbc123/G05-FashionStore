@@ -38,10 +38,10 @@ public class OrderService {
 
     @Transactional
     public long countSuccessfulPurchases(Customer customer, Long productId) {
-        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng CONFIRMED và đúng mã sản phẩm
+        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng COMPLETED và đúng mã sản phẩm
         return orderRepository.findAll().stream()
                 .filter(o -> o.getCustomer().getCustomerId().equals(customer.getCustomerId())
-                        && o.getStatus() == OrderStatus.CONFIRMED)
+                        && o.getStatus() == OrderStatus.COMPLETED)
                 .flatMap(o -> o.getOrderItems().stream())
                 .filter(oi -> oi.getProductVariant().getProduct().getProductId().equals(productId))
                 .count();

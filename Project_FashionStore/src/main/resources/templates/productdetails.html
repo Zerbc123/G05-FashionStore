@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +9,23 @@
     <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/common.css}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
 
     <style>
-
         /* --- ÉP BUỘC MỌI THỨ DÍNH LÊN TRẦN NHÀ --- */
         body {
             background-color: var(--bg-light);
-            padding-top: 100px; /* Đẩy nội dung xuống để không bị menu đè */
-            margin: 0 !important; /* Xóa lề mặc định của trình duyệt */
+            padding-top: 100px;
+            /* Đẩy nội dung xuống để không bị menu đè */
+            margin: 0 !important;
+            /* Xóa lề mặc định của trình duyệt */
         }
 
         /* Bọc lại toàn bộ thẻ header và navbar */
-        header, .navbar {
+        header,
+        .navbar {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -29,33 +34,132 @@
             z-index: 9999 !important;
             background-color: white !important;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05) !important;
-            margin: 0 !important; /* Quét sạch mọi khoảng cách */
+            margin: 0 !important;
+            /* Quét sạch mọi khoảng cách */
         }
 
-        :root { --primary-color: #ff6b9d; --secondary-color: #ee5253; --bg-light: #fcfcfc; }
-        body { background-color: var(--bg-light); padding-top: 100px; font-family: 'Poppins', sans-serif; }
-        .product-card-detail { background: white; border-radius: 25px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid #f1f1f1; }
+        :root {
+            --primary-color: #ff6b9d;
+            --secondary-color: #ee5253;
+            --bg-light: #fcfcfc;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            padding-top: 100px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .product-card-detail {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f1f1f1;
+        }
 
         /* Image Section */
-        .main-img-holder { border-radius: 20px; overflow: hidden; background: #f8f9fa; border: 1px solid #eee; position: relative; padding-bottom: 100%; width: 100%; }
-        .main-img-holder img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
-        .thumb-list img { width: 75px; height: 75px; object-fit: cover; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
-        .thumb-list img:hover { border-color: var(--primary-color); }
+        .main-img-holder {
+            border-radius: 20px;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            position: relative;
+            padding-bottom: 100%;
+            width: 100%;
+        }
+
+        .main-img-holder img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .thumb-list img {
+            width: 75px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .thumb-list img:hover {
+            border-color: var(--primary-color);
+        }
 
         /* Typography & Prices */
-        .product-name { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: #2d3436; }
-        .price-current { font-size: 32px; font-weight: 700; color: var(--primary-color); }
-        .price-old { text-decoration: line-through; color: #b2bec3; margin-left: 12px; font-size: 20px; }
+        .product-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .price-current {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: #b2bec3;
+            margin-left: 12px;
+            font-size: 20px;
+        }
 
         /* Selectors */
-        .option-title { font-weight: 600; font-size: 14px; color: #2d3436; margin-bottom: 12px; display: block; }
-        .size-selector input { display: none; }
-        .size-label { display: inline-block; padding: 8px 20px; border: 1px solid #ddd; border-radius: 8px; margin-right: 8px; cursor: pointer; min-width: 55px; text-align: center; }
-        .size-selector input:checked + .size-label { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .option-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3436;
+            margin-bottom: 12px;
+            display: block;
+        }
 
-        .color-selector input { display: none; }
-        .color-label { display: inline-block; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ddd; margin-right: 12px; cursor: pointer; }
-        .color-selector input:checked + .color-label { border-color: #2d3436; transform: scale(1.1); }
+        .size-selector input {
+            display: none;
+        }
+
+        .size-label {
+            display: inline-block;
+            padding: 8px 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-right: 8px;
+            cursor: pointer;
+            min-width: 55px;
+            text-align: center;
+        }
+
+        .size-selector input:checked+.size-label {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .color-selector input {
+            display: none;
+        }
+
+        .color-label {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .color-selector input:checked+.color-label {
+            border-color: #2d3436;
+            transform: scale(1.1);
+        }
 
         /* Quantity Selector */
         .quantity-wrapper {
@@ -68,10 +172,13 @@
             gap: 4px;
             transition: border-color 0.3s;
         }
+
         .quantity-wrapper:hover {
             border-color: var(--primary-color);
         }
-        .btn-quantity-minus, .btn-quantity-plus {
+
+        .btn-quantity-minus,
+        .btn-quantity-plus {
             width: 38px;
             height: 38px;
             border-radius: 50%;
@@ -85,18 +192,23 @@
             align-items: center;
             justify-content: center;
             transition: all 0.25s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
             flex-shrink: 0;
         }
-        .btn-quantity-minus:hover, .btn-quantity-plus:hover {
+
+        .btn-quantity-minus:hover,
+        .btn-quantity-plus:hover {
             background: var(--primary-color);
             color: white;
-            box-shadow: 0 4px 12px rgba(255,107,157,0.35);
+            box-shadow: 0 4px 12px rgba(255, 107, 157, 0.35);
             transform: scale(1.08);
         }
-        .btn-quantity-minus:active, .btn-quantity-plus:active {
+
+        .btn-quantity-minus:active,
+        .btn-quantity-plus:active {
             transform: scale(0.95);
         }
+
         .quantity-input {
             border: none;
             text-align: center;
@@ -108,447 +220,618 @@
             -moz-appearance: textfield;
             appearance: textfield;
         }
+
         .quantity-input::-webkit-outer-spin-button,
         .quantity-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+
         .quantity-input:focus {
             outline: none;
             box-shadow: none;
         }
 
         /* Buttons */
-        .btn-add-cart { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; margin-top: 20px; transition: 0.3s; }
-        .btn-add-cart:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3); }
-        
-        .btn-buy-now { background: linear-gradient(135deg, #ff6348, #ff4757); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 20px; transition: 0.3s; }
-        .btn-buy-now:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 67, 71, 0.3); }
+        .btn-add-cart {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .btn-add-cart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .btn-buy-now {
+            background: linear-gradient(135deg, #ff6348, #ff4757);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .btn-buy-now:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 67, 71, 0.3);
+        }
 
         /* Tabs Section */
-        .details-section { margin-top: 60px; border-top: 1px solid #eee; padding-top: 40px; }
-        .custom-tabs { border: none; justify-content: center; gap: 50px; margin-bottom: 30px; }
-        .custom-tabs .nav-link { border: none; color: #888; font-weight: 600; text-transform: uppercase; padding: 10px 0; position: relative; }
-        .custom-tabs .nav-link.active { color: var(--primary-color); background: transparent; }
-        .custom-tabs .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--primary-color); }
+        .details-section {
+            margin-top: 60px;
+            border-top: 1px solid #eee;
+            padding-top: 40px;
+        }
+
+        .custom-tabs {
+            border: none;
+            justify-content: center;
+            gap: 50px;
+            margin-bottom: 30px;
+        }
+
+        .custom-tabs .nav-link {
+            border: none;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .custom-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .custom-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-color);
+        }
 
         /* Comments Styling */
-        .comment-item { padding: 25px 0; border-bottom: 1px solid #f1f1f1; }
-        .comment-avatar { width: 50px; height: 50px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #888; }
-        .comment-content { flex: 1; padding-left: 20px; }
-        .comment-author { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-        .comment-date { font-size: 12px; color: #b2bec3; }
-        .comment-text { color: #444; margin-top: 10px; line-height: 1.6; }
-        .shop-reply { background: #f8f9fa; padding: 15px 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--primary-color); }
-        .rating-summary { background: #fff8fa; border-radius: 20px; padding: 30px; margin-bottom: 40px; }
+        .comment-item {
+            padding: 25px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .comment-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #888;
+        }
+
+        .comment-content {
+            flex: 1;
+            padding-left: 20px;
+        }
+
+        .comment-author {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .comment-date {
+            font-size: 12px;
+            color: #b2bec3;
+        }
+
+        .comment-text {
+            color: #444;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .shop-reply {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .rating-summary {
+            background: #fff8fa;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
 
         /* --- PHẦN MỚI THÊM CHO FORM ĐÁNH GIÁ --- */
         .review-box {
-            background: #fff; border: 1px solid #eee; border-radius: 15px; padding: 20px; margin-bottom: 30px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
         }
-        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
-        .star-rating input { display: none; }
-        .star-rating label { font-size: 24px; color: #ddd; cursor: pointer; transition: 0.2s; padding: 0 2px; }
-        .star-rating input:checked ~ label,
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 24px;
+            color: #ddd;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0 2px;
+        }
+
+        .star-rating input:checked~label,
         .star-rating label:hover,
-        .star-rating label:hover ~ label { color: #ffc107; }
+        .star-rating label:hover~label {
+            color: #ffc107;
+        }
     </style>
 </head>
+
 <body>
 
-<header th:replace="~{fragments/header :: header}"></header>
+    <header th:replace="~{fragments/header :: header}"></header>
 
-<main class="container my-5">
-    <!-- Hiển thị thông báo lỗi/thành công -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert" style="border-radius: 12px;">
-        <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${successMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert" style="border-radius: 12px;">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${errorMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-
-    <div class="product-card-detail">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="main-img-holder mb-4">
-                    <img th:if="${product.variants != null and !product.variants.empty}" 
-                                         th:src="${product.variants[0].imageUrl}" 
-                                         class="product-img"
-                                         th:alt="${product.productName}"
-                                         onerror="this.src='https://via.placeholder.com/60x60/cccccc/000000?text=Error'"
-                                         loading="lazy">
-                </div>
-                <div class="d-flex gap-3 thumb-list justify-content-center">
-                    <img th:if="${product.variants != null and !product.variants.empty}" 
-                                         th:src="${product.variants[0].imageUrl}" 
-                                         class="product-img"
-                                         th:alt="${product.productName}"
-                                         onerror="this.src='https://via.placeholder.com/60x60/cccccc/000000?text=Error'"
-                                         loading="lazy">
-                </div>
-            </div>
-
-            <div class="col-lg-6 ps-lg-5">
-                <h1 class="product-name" th:text="${product.productName}">Product Name</h1>
-                <div class="d-flex align-items-center mb-4" th:if="${reviews != null and !reviews.empty}">
-                    <div class="text-warning me-1">
-                        <i th:each="i : ${#numbers.sequence(1, 5)}"
-                           th:class="${averageRating != null and i <= averageRating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
-                    </div>
-                    <span class="fw-semibold me-1" th:text="${averageRating}">0</span>
-                    <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'"></span>
-                </div>
-
-                <div class="mb-4">
-                    <span class="price-current" th:text="${#numbers.formatDecimal(product.variants[0].price, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</span>
-                    <span class="price-old">399.000₫</span>
-                </div>
-
-                <form id="mainCartForm" th:action="@{/cart/add}" method="POST">
-                    <input type="hidden" name="productId" th:value="${product.productId}">
-                    
-                    <div class="mb-4">
-                        <label class="option-title">CHỌN SIZE:</label>
-                        <div class="size-selector">
-                            <label th:each="size : ${uniqueSizes}">
-                                <input type="radio" name="sizeId" th:value="${size.categorySizeId}" required>
-                                <span class="size-label" th:text="${size.sizeName}">S</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="option-title">MÀU SẮC:</label>
-                        <div class="color-selector">
-                            <label th:each="color : ${uniqueColors}" class="d-inline-flex align-items-center me-3 mb-2">
-                                <input type="radio" name="colorId" th:value="${color.colorId}" required>
-                                <span class="color-label" th:style="'background-color:' + ${color.colorCode}"></span>
-                                <span class="color-name ms-2" th:text="${color.colorName}">Màu</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="option-title">SỐ LƯỢNG:</label>
-                        <div class="quantity-wrapper">
-                            <button type="button" class="btn-quantity-minus" onclick="decreaseQuantity()">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="number" name="quantity" id="quantityInput" class="quantity-input" value="1" min="1" max="99" readonly>
-                            <button type="button" class="btn-quantity-plus" onclick="increaseQuantity()">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-3">
-                        <button type="button" class="btn-add-cart flex-fill" onclick="addToCart()">
-                            <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
-                        </button>
-                        <button type="button" class="btn-buy-now flex-fill" onclick="buyNow()">
-                            <i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+    <main class="container my-5">
+        <!-- Hiển thị thông báo lỗi/thành công -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm mb-4"
+            role="alert" style="border-radius: 12px;">
+            <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert"
+            style="border-radius: 12px;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <div class="details-section">
-            <ul class="nav nav-tabs custom-tabs" id="detailTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mota">Mô Tả</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#thongso">Thông Số</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#danhgia">Đánh Giá</button></li>
-            </ul>
-
-            <div class="tab-content py-4">
-                <div class="tab-pane fade show active" id="mota">
-                    <p th:text="${product.description}"></p>
+        <div class="product-card-detail">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="main-img-holder mb-4">
+                        <img th:if="${product.variants != null and !product.variants.empty}"
+                            th:src="${product.variants[0].imageUrl}" class="product-img" th:alt="${product.productName}"
+                            onerror="this.src='https://via.placeholder.com/60x60/cccccc/000000?text=Error'"
+                            loading="lazy">
+                    </div>
+                    <div class="d-flex gap-3 thumb-list justify-content-center">
+                        <img th:if="${product.variants != null and !product.variants.empty}"
+                            th:src="${product.variants[0].imageUrl}" class="product-img" th:alt="${product.productName}"
+                            onerror="this.src='https://via.placeholder.com/60x60/cccccc/000000?text=Error'"
+                            loading="lazy">
+                    </div>
                 </div>
 
-                <div class="tab-pane fade" id="thongso">
-                    <table class="table table-sm w-50">
-                        <tr><td class="text-muted">Chất liệu</td><td class="fw-bold">100% Cotton Organic</td></tr>
-                        <tr><td class="text-muted">Mã SP</td><td class="fw-bold" th:text="${product.productId}"></td></tr>
-                    </table>
+                <div class="col-lg-6 ps-lg-5">
+                    <h1 class="product-name" th:text="${product.productName}">Product Name</h1>
+                    <div class="d-flex align-items-center mb-4" th:if="${reviews != null and !reviews.empty}">
+                        <div class="text-warning me-1">
+                            <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                th:class="${averageRating != null and i <= averageRating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                        </div>
+                        <span class="fw-semibold me-1" th:text="${averageRating}">0</span>
+                        <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <span class="price-current"
+                            th:text="${#numbers.formatDecimal(product.variants[0].price, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</span>
+                        <span class="price-old">399.000₫</span>
+                    </div>
+
+                    <form id="mainCartForm" th:action="@{/cart/add}" method="POST">
+                        <input type="hidden" name="productId" th:value="${product.productId}">
+
+                        <div class="mb-4">
+                            <label class="option-title">CHỌN SIZE:</label>
+                            <div class="size-selector">
+                                <label th:each="size : ${uniqueSizes}">
+                                    <input type="radio" name="sizeId" th:value="${size.categorySizeId}" required>
+                                    <span class="size-label" th:text="${size.sizeName}">S</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="option-title">MÀU SẮC:</label>
+                            <div class="color-selector">
+                                <label th:each="color : ${uniqueColors}"
+                                    class="d-inline-flex align-items-center me-3 mb-2">
+                                    <input type="radio" name="colorId" th:value="${color.colorId}" required>
+                                    <span class="color-label"
+                                        th:style="'background-color:' + ${color.colorCode}"></span>
+                                    <span class="color-name ms-2" th:text="${color.colorName}">Màu</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="option-title">SỐ LƯỢNG:</label>
+                            <div class="quantity-wrapper">
+                                <button type="button" class="btn-quantity-minus" onclick="decreaseQuantity()">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" name="quantity" id="quantityInput" class="quantity-input" value="1"
+                                    min="1" max="99" readonly>
+                                <button type="button" class="btn-quantity-plus" onclick="increaseQuantity()">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn-add-cart flex-fill" onclick="addToCart()">
+                                <i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+                            </button>
+                            <button type="button" class="btn-buy-now flex-fill" onclick="buyNow()">
+                                <i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
+            </div>
 
-                <div class="tab-pane fade" id="danhgia">
+            <div class="details-section">
+                <ul class="nav nav-tabs custom-tabs" id="detailTab" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mota">Mô
+                            Tả</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#thongso">Thông
+                            Số</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#danhgia">Đánh
+                            Giá</button></li>
+                </ul>
 
-                    <div class="rating-summary d-flex align-items-center justify-content-between">
-                        <div class="text-center" th:if="${#lists.size(reviews) > 0}">
-                            <h2 class="display-4 fw-bold mb-0 text-primary" th:text="${averageRating}">4.5</h2>
-                            <div class="text-warning mb-1 small">
-                                <i class="bi bi-star-fill"></i>
+                <div class="tab-content py-4">
+                    <div class="tab-pane fade show active" id="mota">
+                        <p th:text="${product.description}"></p>
+                    </div>
+
+                    <div class="tab-pane fade" id="thongso">
+                        <table class="table table-sm w-50">
+                            <tr>
+                                <td class="text-muted">Chất liệu</td>
+                                <td class="fw-bold">100% Cotton Organic</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Mã SP</td>
+                                <td class="fw-bold" th:text="${product.productId}"></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade" id="danhgia">
+
+                        <div class="rating-summary d-flex align-items-center justify-content-between">
+                            <div class="text-center" th:if="${#lists.size(reviews) > 0}">
+                                <h2 class="display-4 fw-bold mb-0 text-primary" th:text="${averageRating}">4.5</h2>
+                                <div class="text-warning mb-1 small">
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                <span class="text-muted small" th:text="${#lists.size(reviews)} + ' đánh giá'"></span>
                             </div>
-                            <span class="text-muted small" th:text="${#lists.size(reviews)} + ' đánh giá'"></span>
-                        </div>
-                        <div class="text-center" th:if="${#lists.size(reviews) == 0}">
-                            <p class="text-muted fst-italic mb-0">Chưa có đánh giá nào.</p>
-                        </div>
-
-                        <button th:if="${canReview}" class="btn btn-outline-primary btn-sm rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse">
-                            Viết Đánh Giá
-                        </button>
-                    </div>
-
-                    <!-- Case 1: Đã đánh giá hết lượt - hiện thông báo "đã đánh giá" -->
-                    <div class="alert alert-success border mb-4 text-center shadow-sm"
-                         th:if="${!canReview and hasReviewed}">
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        Bạn đã đánh giá sản phẩm này. Cảm ơn bạn đã chia sẻ cảm nhận!
-                    </div>
-
-                    <!-- Case 2: Chưa mua hoặc chưa nhận hàng -->
-                    <div class="alert alert-light border mb-4 text-center shadow-sm"
-                         th:if="${!canReview and !hasReviewed}">
-                        <i class="bi bi-info-circle-fill text-primary"></i>
-                        Bạn cần đặt mua và nhận sản phẩm này thành công để có thể viết đánh giá.
-                    </div>
-
-                    <div class="collapse mb-5" id="reviewFormCollapse" th:if="${canReview}">
-                        <div class="review-box shadow-sm border">
-                            <h6 class="fw-bold mb-3 text-success"><i class="bi bi-pencil-square"></i> Đánh giá của bạn về sản phẩm này</h6>
-
-                            <form th:action="@{/review/add}" method="POST">
-                                <input type="hidden" name="productId" th:value="${product.productId}">
-
-                                <div class="mb-3">
-                                    <label class="small text-muted mb-1">Bạn thấy sản phẩm thế nào? (Chọn số sao)</label>
-                                    <div class="star-rating" style="justify-content: flex-end;">
-                                        <input type="radio" id="star5" name="rating" value="5" required/><label for="star5"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2"><i class="bi bi-star-fill"></i></label>
-                                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1"><i class="bi bi-star-fill"></i></label>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <textarea name="comment" id="reviewComment" class="form-control" rows="3"
-                                              placeholder="Nhập cảm nhận của bạn về chất liệu, kiểu dáng... (tối thiểu 10 ký tự)"
-                                              minlength="10" maxlength="500" required
-                                              oninput="updateReviewCounter()"></textarea>
-                                    <div class="d-flex justify-content-between mt-1">
-                                        <small class="text-muted">Tối thiểu 10 ký tự</small>
-                                        <small id="reviewCounter" class="text-muted">0 / 500</small>
-                                    </div>
-                                </div>
-
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary btn-sm px-4">Gửi đánh giá</button>
-                                </div>
-                            </form>
-
-                        </div>
-                    </div>
-
-                    <div class="comment-list mt-4">
-                        <h5 class="fw-bold mb-4 border-bottom pb-2">Khách hàng nhận xét</h5>
-
-                        <div class="comment-item d-flex" th:each="review : ${reviews}">
-                            <div class="comment-avatar me-3" style="background: transparent;">
-                                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${review.customer.fullName} + '&background=random'}" class="rounded-circle" width="50" height="50">
+                            <div class="text-center" th:if="${#lists.size(reviews) == 0}">
+                                <p class="text-muted fst-italic mb-0">Chưa có đánh giá nào.</p>
                             </div>
 
-                            <div class="comment-content">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="comment-author">
-                                            [[${review.customer.fullName}]]
-                                            <span class="badge bg-light text-success ms-1 small fw-normal"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
-                                        </div>
-                                        <div class="mb-1">
-                                            <i th:each="i : ${#numbers.sequence(1, 5)}"
-                                               th:class="${i <= review.rating ? 'bi bi-star-fill text-warning small' : 'bi bi-star text-warning small'}"></i>
+                            <button th:if="${canReview}" class="btn btn-outline-primary btn-sm rounded-pill px-4"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse">
+                                Viết Đánh Giá
+                            </button>
+                        </div>
+
+                        <!-- Case 1: Đã đánh giá hết lượt - hiện thông báo "đã đánh giá" -->
+                        <div class="alert alert-success border mb-4 text-center shadow-sm"
+                            th:if="${!canReview and hasReviewed}">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            Bạn đã đánh giá sản phẩm này. Cảm ơn bạn đã chia sẻ cảm nhận!
+                        </div>
+
+                        <!-- Case 2: Chưa mua hoặc chưa nhận hàng -->
+                        <div class="alert alert-light border mb-4 text-center shadow-sm"
+                            th:if="${!canReview and !hasReviewed}">
+                            <i class="bi bi-info-circle-fill text-primary"></i>
+                            Bạn cần đặt mua và nhận sản phẩm này thành công để có thể viết đánh giá.
+                        </div>
+
+                        <div class="collapse mb-5" id="reviewFormCollapse" th:if="${canReview}">
+                            <div class="review-box shadow-sm border">
+                                <h6 class="fw-bold mb-3 text-success"><i class="bi bi-pencil-square"></i> Đánh giá của
+                                    bạn về sản phẩm này</h6>
+
+                                <form th:action="@{/review/add}" method="POST">
+                                    <input type="hidden" name="productId" th:value="${product.productId}">
+
+                                    <div class="mb-3">
+                                        <label class="small text-muted mb-1">Bạn thấy sản phẩm thế nào? (Chọn số
+                                            sao)</label>
+                                        <div class="star-rating" style="justify-content: flex-end;">
+                                            <input type="radio" id="star5" name="rating" value="5" required /><label
+                                                for="star5"><i class="bi bi-star-fill"></i></label>
+                                            <input type="radio" id="star4" name="rating" value="4" /><label
+                                                for="star4"><i class="bi bi-star-fill"></i></label>
+                                            <input type="radio" id="star3" name="rating" value="3" /><label
+                                                for="star3"><i class="bi bi-star-fill"></i></label>
+                                            <input type="radio" id="star2" name="rating" value="2" /><label
+                                                for="star2"><i class="bi bi-star-fill"></i></label>
+                                            <input type="radio" id="star1" name="rating" value="1" /><label
+                                                for="star1"><i class="bi bi-star-fill"></i></label>
                                         </div>
                                     </div>
-                                    <div class="comment-date" th:text="${#temporals.format(review.reviewDate, 'dd/MM/yyyy')}"></div>
-                                </div>
-                                <div class="comment-text" th:text="${review.comment}"></div>
+
+                                    <div class="mb-3">
+                                        <textarea name="comment" id="reviewComment" class="form-control" rows="3"
+                                            placeholder="Nhập cảm nhận của bạn về chất liệu, kiểu dáng... (tối đa 200 từ)"
+                                            minlength="10" maxlength="2000" required
+                                            oninput="updateReviewCounter()"></textarea>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small class="text-muted">Tối thiểu 10 ký tự</small>
+                                            <small id="reviewCounter" class="text-muted">0 ký tự | 0 từ (Tối đa 200
+                                                từ)</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary btn-sm px-4">Gửi đánh giá</button>
+                                    </div>
+                                </form>
+
                             </div>
                         </div>
 
+                        <div class="comment-list mt-4">
+                            <h5 class="fw-bold mb-4 border-bottom pb-2">Khách hàng nhận xét</h5>
+
+                            <div class="comment-item d-flex" th:each="review : ${reviews}">
+                                <div class="comment-avatar me-3" style="background: transparent;">
+                                    <img th:src="@{'https://ui-avatars.com/api/?name=' + ${review.customer.fullName} + '&background=random'}"
+                                        class="rounded-circle" width="50" height="50">
+                                </div>
+
+                                <div class="comment-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="comment-author">
+                                                [[${review.customer.fullName}]]
+                                                <span class="badge bg-light text-success ms-1 small fw-normal"><i
+                                                        class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                                    th:class="${i <= review.rating ? 'bi bi-star-fill text-warning small' : 'bi bi-star text-warning small'}"></i>
+                                            </div>
+                                        </div>
+                                        <div class="comment-date"
+                                            th:text="${#temporals.format(review.reviewDate, 'dd/MM/yyyy')}"></div>
+                                    </div>
+                                    <div class="comment-text" th:text="${review.comment}"></div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+
+    <form id="directCheckoutForm" th:action="@{/cart/buy-now}" method="POST" style="display: none;">
+        <input type="hidden" name="productId" th:value="${product.productId}">
+        <input type="hidden" name="sizeId" id="directSizeId">
+        <input type="hidden" name="colorId" id="directColorId">
+        <input type="hidden" name="quantity" value="1">
+    </form>
+
+    <!-- Variant stock data encoded as data-attributes (safe, no inline JS issues) -->
+    <div id="variant-stock-data" style="display:none">
+        <span th:each="v : ${variants}" th:if="${v.categorySize != null and v.color != null}"
+            th:attr="data-key=${v.categorySize.categorySizeId + '_' + v.color.colorId}, data-stock=${v.stock}"></span>
     </div>
-</main>
 
-<footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+        // Build stock map from hidden data-attributes (safe Thymeleaf approach)
+        const variantStockMap = {};
 
-<form id="directCheckoutForm" th:action="@{/cart/buy-now}" method="POST" style="display: none;">
-    <input type="hidden" name="productId" th:value="${product.productId}">
-    <input type="hidden" name="sizeId" id="directSizeId">
-    <input type="hidden" name="colorId" id="directColorId">
-    <input type="hidden" name="quantity" value="1">
-</form>
-
-<!-- Variant stock data encoded as data-attributes (safe, no inline JS issues) -->
-<div id="variant-stock-data" style="display:none">
-    <span th:each="v : ${variants}"
-          th:if="${v.categorySize != null and v.color != null}"
-          th:attr="data-key=${v.categorySize.categorySizeId + '_' + v.color.colorId}, data-stock=${v.stock}"></span>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-// Build stock map from hidden data-attributes (safe Thymeleaf approach)
-const variantStockMap = {};
-
-function getSelectedStock() {
-    const selectedSize  = document.querySelector('input[name="sizeId"]:checked');
-    const selectedColor = document.querySelector('input[name="colorId"]:checked');
-    if (!selectedSize || !selectedColor) return null;
-    const key = selectedSize.value + '_' + selectedColor.value;
-    return (variantStockMap[key] !== undefined) ? variantStockMap[key] : null;
-}
-
-function updateQuantityLimit() {
-    const stock = getSelectedStock();
-    const qInput = document.getElementById('quantityInput');
-    const btnAddCart = document.querySelector('.btn-add-cart');
-    const btnBuyNow = document.querySelector('.btn-buy-now');
-    
-    if (stock !== null) {
-        if (stock <= 0) {
-            qInput.max = 0;
-            qInput.value = 0;
-            btnAddCart.disabled = true;
-            btnAddCart.innerHTML = '<i class="bi bi-x-circle me-2"></i> HẾT HÀNG';
-            btnAddCart.style.opacity = '0.6';
-            btnAddCart.style.cursor = 'not-allowed';
-            
-            btnBuyNow.disabled = true;
-            btnBuyNow.innerHTML = '<i class="bi bi-slash-circle me-2"></i> HẾT HÀNG';
-            btnBuyNow.style.opacity = '0.6';
-            btnBuyNow.style.cursor = 'not-allowed';
-        } else {
-            qInput.max = stock;
-            if (parseInt(qInput.value) > stock) {
-                qInput.value = stock;
-            } else if (parseInt(qInput.value) <= 0) {
-                qInput.value = 1;
-            }
-            btnAddCart.disabled = false;
-            btnAddCart.innerHTML = '<i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG';
-            btnAddCart.style.opacity = '1';
-            btnAddCart.style.cursor = 'pointer';
-            
-            btnBuyNow.disabled = false;
-            btnBuyNow.innerHTML = '<i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY';
-            btnBuyNow.style.opacity = '1';
-            btnBuyNow.style.cursor = 'pointer';
+        function getSelectedStock() {
+            const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+            const selectedColor = document.querySelector('input[name="colorId"]:checked');
+            if (!selectedSize || !selectedColor) return null;
+            const key = selectedSize.value + '_' + selectedColor.value;
+            return (variantStockMap[key] !== undefined) ? variantStockMap[key] : null;
         }
-        updateBuyNowFormQuantity();
-    }
-}
 
-// Gắn sự kiện cho tất cả radio size & color
-document.addEventListener('DOMContentLoaded', function() {
-    // Đọc dữ liệu stock từ data-attributes
-    document.querySelectorAll('#variant-stock-data span').forEach(function(span) {
-        variantStockMap[span.dataset.key] = parseInt(span.dataset.stock);
-    });
+        function updateQuantityLimit() {
+            const stock = getSelectedStock();
+            const qInput = document.getElementById('quantityInput');
+            const btnAddCart = document.querySelector('.btn-add-cart');
+            const btnBuyNow = document.querySelector('.btn-buy-now');
 
-    // Gắn listener khi thay đổi size hoặc color
-    document.querySelectorAll('input[name="sizeId"], input[name="colorId"]').forEach(function(radio) {
-        radio.addEventListener('change', updateQuantityLimit);
-    });
-    
-    // Kiểm tra trạng thái ban đầu if any
-    updateQuantityLimit();
-});
+            if (stock !== null) {
+                if (stock <= 0) {
+                    qInput.max = 0;
+                    qInput.value = 0;
+                    btnAddCart.disabled = true;
+                    btnAddCart.innerHTML = '<i class="bi bi-x-circle me-2"></i> HẾT HÀNG';
+                    btnAddCart.style.opacity = '0.6';
+                    btnAddCart.style.cursor = 'not-allowed';
 
-function decreaseQuantity() {
-    const quantityInput = document.getElementById('quantityInput');
-    let currentValue = parseInt(quantityInput.value);
-    if (currentValue > 1) {
-        quantityInput.value = currentValue - 1;
-        updateBuyNowFormQuantity();
-    }
-}
+                    btnBuyNow.disabled = true;
+                    btnBuyNow.innerHTML = '<i class="bi bi-slash-circle me-2"></i> HẾT HÀNG';
+                    btnBuyNow.style.opacity = '0.6';
+                    btnBuyNow.style.cursor = 'not-allowed';
+                } else {
+                    qInput.max = stock;
+                    if (parseInt(qInput.value) > stock) {
+                        qInput.value = stock;
+                    } else if (parseInt(qInput.value) <= 0) {
+                        qInput.value = 1;
+                    }
+                    btnAddCart.disabled = false;
+                    btnAddCart.innerHTML = '<i class="bi bi-bag-plus me-2"></i> THÊM VÀO GIỎ HÀNG';
+                    btnAddCart.style.opacity = '1';
+                    btnAddCart.style.cursor = 'pointer';
 
-function increaseQuantity() {
-    const quantityInput = document.getElementById('quantityInput');
-    let currentValue = parseInt(quantityInput.value);
-    // Luôn dùng thuộc tính max hiện tại của input (đã được set theo stock)
-    const maxQty = parseInt(quantityInput.max) || 99;
-    if (currentValue < maxQty) {
-        quantityInput.value = currentValue + 1;
-        updateBuyNowFormQuantity();
-    }
-}
+                    btnBuyNow.disabled = false;
+                    btnBuyNow.innerHTML = '<i class="bi bi-lightning-charge-fill me-2"></i> MUA NGAY';
+                    btnBuyNow.style.opacity = '1';
+                    btnBuyNow.style.cursor = 'pointer';
+                }
+                updateBuyNowFormQuantity();
+            }
+        }
 
-function updateBuyNowFormQuantity() {
-    const qty = document.getElementById('quantityInput').value;
-    const buyNowQty = document.querySelector('#directCheckoutForm input[name="quantity"]');
-    if (buyNowQty) buyNowQty.value = qty;
-}
+        // Gắn sự kiện cho tất cả radio size & color
+        document.addEventListener('DOMContentLoaded', function () {
+            // Đọc dữ liệu stock từ data-attributes
+            document.querySelectorAll('#variant-stock-data span').forEach(function (span) {
+                variantStockMap[span.dataset.key] = parseInt(span.dataset.stock);
+            });
 
-function addToCart() {
-    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
-    const selectedColor = document.querySelector('input[name="colorId"]:checked');
-    
-    if (!selectedSize) {
-        alert('⚠️ Vui lòng chọn Kích thước trước khi thêm vào giỏ hàng!');
-        return;
-    }
-    
-    if (!selectedColor) {
-        alert('⚠️ Vui lòng chọn Màu sắc trước khi thêm vào giỏ hàng!');
-        return;
-    }
-    
-    // Submit form thêm vào giỏ hàng
-    document.getElementById('mainCartForm').submit();
-}
+            // Gắn listener khi thay đổi size hoặc color
+            document.querySelectorAll('input[name="sizeId"], input[name="colorId"]').forEach(function (radio) {
+                radio.addEventListener('change', updateQuantityLimit);
+            });
 
-function buyNow() {
-    const selectedSize = document.querySelector('input[name="sizeId"]:checked');
-    const selectedColor = document.querySelector('input[name="colorId"]:checked');
-    const selectedQuantity = document.querySelector('input[name="quantity"]').value;
-    
-    if (!selectedSize) {
-        alert('⚠️ Vui lòng chọn Kích thước trước khi mua!');
-        return;
-    }
-    
-    if (!selectedColor) {
-        alert('⚠️ Vui lòng chọn Màu sắc trước khi mua!');
-        return;
-    }
-    
-    // Gán giá trị vào form ẩn
-    document.getElementById('directSizeId').value = selectedSize.value;
-    document.getElementById('directColorId').value = selectedColor.value;
-    document.querySelector('#directCheckoutForm input[name="quantity"]').value = selectedQuantity;
-    
-    // Submit form MUA NGAY
-    document.getElementById('directCheckoutForm').submit();
-}
-function updateReviewCounter() {
-    const textarea = document.getElementById('reviewComment');
-    const counter  = document.getElementById('reviewCounter');
-    if (!textarea || !counter) return;
-    const len = textarea.value.length;
-    const max = 500;
-    counter.textContent = len + ' / ' + max;
-    // Đổi màu khi gần đạt giới hạn
-    if (len >= max) {
-        counter.className = 'text-danger fw-bold';
-    } else if (len >= max * 0.8) {
-        counter.className = 'text-warning fw-bold';
-    } else {
-        counter.className = 'text-muted';
-    }
-}
-</script>
+            // Kiểm tra trạng thái ban đầu if any
+            updateQuantityLimit();
+        });
+
+        function decreaseQuantity() {
+            const quantityInput = document.getElementById('quantityInput');
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+                updateBuyNowFormQuantity();
+            }
+        }
+
+        function increaseQuantity() {
+            const quantityInput = document.getElementById('quantityInput');
+            let currentValue = parseInt(quantityInput.value);
+            // Luôn dùng thuộc tính max hiện tại của input (đã được set theo stock)
+            const maxQty = parseInt(quantityInput.max) || 99;
+            if (currentValue < maxQty) {
+                quantityInput.value = currentValue + 1;
+                updateBuyNowFormQuantity();
+            }
+        }
+
+        function updateBuyNowFormQuantity() {
+            const qty = document.getElementById('quantityInput').value;
+            const buyNowQty = document.querySelector('#directCheckoutForm input[name="quantity"]');
+            if (buyNowQty) buyNowQty.value = qty;
+        }
+
+        function addToCart() {
+            const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+            const selectedColor = document.querySelector('input[name="colorId"]:checked');
+
+            if (!selectedSize) {
+                alert('⚠️ Vui lòng chọn Kích thước trước khi thêm vào giỏ hàng!');
+                return;
+            }
+
+            if (!selectedColor) {
+                alert('⚠️ Vui lòng chọn Màu sắc trước khi thêm vào giỏ hàng!');
+                return;
+            }
+
+            // Submit form thêm vào giỏ hàng
+            document.getElementById('mainCartForm').submit();
+        }
+
+        function buyNow() {
+            const selectedSize = document.querySelector('input[name="sizeId"]:checked');
+            const selectedColor = document.querySelector('input[name="colorId"]:checked');
+            const selectedQuantity = document.querySelector('input[name="quantity"]').value;
+
+            if (!selectedSize) {
+                alert('⚠️ Vui lòng chọn Kích thước trước khi mua!');
+                return;
+            }
+
+            if (!selectedColor) {
+                alert('⚠️ Vui lòng chọn Màu sắc trước khi mua!');
+                return;
+            }
+
+            // Gán giá trị vào form ẩn
+            document.getElementById('directSizeId').value = selectedSize.value;
+            document.getElementById('directColorId').value = selectedColor.value;
+            document.querySelector('#directCheckoutForm input[name="quantity"]').value = selectedQuantity;
+
+            // Submit form MUA NGAY
+            document.getElementById('directCheckoutForm').submit();
+        }
+        function updateReviewCounter() {
+            const textarea = document.getElementById('reviewComment');
+            const counter = document.getElementById('reviewCounter');
+            if (!textarea || !counter) return;
+
+            const text = textarea.value.trim();
+            const charLen = text.length;
+            const wordCount = text.length > 0 ? text.split(/\s+/).length : 0;
+
+            counter.textContent = charLen + ' ký tự | ' + wordCount + ' từ (Tối đa 200 từ)';
+
+            // Đổi màu khi gần đạt giới hạn
+            if (wordCount > 200) {
+                counter.className = 'text-danger fw-bold';
+            } else if (wordCount >= 180) {
+                counter.className = 'text-warning fw-bold';
+            } else {
+                counter.className = 'text-muted';
+            }
+        }
+
+        // Chặn submit nếu quá 200 từ
+        document.addEventListener('DOMContentLoaded', function () {
+            const reviewForm = document.querySelector('form[action$="/review/add"]');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', function (e) {
+                    const textarea = document.getElementById('reviewComment');
+                    const text = textarea.value.trim();
+                    const wordCount = text.length > 0 ? text.split(/\s+/).length : 0;
+                    if (wordCount > 200) {
+                        e.preventDefault();
+                        alert('⚠️ Nội dung đánh giá của bạn quá dài! Vui lòng rút gọn lại dưới 200 từ.');
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
+
 </html>

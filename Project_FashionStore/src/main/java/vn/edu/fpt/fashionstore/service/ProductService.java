@@ -119,7 +119,7 @@ public class ProductService {
 
     // Lọc sản phẩm theo nhiều tiêu chí
     public Page<Product> filterProducts(Integer categoryId, String size, Double minPrice, Double maxPrice,
-                                        Pageable pageable) {
+            Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
 
@@ -160,7 +160,14 @@ public class ProductService {
             Double minPrice, Double maxPrice, Pageable pageable) {
 
         Specification<Product> spec = (root, query, cb) -> {
-            query.distinct(true);
+            // Use DISTINCT only for count queries, GROUP BY for result queries to handle
+            // SQL Server sorting
+            if (query.getResultType() == Long.class) {
+                query.distinct(true);
+            } else {
+                query.groupBy(root.get("productId"), root.get("productName"), root.get("description"),
+                        root.get("category"), root.get("accountId"));
+            }
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Tìm theo tên sản phẩm
@@ -180,26 +187,28 @@ public class ProductService {
                             "túi xách", "giày dép", "mũ nón", "đồng hồ", "mắt kính", "phụ kiện khác", "phụ kiện");
                     predicates.add(cb.lower(root.get("category").get("categoryName")).in(accessoryCategories));
                 } else {
-                    predicates.add(cb.equal(cb.lower(root.get("category").get("categoryName")), categoryName.toLowerCase()));
+                    predicates.add(
+                            cb.equal(cb.lower(root.get("category").get("categoryName")), categoryName.toLowerCase()));
                 }
             }
 
             // 4. Lọc biến thể bằng Subquery để tránh nhân bản dữ liệu (DISTINCT)
-            boolean hasOtherVariantFilter = (size != null && !size.isBlank()) || 
-                                          (color != null && !color.isBlank()) || 
-                                          (minPrice != null && minPrice > 0) || 
-                                          (maxPrice != null && maxPrice > 0);
-            
-            boolean hasStockStatusFilter = (stockStatus != null && !stockStatus.isBlank() && !stockStatus.equals("all"));
+            boolean hasOtherVariantFilter = (size != null && !size.isBlank()) ||
+                    (color != null && !color.isBlank()) ||
+                    (minPrice != null && minPrice > 0) ||
+                    (maxPrice != null && maxPrice > 0);
+
+            boolean hasStockStatusFilter = (stockStatus != null && !stockStatus.isBlank()
+                    && !stockStatus.equals("all"));
 
             if (hasOtherVariantFilter) {
                 jakarta.persistence.criteria.Subquery<Integer> subquery = query.subquery(Integer.class);
                 Root<ProductVariant> subRoot = subquery.from(ProductVariant.class);
                 subquery.select(cb.literal(1));
-                
+
                 List<Predicate> subPredicates = new ArrayList<>();
                 subPredicates.add(cb.equal(subRoot.get("product"), root));
-                
+
                 if (size != null && !size.isBlank()) {
                     subPredicates.add(cb.equal(subRoot.get("categorySize").get("sizeName"), size));
                 }
@@ -221,7 +230,7 @@ public class ProductService {
                 Root<ProductVariant> sumRoot = sumSubquery.from(ProductVariant.class);
                 sumSubquery.select(cb.sum(sumRoot.get("stock")));
                 sumSubquery.where(cb.equal(sumRoot.get("product"), root));
-                
+
                 if (stockStatus.equalsIgnoreCase("in-stock")) {
                     predicates.add(cb.greaterThan(sumSubquery, 20L));
                 } else if (stockStatus.equalsIgnoreCase("low-stock")) {
@@ -232,8 +241,9 @@ public class ProductService {
             }
 
             // 5. Sắp xếp theo giá (cần Join nhưng chỉ cho orderBy)
-            if (pageable.getSort() != null && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
-                Join<Product, ProductVariant> sortJoin = root.join("variants", JoinType.INNER);
+            if (pageable.getSort() != null
+                    && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
+                Join<Product, ProductVariant> sortJoin = root.join("variants", JoinType.LEFT);
                 pageable.getSort().forEach(order -> {
                     if (order.getProperty().equals("variants.price")) {
                         if (order.getDirection().isAscending()) {
@@ -249,32 +259,37 @@ public class ProductService {
         };
 
         Pageable p = pageable;
-        if (pageable.getSort() != null && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
+        if (pageable.getSort() != null
+                && pageable.getSort().stream().anyMatch(o -> o.getProperty().equals("variants.price"))) {
             p = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.unsorted());
         }
 
         Page<Product> result = productRepository.findAll(spec, p);
-        
+
         // 6. Force load và lọc biến thể để hiển thị giá khớp filter
-        boolean hasVarFilter = (size != null && !size.isBlank()) || 
-                             (color != null && !color.isBlank()) || 
-                             (minPrice != null && minPrice > 0) || 
-                             (maxPrice != null && maxPrice > 0);
+        boolean hasVarFilter = (size != null && !size.isBlank()) ||
+                (color != null && !color.isBlank()) ||
+                (minPrice != null && minPrice > 0) ||
+                (maxPrice != null && maxPrice > 0);
 
         result.forEach(product -> {
             if (product.getVariants() != null) {
                 List<ProductVariant> matchedVariants = product.getVariants().stream()
-                    .filter(v -> {
-                        boolean match = true;
-                        if (size != null && !size.isBlank()) match &= v.getCategorySize() != null && size.equals(v.getCategorySize().getSizeName());
-                        if (color != null && !color.isBlank()) match &= v.getColor() != null && color.equals(v.getColor().getColorName());
-                        if (minPrice != null && minPrice > 0) match &= v.getPrice() != null && v.getPrice() >= minPrice;
-                        if (maxPrice != null && maxPrice > 0) match &= v.getPrice() != null && v.getPrice() <= maxPrice;
-                        return match;
-                    })
-                    .sorted((v1, v2) -> v1.getPrice().compareTo(v2.getPrice()))
-                    .collect(java.util.stream.Collectors.toList());
-                
+                        .filter(v -> {
+                            boolean match = true;
+                            if (size != null && !size.isBlank())
+                                match &= v.getCategorySize() != null && size.equals(v.getCategorySize().getSizeName());
+                            if (color != null && !color.isBlank())
+                                match &= v.getColor() != null && color.equals(v.getColor().getColorName());
+                            if (minPrice != null && minPrice > 0)
+                                match &= v.getPrice() != null && v.getPrice() >= minPrice;
+                            if (maxPrice != null && maxPrice > 0)
+                                match &= v.getPrice() != null && v.getPrice() <= maxPrice;
+                            return match;
+                        })
+                        .sorted((v1, v2) -> v1.getPrice().compareTo(v2.getPrice()))
+                        .collect(java.util.stream.Collectors.toList());
+
                 if (hasVarFilter && !matchedVariants.isEmpty()) {
                     product.setVariants(matchedVariants);
                 } else {
@@ -529,8 +544,8 @@ public class ProductService {
 
     private boolean hasVariantFilter(String size, String color, Double minPrice, Double maxPrice) {
         return (size != null && !size.isBlank()) ||
-               (color != null && !color.isBlank()) ||
-               (minPrice != null && minPrice > 0) ||
-               (maxPrice != null && maxPrice > 0);
+                (color != null && !color.isBlank()) ||
+                (minPrice != null && minPrice > 0) ||
+                (maxPrice != null && maxPrice > 0);
     }
 }

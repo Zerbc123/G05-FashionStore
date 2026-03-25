@@ -279,10 +279,10 @@ public class ProductController {
             long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, id);
             long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, id);
 
-            // Nút "Viết đánh giá" chỉ hiện khi số lần mua NHIỀU HƠN số lần đã review
-            model.addAttribute("canReview", purchaseCount > reviewCount);
-            // Đã review ít nhất 1 lần (dùng để hiện thông báo "đã đánh giá" thay vì "cần mua")
-            model.addAttribute("hasReviewed", reviewCount > 0);
+            // Nút "Viết đánh giá" chỉ hiện khi ĐÃ MUA (COMPLETED) và CHƯA REVIEW (Mỗi sản phẩm chỉ được review 1 lần)
+            model.addAttribute("canReview", purchaseCount > 0 && reviewCount == 0);
+            // Đã review ít nhất 1 lần (dùng để hiện thông báo "đã đánh giá")
+            model.addAttribute("hasReviewed", reviewCount >= 1);
         } else {
             model.addAttribute("canReview", false);
             model.addAttribute("hasReviewed", false);

@@ -66,15 +66,24 @@ public class ReviewController {
         long purchaseCount = orderService.countSuccessfulPurchases(currentCustomer, productId);
         long reviewCount = reviewRepository.countByCustomerAndProduct_ProductId(currentCustomer, productId);
 
-        // 3. KIỂM TRA ĐIỀU KIỆN ĐÁNH GIÁ (Phải mua rồi và Số lần mua > Số lần đã đánh giá)
+        // 3. KIỂM TRA ĐIỀU KIỆN ĐÁNH GIÁ (Phải mua rồi và Chưa từng đánh giá sản phẩm này)
         if (purchaseCount == 0) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bạn phải mua và nhận hàng thành công mới được đánh giá sản phẩm này!");
             return "redirect:/products/detail/" + productId;
         }
 
-        if (purchaseCount <= reviewCount) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bạn đã hết lượt đánh giá cho lần mua này. Hãy mua thêm để tiếp tục đánh giá nhé!");
+        if (reviewCount >= 1) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn đã đánh giá sản phẩm này rồi! Mỗi sản phẩm chỉ được nhận xét một lần duy nhất.");
             return "redirect:/products/detail/" + productId;
+        }
+
+        // 3.5 KIỂM TRA ĐỘ DÀI (Giới hạn 200 từ)
+        if (comment != null) {
+            String[] words = comment.trim().split("\\s+");
+            if (words.length > 200) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Nội dung đánh giá không được quá 200 từ!");
+                return "redirect:/products/detail/" + productId;
+            }
         }
 
         // 4. LƯU ĐÁNH GIÁ VÀO DATABASE
