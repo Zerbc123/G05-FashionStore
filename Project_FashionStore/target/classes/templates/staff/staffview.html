@@ -89,10 +89,6 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
 
-        .feature-card.dashboard:hover {
-            border-color: #667eea;
-        }
-
         .feature-card.orders:hover {
             border-color: #f093fb;
         }
@@ -109,9 +105,7 @@
             border-color: #ff6b9d;
         }
 
-        .feature-card.categories:hover {
-            border-color: #feca57;
-        }
+
 
         .feature-icon {
             width: 80px;
@@ -123,10 +117,6 @@
             margin: 0 auto 25px;
             font-size: 2rem;
             color: white;
-        }
-
-        .icon-dashboard {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .icon-orders {
@@ -145,9 +135,7 @@
             background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
         }
 
-        .icon-categories {
-            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
-        }
+
 
         .feature-card h3 {
             font-family: 'Playfair Display', serif;
@@ -173,10 +161,6 @@
             color: white;
         }
 
-        .btn-dashboard {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
         .btn-orders {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
@@ -193,9 +177,7 @@
             background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
         }
 
-        .btn-categories {
-            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
-        }
+
 
         .btn-feature:hover {
             transform: scale(1.05);
@@ -203,30 +185,7 @@
             color: white;
         }
 
-        /* Stats Section */
-        .stats-section {
-            background: white;
-            padding: 60px 0;
-        }
 
-        .stat-card {
-            text-align: center;
-            padding: 30px;
-        }
-
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #667eea;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .stat-label {
-            color: #636e72;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
 
         /* Footer */
         .staff-footer {
@@ -261,20 +220,6 @@
         <div class="container">
             <h2 class="section-title">Truy Cập Nhanh</h2>
             <div class="row g-4">
-                <!-- Dashboard Card -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card dashboard">
-                        <div class="feature-icon icon-dashboard">
-                            <i class="bi bi-speedometer2"></i>
-                        </div>
-                        <h3>Dashboard</h3>
-                        <p>Xem tổng quan thống kê và báo cáo hệ thống</p>
-                        <a th:href="@{/staff/dashboard}" class="btn-feature btn-dashboard">
-                            <i class="bi bi-arrow-right"></i> Xem Dashboard
-                        </a>
-                    </div>
-                </div>
-
                 <!-- Orders Card -->
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card orders">
@@ -331,54 +276,12 @@
                     </div>
                 </div>
 
-                <!-- Categories Card -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card categories">
-                        <div class="feature-icon icon-categories">
-                            <i class="bi bi-tags"></i>
-                        </div>
-                        <h3>Danh Mục</h3>
-                        <p>Tổ chức và quản lý danh mục sản phẩm</p>
-                        <a th:href="@{/staff/categories}" class="btn-feature btn-categories">
-                            <i class="bi bi-arrow-right"></i> Quản Lý DM
-                        </a>
-                    </div>
-                </div>
+
             </div>
         </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">12</div>
-                        <div class="stat-label">Đơn Chờ</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">45</div>
-                        <div class="stat-label">Hoàn Thành</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">8</div>
-                        <div class="stat-label">Tickets Mới</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card">
-                        <div class="stat-number">234</div>
-                        <div class="stat-label">Sản Phẩm</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Footer -->
     <footer class="staff-footer">
