@@ -60,8 +60,12 @@ public class AdminVoucherController {
     // 5. Xóa Voucher (Gọi qua đường link GET tĩnh)
     @GetMapping("/delete/{id}")
     public String deleteVoucher(@PathVariable("id") Integer id, RedirectAttributes ra) {
-        voucherService.deleteVoucher(id);
-        ra.addFlashAttribute("successMessage", "Đã xóa mã giảm giá khỏi hệ thống!");
+        try {
+            voucherService.deleteVoucher(id);
+            ra.addFlashAttribute("successMessage", "Đã xóa mã giảm giá khỏi hệ thống!");
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/admin/vouchers";
     }
 }

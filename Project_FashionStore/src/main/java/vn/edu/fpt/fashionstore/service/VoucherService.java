@@ -3,6 +3,7 @@ package vn.edu.fpt.fashionstore.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.fashionstore.entity.Voucher;
+import vn.edu.fpt.fashionstore.repository.OrderRepository;
 import vn.edu.fpt.fashionstore.repository.VoucherRepository;
 
 import java.time.LocalDate;
@@ -14,6 +15,9 @@ public class VoucherService {
 
     @Autowired
     private VoucherRepository voucherRepository;
+    
+    @Autowired
+    private OrderRepository orderRepository;
 
     // 1. Lấy toàn bộ danh sách Voucher để hiển thị lên bảng cho Admin
     public List<Voucher> getAllVouchers() {
@@ -37,6 +41,10 @@ public class VoucherService {
 
     // 4. Xóa Voucher theo ID
     public void deleteVoucher(Integer id) {
+        // Kiểm tra xem voucher có đang được sử dụng bởi orders không
+        if (orderRepository.existsByVoucher_VoucherId(id)) {
+            throw new RuntimeException("Không thể xóa mã giảm giá này vì đã có đơn hàng sử dụng!");
+        }
         voucherRepository.deleteById(id);
     }
 

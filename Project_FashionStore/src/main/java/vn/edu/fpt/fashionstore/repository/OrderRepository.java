@@ -127,4 +127,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Long getTotalOrders(@Param("startDate") LocalDate startDate, 
                         @Param("endDate") LocalDate endDate, 
                         @Param("statuses") List<OrderStatus> statuses);
+    
+    // Check if voucher is being used by any orders
+    boolean existsByVoucher_VoucherId(Integer voucherId);
 }
