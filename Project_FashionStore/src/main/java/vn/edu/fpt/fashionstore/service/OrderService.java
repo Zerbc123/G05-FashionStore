@@ -36,15 +36,10 @@ public class OrderService {
     @Autowired
     private VoucherRepository voucherRepository;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public long countSuccessfulPurchases(Customer customer, Long productId) {
-        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng COMPLETED và đúng mã sản phẩm
-        return orderRepository.findAll().stream()
-                .filter(o -> o.getCustomer().getCustomerId().equals(customer.getCustomerId())
-                        && o.getStatus() == OrderStatus.COMPLETED)
-                .flatMap(o -> o.getOrderItems().stream())
-                .filter(oi -> oi.getProductVariant().getProduct().getProductId().equals(productId))
-                .count();
+        // Đếm tất cả OrderItem của khách hàng này, thuộc đơn hàng CONFIRMED hoặc COMPLETED và đúng mã sản phẩm
+        return orderRepository.countSuccessfulPurchases(customer, productId);
     }
 
     // =======================================================

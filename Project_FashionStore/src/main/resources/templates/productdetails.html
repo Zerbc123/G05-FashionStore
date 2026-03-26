@@ -565,14 +565,14 @@
                                 <h6 class="fw-bold mb-3 text-success"><i class="bi bi-pencil-square"></i> Đánh giá của
                                     bạn về sản phẩm này</h6>
 
-                                <form th:action="@{/review/add}" method="POST">
+                                <form id="reviewForm" th:action="@{/review/add}" method="POST">
                                     <input type="hidden" name="productId" th:value="${product.productId}">
 
                                     <div class="mb-3">
                                         <label class="small text-muted mb-1">Bạn thấy sản phẩm thế nào? (Chọn số
                                             sao)</label>
                                         <div class="star-rating" style="justify-content: flex-end;">
-                                            <input type="radio" id="star5" name="rating" value="5" required /><label
+                                            <input type="radio" id="star5" name="rating" value="5" /><label
                                                 for="star5"><i class="bi bi-star-fill"></i></label>
                                             <input type="radio" id="star4" name="rating" value="4" /><label
                                                 for="star4"><i class="bi bi-star-fill"></i></label>
@@ -817,16 +817,34 @@
 
         // Chặn submit nếu quá 200 từ
         document.addEventListener('DOMContentLoaded', function () {
-            const reviewForm = document.querySelector('form[action$="/review/add"]');
+            const reviewForm = document.getElementById('reviewForm');
             if (reviewForm) {
                 reviewForm.addEventListener('submit', function (e) {
                     const textarea = document.getElementById('reviewComment');
                     const text = textarea.value.trim();
                     const wordCount = text.length > 0 ? text.split(/\s+/).length : 0;
+                    
                     if (wordCount > 200) {
                         e.preventDefault();
                         alert('⚠️ Nội dung đánh giá của bạn quá dài! Vui lòng rút gọn lại dưới 200 từ.');
+                        return;
                     }
+
+                    if (text.length < 10) {
+                        e.preventDefault();
+                        alert('⚠️ Nội dung đánh giá quá ngắn! Vui lòng nhập ít nhất 10 ký tự.');
+                        return;
+                    }
+                    
+                    // Check if rating is selected
+                    const rating = reviewForm.querySelector('input[name="rating"]:checked');
+                    if (!rating) {
+                        e.preventDefault();
+                        alert('⚠️ Vui lòng chọn số sao đánh giá!');
+                        return;
+                    }
+                    
+                    console.log('Submitting review form...');
                 });
             }
         });
