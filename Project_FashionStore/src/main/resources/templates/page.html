@@ -418,11 +418,38 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             margin-bottom: 2rem;
+            position: relative;
         }
 
         .product-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Out of Stock Styles */
+        .product-card.out-of-stock .product-image {
+            opacity: 0.6;
+        }
+
+        .out-of-stock-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .out-of-stock-overlay span {
+            background: #dc3545;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+            display: inline-block;
         }
 
         .product-image-wrapper {
@@ -927,8 +954,12 @@
         <div class="row">
 
             <div class="col-lg-3 col-md-6" th:each="product : ${bestSellingProducts}">
-                <div class="product-card">
+                <div class="product-card" th:classappend="${product.isOutOfStock()} ? 'out-of-stock' : ''">
                     <div class="product-image-wrapper">
+                        <!-- Out of Stock Overlay -->
+                        <div th:if="${product.isOutOfStock()}" class="out-of-stock-overlay">
+                            <span>HẾT HÀNG</span>
+                        </div>
                         <a th:href="@{/products/detail/{id}(id=${product.id})}">
                             <img th:src="${product.image}"
                                  alt="Product" class="product-image"

@@ -61,6 +61,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         String getImage();        // Hứng alias 'image' (Ảnh đại diện)
 
         String getCategoryName(); // Hứng alias 'categoryName'
+
+        Long getTotalStock();     // Hứng alias 'totalStock' (Tổng số lượng tồn kho)
+
+        // Helper method để check hết hàng
+        default boolean isOutOfStock() {
+            return getTotalStock() == null || getTotalStock() == 0;
+        }
     }
 
     // 2. Câu truy vấn tối ưu lấy dữ liệu vào Interface trên
@@ -69,7 +76,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "p.productName as name, " +
             "c.categoryName as categoryName, " +
             "MIN(v.price) as price, " +          // Lấy giá thấp nhất trong các biến thể
-            "MIN(v.imageUrl) as image " +       // Lấy 1 ảnh đại diện (chú ý tên trường trong Entity Variant là imageUrl hay image_url)
+            "MIN(v.imageUrl) as image, " +       // Lấy 1 ảnh đại diện
+            "COALESCE(SUM(v.stock), 0) as totalStock " +  // Tổng tồn kho của tất cả variants
             "FROM Product p " +
             "LEFT JOIN p.variants v " +          // Kết nối bảng biến thể
             "LEFT JOIN p.category c " +          // Kết nối bảng danh mục
@@ -81,12 +89,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "p.productId as id, " +
             "p.productName as name, " +
             "c.categoryName as categoryName, " +
-            "MIN(v.price) as price, " +
-            "MIN(v.imageUrl) as image " +
+            "MIN(pv.price) as price, " +
+            "MIN(pv.imageUrl) as image, " +
+            "COALESCE(SUM(pv.stock), 0) as totalStock " +  // Tổng tồn kho
             "FROM OrderItem oi " +
             "JOIN oi.productVariant v " +
             "JOIN v.product p " +
             "LEFT JOIN p.category c " +
+            "LEFT JOIN p.variants pv " +  // Join thêm để lấy stock của tất cả variants
             "WHERE oi.order.status = vn.edu.fpt.fashionstore.entity.OrderStatus.CONFIRMED " +
             "GROUP BY p.productId, p.productName, c.categoryName " +
             "ORDER BY SUM(oi.quantity) DESC")
