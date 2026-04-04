@@ -45,19 +45,19 @@ public class Order {
     @Transient
     private String deliveryAddress;
 
-    @Transient
+    @Column(name = "confirmed_by", length = 100, columnDefinition = "NVARCHAR(100)")
     private String confirmedBy;
 
-    @Transient
+    @Column(name = "confirmed_date")
     private java.time.LocalDateTime confirmedDate;
 
-    @Transient
+    @Column(name = "cancelled_by", length = 100, columnDefinition = "NVARCHAR(100)")
     private String cancelledBy;
 
-    @Transient
+    @Column(name = "cancelled_date")
     private java.time.LocalDateTime cancelledDate;
 
-    @Transient
+    @Column(name = "cancellation_reason", length = 500, columnDefinition = "NVARCHAR(500)")
     private String cancellationReason;
 
     @Column(name = "payment_status", length = 20)
@@ -115,9 +115,53 @@ public class Order {
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
+    public String getConfirmedBy() { return confirmedBy; }
+    public void setConfirmedBy(String confirmedBy) { this.confirmedBy = confirmedBy; }
+
+    public java.time.LocalDateTime getConfirmedDate() { return confirmedDate; }
+    public void setConfirmedDate(java.time.LocalDateTime confirmedDate) { this.confirmedDate = confirmedDate; }
+
+    public String getCancelledBy() { return cancelledBy; }
+    public void setCancelledBy(String cancelledBy) { this.cancelledBy = cancelledBy; }
+
+    public java.time.LocalDateTime getCancelledDate() { return cancelledDate; }
+    public void setCancelledDate(java.time.LocalDateTime cancelledDate) { this.cancelledDate = cancelledDate; }
+
+    public String getCancellationReason() { return cancellationReason; }
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+
     // --- Business methods cũ của bạn ---
     public boolean canBeCancelled() {
-        return status == OrderStatus.PENDING;
+        // Không cho hủy đơn đã thanh toán MoMo
+        if ("MOMO".equalsIgnoreCase(paymentMethod) && "PAID".equalsIgnoreCase(paymentStatus)) {
+            return false;
+        }
+        
+        // Cho phép hủy đơn PENDING hoặc CONFIRMED (trong vòng 1 phút)
+        // COMPLETED thì không cho hủy (đã giao hàng thành công)
+        if (status == OrderStatus.PENDING) {
+            return true;
+        }
+        
+        if (status == OrderStatus.CONFIRMED) {
+            // Chỉ cho hủy nếu chưa quá 1 phút kể từ khi confirm
+            if (confirmedDate != null) {
+                java.time.Duration duration = java.time.Duration.between(confirmedDate, java.time.LocalDateTime.now());
+                return duration.toMinutes() < 1; // Chỉ cho hủy trong vòng 1 phút
+            }
+            return true; // Nếu chưa có confirmedDate thì vẫn cho hủy
+        }
+        
+        return false; // COMPLETED và CANCELLED không cho hủy
+    }
+    
+    // Kiểm tra xem đơn hàng có thể tự động chuyển sang COMPLETED không
+    public boolean shouldAutoComplete() {
+        if (status == OrderStatus.CONFIRMED && confirmedDate != null) {
+            java.time.Duration duration = java.time.Duration.between(confirmedDate, java.time.LocalDateTime.now());
+            return duration.toMinutes() >= 1; // Sau 24h tự động COMPLETED
+        }
+        return false;
     }
 
     public boolean canBeConfirmed() {

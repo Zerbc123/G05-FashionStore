@@ -25,7 +25,9 @@ import vn.edu.fpt.fashionstore.entity.Order;
 import vn.edu.fpt.fashionstore.entity.OrderItem;
 import vn.edu.fpt.fashionstore.entity.OrderStatus;
 import vn.edu.fpt.fashionstore.repository.OrderRepository;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.util.RoleUtils;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/orders")
@@ -33,6 +35,7 @@ import vn.edu.fpt.fashionstore.util.RoleUtils;
 public class AdminOrderController {
 
     private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     private boolean isAdmin(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
@@ -80,29 +83,45 @@ public class AdminOrderController {
     @PostMapping("/update-status/{id}")
     @Transactional
     public String updateStatus(@PathVariable Long id,
-                               @RequestParam String status, HttpSession session, Model model) {
+                               @RequestParam String status, 
+                               HttpSession session, 
+                               RedirectAttributes redirectAttributes) {
 
         if (!RoleUtils.canManageOrders(session)) {
             return "redirect:/login";
         }
 
-        orderRepository.findById(id).ifPresent(order -> {
-            String currentStatus = order.getStatus().name();
-
-            // Prevent changing from Confirmed to Pending
-            if (("CONFIRMED".equalsIgnoreCase(currentStatus) || "CANCELLED".equalsIgnoreCase(currentStatus)) &&
-                    "PENDING".equalsIgnoreCase(status)) {
-                return;
+        try {
+            String userRole = (String) session.getAttribute("userRole");
+            if (userRole == null) {
+                userRole = "Admin";
             }
 
             // Chuyển String nhận từ HTML form sang Enum
-            try {
-                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
+            OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
+
+            // Gọi service để xử lý logic trừ/hoàn stock
+            if (newStatus == OrderStatus.CONFIRMED) {
+                orderService.confirmOrder(id, userRole);
+                redirectAttributes.addFlashAttribute("success", "Đã xác nhận đơn hàng và trừ stock thành công!");
+            } else if (newStatus == OrderStatus.CANCELLED) {
+                orderService.cancelOrder(id, userRole, "Đã hủy bởi " + userRole);
+                redirectAttributes.addFlashAttribute("success", "Đã hủy đơn hàng và hoàn lại stock thành công!");
+            } else {
+                // Các trạng thái khác chỉ cập nhật đơn giản
+                Order order = orderRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
                 order.setStatus(newStatus);
                 orderRepository.save(order);
-            } catch (IllegalArgumentException e) {
+                redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái đơn hàng thành công!");
             }
-        });
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "Trạng thái không hợp lệ!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật trạng thái: " + e.getMessage());
+        }
 
         return "redirect:/admin/orders";
     }

@@ -14,6 +14,7 @@ import vn.edu.fpt.fashionstore.repository.ProductRepository;
 import vn.edu.fpt.fashionstore.repository.ProductVariantRepository;
 
 import java.util.*;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -228,6 +229,11 @@ public class InventoryService {
                 .map(product -> {
                     List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(product.getProductId());
                     
+                    // Skip products with no variants since we can't manage their stock
+                    if (variants == null || variants.isEmpty()) {
+                        return null;
+                    }
+                    
                     // Calculate total stock
                     int totalStock = variants.stream()
                             .filter(v -> v.getStock() != null)
@@ -251,7 +257,7 @@ public class InventoryService {
                         status = "in-stock";
                     }
                     
-                    String imageUrl = (variants != null && !variants.isEmpty()) ? variants.get(0).getImageUrl() : null;
+                    String imageUrl = variants.get(0).getImageUrl();
                     
                     return new ProductInventoryDTO(
                         product.getProductId(),
@@ -264,6 +270,7 @@ public class InventoryService {
                         imageUrl
                     );
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
                 
         int start = (int) pageable.getOffset();

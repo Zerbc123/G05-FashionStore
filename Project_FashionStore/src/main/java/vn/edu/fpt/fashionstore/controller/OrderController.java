@@ -399,7 +399,6 @@ public class OrderController {
             // Tạo order từ session (hỗ trợ cả Mua ngay và checkout thường)
             Order order = orderService.createOrderFromSessionData(session, currentCustomer, deliveryAddress);
             order.setTotalAmount(totalAmount);
-            order.setStatus(OrderStatus.CONFIRMED);
             order.setPaymentMethod("MOMO");
             order.setPaymentStatus("PAID");
 
@@ -408,7 +407,11 @@ public class OrderController {
                 order.setVoucher(appliedVoucher);
             }
 
-            orderRepository.save(order);
+            // Lưu order trước (status = PENDING)
+            order = orderRepository.save(order);
+            
+            // Gọi confirmOrder để trừ stock và set confirmedDate
+            order = orderService.confirmOrder(order.getOrderId(), "MOMO Payment");
 
             session.removeAttribute("momo_deliveryAddress");
             session.removeAttribute("momo_totalAmount");
@@ -605,6 +608,7 @@ public class OrderController {
                     : (currentCustomer.getAddress() != null ? currentCustomer.getAddress() : "N/A");
             model.addAttribute("deliveryAddress", deliveryAddress);
 
+            model.addAttribute("order", order); // Thêm order object để dùng canBeCancelled()
             model.addAttribute("orderCode", "#" + order.getOrderId());
             model.addAttribute("orderId", order.getOrderId().toString());
             model.addAttribute("orderDate", order.getOrderDate());
@@ -650,6 +654,37 @@ public class OrderController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng.");
             return "redirect:/cart";
+        }
+    }
+
+    // =======================================================
+    // 7. LỊCH SỬ ĐƠN HÀNG
+    // =======================================================
+    @GetMapping("/history")
+    @Transactional(readOnly = true)
+    public String orderHistoryPage(HttpSession session, Model model) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            Customer currentCustomer = getCurrentCustomer(session);
+
+            // Kiểm tra nếu customer không tồn tại
+            if (currentCustomer == null) {
+                return "redirect:/login";
+            }
+
+            // Lấy danh sách đơn hàng của customer
+            List<Order> customerOrders = orderService.getOrdersByCustomer(currentCustomer);
+
+            // Thêm vào model
+            model.addAttribute("orders", customerOrders);
+            model.addAttribute("customerName", currentCustomer.getFullName());
+
+            return "viewhistory";
+        } catch (Exception e) {
+            return "redirect:/login";
         }
     }
 

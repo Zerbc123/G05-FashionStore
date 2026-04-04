@@ -75,13 +75,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "p.productId as id, " +
             "p.productName as name, " +
             "c.categoryName as categoryName, " +
-            "MIN(v.price) as price, " +          // Lấy giá thấp nhất trong các biến thể
-            "MIN(v.imageUrl) as image, " +       // Lấy 1 ảnh đại diện
-            "COALESCE(SUM(v.stock), 0) as totalStock " +  // Tổng tồn kho của tất cả variants
+            "MIN(v.price) as price, " +          
+            "MIN(v.imageUrl) as image, " +       
+            "COALESCE(SUM(v.stock), 0) as totalStock " +  
             "FROM Product p " +
-            "LEFT JOIN p.variants v " +          // Kết nối bảng biến thể
-            "LEFT JOIN p.category c " +          // Kết nối bảng danh mục
-            "GROUP BY p.productId, p.productName, c.categoryName")
+            "JOIN p.variants v " +          // Changed from LEFT JOIN to JOIN
+            "LEFT JOIN p.category c " +          
+            "GROUP BY p.productId, p.productName, c.categoryName " +
+            "HAVING COUNT(v) > 0")
     List<ProductHomeInfo> getAllProductHome();
 
     // ĐÃ SỬA LẠI: Trả về ProductHomeInfo thay vì Product để giao diện HTML đọc được

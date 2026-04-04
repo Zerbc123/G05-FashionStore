@@ -439,10 +439,13 @@
                         <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4" th:if="${product.variants != null and !product.variants.empty}">
                         <span class="price-current"
                             th:text="${#numbers.formatDecimal(product.variants[0].price, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</span>
                         <span class="price-old">399.000₫</span>
+                    </div>
+                    <div class="mb-4" th:unless="${product.variants != null and !product.variants.empty}">
+                        <span class="price-current">Liên hệ</span>
                     </div>
 
                     <form id="mainCartForm" th:action="@{/cart/add}" method="POST">
@@ -451,7 +454,7 @@
                         <div class="mb-4">
                             <label class="option-title">CHỌN SIZE:</label>
                             <div class="size-selector">
-                                <label th:each="size : ${uniqueSizes}">
+                                <label th:each="size : ${uniqueSizes}" th:attr="data-size-id=${size.categorySizeId}">
                                     <input type="radio" name="sizeId" th:value="${size.categorySizeId}" required>
                                     <span class="size-label" th:text="${size.sizeName}">S</span>
                                 </label>
@@ -462,7 +465,8 @@
                             <label class="option-title">MÀU SẮC:</label>
                             <div class="color-selector">
                                 <label th:each="color : ${uniqueColors}"
-                                    class="d-inline-flex align-items-center me-3 mb-2">
+                                    class="d-inline-flex align-items-center me-3 mb-2"
+                                    th:attr="data-color-id=${color.colorId}">
                                     <input type="radio" name="colorId" th:value="${color.colorId}" required>
                                     <span class="color-label"
                                         th:style="'background-color:' + ${color.colorCode}"></span>
@@ -657,11 +661,18 @@
             th:attr="data-key=${v.categorySize.categorySizeId + '_' + v.color.colorId}, data-stock=${v.stock}"></span>
     </div>
 
+    <!-- Variant combinations data for filtering -->
+    <div id="variant-combinations-data" style="display:none">
+        <span th:each="v : ${variants}" th:if="${v.categorySize != null and v.color != null}"
+            th:attr="data-size=${v.categorySize.categorySizeId}, data-color=${v.color.colorId}"></span>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // Build stock map from hidden data-attributes (safe Thymeleaf approach)
         const variantStockMap = {};
+        const variantCombinations = []; // Store all valid size-color combinations
 
         function getSelectedStock() {
             const selectedSize = document.querySelector('input[name="sizeId"]:checked');
@@ -711,16 +722,100 @@
             }
         }
 
+        // Load variant combinations data
+        function loadVariantCombinations() {
+            document.querySelectorAll('#variant-combinations-data span').forEach(function (span) {
+                variantCombinations.push({
+                    sizeId: parseInt(span.dataset.size),
+                    colorId: parseInt(span.dataset.color)
+                });
+            });
+        }
+
+        // Filter colors based on selected size
+        function filterColorsBySize(selectedSizeId) {
+            const availableColorIds = variantCombinations
+                .filter(v => v.sizeId === parseInt(selectedSizeId))
+                .map(v => v.colorId);
+
+            document.querySelectorAll('.color-selector label').forEach(function (label) {
+                const colorId = parseInt(label.dataset.colorId);
+                const input = label.querySelector('input[name="colorId"]');
+                
+                if (availableColorIds.includes(colorId)) {
+                    label.style.opacity = '1';
+                    label.style.pointerEvents = 'auto';
+                    input.disabled = false;
+                } else {
+                    label.style.opacity = '0.3';
+                    label.style.pointerEvents = 'none';
+                    input.disabled = true;
+                    if (input.checked) {
+                        input.checked = false;
+                    }
+                }
+            });
+        }
+
+        // Filter sizes based on selected color
+        function filterSizesByColor(selectedColorId) {
+            const availableSizeIds = variantCombinations
+                .filter(v => v.colorId === parseInt(selectedColorId))
+                .map(v => v.sizeId);
+
+            document.querySelectorAll('.size-selector label').forEach(function (label) {
+                const sizeId = parseInt(label.dataset.sizeId);
+                const input = label.querySelector('input[name="sizeId"]');
+                
+                if (availableSizeIds.includes(sizeId)) {
+                    label.style.opacity = '1';
+                    label.style.pointerEvents = 'auto';
+                    input.disabled = false;
+                } else {
+                    label.style.opacity = '0.3';
+                    label.style.pointerEvents = 'none';
+                    input.disabled = true;
+                    if (input.checked) {
+                        input.checked = false;
+                    }
+                }
+            });
+        }
+
+        // Reset all options to enabled
+        function resetAllOptions() {
+            document.querySelectorAll('.size-selector label, .color-selector label').forEach(function (label) {
+                label.style.opacity = '1';
+                label.style.pointerEvents = 'auto';
+                const input = label.querySelector('input');
+                if (input) input.disabled = false;
+            });
+        }
+
         // Gắn sự kiện cho tất cả radio size & color
         document.addEventListener('DOMContentLoaded', function () {
+            // Load variant combinations
+            loadVariantCombinations();
+
             // Đọc dữ liệu stock từ data-attributes
             document.querySelectorAll('#variant-stock-data span').forEach(function (span) {
                 variantStockMap[span.dataset.key] = parseInt(span.dataset.stock);
             });
 
-            // Gắn listener khi thay đổi size hoặc color
-            document.querySelectorAll('input[name="sizeId"], input[name="colorId"]').forEach(function (radio) {
-                radio.addEventListener('change', updateQuantityLimit);
+            // Gắn listener cho size selection
+            document.querySelectorAll('input[name="sizeId"]').forEach(function (radio) {
+                radio.addEventListener('change', function() {
+                    filterColorsBySize(this.value);
+                    updateQuantityLimit();
+                });
+            });
+
+            // Gắn listener cho color selection
+            document.querySelectorAll('input[name="colorId"]').forEach(function (radio) {
+                radio.addEventListener('change', function() {
+                    filterSizesByColor(this.value);
+                    updateQuantityLimit();
+                });
             });
 
             // Kiểm tra trạng thái ban đầu if any

@@ -388,7 +388,7 @@
         const errorAlert = document.querySelector('.alert-danger');
         
         if (passwordInput && confirmPasswordInput && errorAlert) {
-            // Hide alert when user starts typing in either field
+            // Hide alert when user starts typing in either field(ẩn error khi user bắt đầu gõ)
             [passwordInput, confirmPasswordInput].forEach(input => {
                 input.addEventListener('input', function() {
                     errorAlert.style.display = 'none';

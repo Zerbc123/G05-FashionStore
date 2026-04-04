@@ -78,12 +78,12 @@ public class OrderService {
             }
             order = orderRepository.save(order);
             
-            // Lưu OrderItem vào database và giảm stock
+            // Lưu OrderItem vào database (KHÔNG trừ stock ngay, chỉ trừ khi CONFIRMED)
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartItem cartItem : cartItems) {
                 ProductVariant variant = cartItem.getProductVariant();
                 
-                // Kiểm tra stock trước khi giảm
+                // Kiểm tra stock trước khi tạo order
                 if (variant.getStock() < cartItem.getQuantity()) {
                     throw new RuntimeException("Sản phẩm " + variant.getProduct().getProductName() + 
                                             " (Size: " + variant.getCategorySize().getSizeName() + 
@@ -91,9 +91,7 @@ public class OrderService {
                                             ") chỉ còn " + variant.getStock() + " sản phẩm. Bạn đã chọn " + cartItem.getQuantity() + " sản phẩm.");
                 }
                 
-                // Giảm stock
-                variant.setStock(variant.getStock() - cartItem.getQuantity());
-                productVariantRepository.save(variant);
+                // KHÔNG giảm stock ở đây - sẽ trừ khi order được CONFIRMED
                 
                 OrderItem orderItem = new OrderItem(order, variant, cartItem.getQuantity());
                 orderItem = orderItemRepository.save(orderItem);
@@ -142,12 +140,12 @@ public class OrderService {
             }
             order = orderRepository.save(order);
             
-            // Lưu OrderItem vào database và giảm stock
+            // Lưu OrderItem vào database (KHÔNG trừ stock ngay, chỉ trừ khi CONFIRMED)
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartItem cartItem : buyNowItems) {
                 ProductVariant variant = cartItem.getProductVariant();
                 
-                // Kiểm tra stock trước khi giảm
+                // Kiểm tra stock trước khi tạo order
                 if (variant.getStock() < cartItem.getQuantity()) {
                     throw new RuntimeException("Sản phẩm " + variant.getProduct().getProductName() + 
                                             " (Size: " + variant.getCategorySize().getSizeName() + 
@@ -155,9 +153,7 @@ public class OrderService {
                                             ") chỉ còn " + variant.getStock() + " sản phẩm. Bạn đã chọn " + cartItem.getQuantity() + " sản phẩm.");
                 }
                 
-                // Giảm stock
-                variant.setStock(variant.getStock() - cartItem.getQuantity());
-                productVariantRepository.save(variant);
+                // KHÔNG giảm stock ở đây - sẽ trừ khi order được CONFIRMED
                 
                 OrderItem orderItem = new OrderItem(order, variant, cartItem.getQuantity());
                 orderItem = orderItemRepository.save(orderItem);
@@ -243,6 +239,38 @@ public class OrderService {
             throw new RuntimeException("Đơn hàng này không thể xác nhận! Trạng thái hiện tại: " + order.getStatus().getDisplayName());
         }
         
+        // Load orderItems nếu chưa có
+        List<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems == null || orderItems.isEmpty()) {
+            orderItems = orderItemRepository.findByOrderOrderByOrderItemIdAsc(order);
+        }
+        
+        // TRỪ STOCK KHI XÁC NHẬN ĐƠN HÀNG
+        if (orderItems == null || orderItems.isEmpty()) {
+            throw new RuntimeException("Đơn hàng không có sản phẩm!");
+        }
+        
+        for (OrderItem orderItem : orderItems) {
+            ProductVariant variant = orderItem.getProductVariant();
+            
+            int oldStock = variant.getStock();
+            int quantity = orderItem.getQuantity();
+            
+            // Kiểm tra stock trước khi trừ
+            if (oldStock < quantity) {
+                throw new RuntimeException("Sản phẩm " + variant.getProduct().getProductName() + 
+                                        " (Size: " + variant.getCategorySize().getSizeName() + 
+                                        ", Màu: " + variant.getColor().getColorName() + 
+                                        ") chỉ còn " + oldStock + " sản phẩm. Không thể xác nhận đơn hàng.");
+            }
+            
+            // Trừ stock
+            int newStock = oldStock - quantity;
+            variant.setStock(newStock);
+            productVariantRepository.save(variant);
+            
+        }
+        
         order.confirm(confirmedBy);
         order = orderRepository.save(order);
         
@@ -257,15 +285,33 @@ public class OrderService {
             throw new RuntimeException("Đơn hàng này không thể hủy! Trạng thái hiện tại: " + order.getStatus().getDisplayName());
         }
         
+        // Lưu trạng thái cũ trước khi hủy
+        OrderStatus oldStatus = order.getStatus();
+        
         order.cancel(cancelledBy, reason);
         order = orderRepository.save(order);
         
-        // Hoàn lại stock cho các sản phẩm trong đơn hàng bị hủy
-        for (OrderItem orderItem : order.getOrderItems()) {
-            ProductVariant variant = orderItem.getProductVariant();
-            variant.setStock(variant.getStock() + orderItem.getQuantity());
-            productVariantRepository.save(variant);
+        // CHỈ HOÀN LẠI STOCK NẾU ĐƠN HÀNG ĐÃ ĐƯỢC CONFIRMED hoặc COMPLETED (tức là stock đã bị trừ)
+        // Nếu đơn hàng còn PENDING thì stock chưa bị trừ, không cần hoàn
+        if (oldStatus == OrderStatus.CONFIRMED || oldStatus == OrderStatus.COMPLETED) {
+            // Load orderItems nếu chưa có
+            List<OrderItem> orderItems = order.getOrderItems();
+            if (orderItems == null || orderItems.isEmpty()) {
+                orderItems = orderItemRepository.findByOrderOrderByOrderItemIdAsc(order);
+            }
             
+            if (orderItems != null && !orderItems.isEmpty()) {
+                for (OrderItem orderItem : orderItems) {
+                    ProductVariant variant = orderItem.getProductVariant();
+                    int oldStock = variant.getStock();
+                    int newStock = oldStock + orderItem.getQuantity();
+                    variant.setStock(newStock);
+                    productVariantRepository.save(variant);
+                    
+                    System.out.println("[CANCEL ORDER #" + orderId + "] Variant #" + variant.getVariantId() + 
+                                     ": Stock " + oldStock + " -> " + newStock + " (hoàn " + orderItem.getQuantity() + ")");
+                }
+            }
         }
         
         return order;
@@ -308,7 +354,39 @@ public class OrderService {
     }
 
     // =======================================================
-    // 6. HELPER METHODS
+    // 6. TỰ ĐỘNG HOÀN THÀNH ĐƠN HÀNG
+    // =======================================================
+    @Transactional
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 30000) // Chạy mỗi 30 giây
+    public void autoCompleteOrders() {
+        try {
+            List<Order> confirmedOrders = orderRepository.findByStatusOrderByOrderDateDesc(OrderStatus.CONFIRMED);
+            
+            System.out.println("[AUTO COMPLETE] Checking " + confirmedOrders.size() + " CONFIRMED orders...");
+            
+            int completedCount = 0;
+            for (Order order : confirmedOrders) {
+                if (order.shouldAutoComplete()) {
+                    System.out.println("[AUTO COMPLETE] Order #" + order.getOrderId() + 
+                                     " confirmed at " + order.getConfirmedDate() + 
+                                     " -> Setting to COMPLETED");
+                    order.setStatus(OrderStatus.COMPLETED);
+                    orderRepository.save(order);
+                    completedCount++;
+                }
+            }
+            
+            if (completedCount > 0) {
+                System.out.println("[AUTO COMPLETE] Completed " + completedCount + " orders");
+            }
+        } catch (Exception e) {
+            System.err.println("[AUTO COMPLETE] Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // =======================================================
+    // 7. HELPER METHODS
     // =======================================================
     private String generateOrderCode() {
         // Tạo mã đơn hàng theo format: ORD + timestamp + random

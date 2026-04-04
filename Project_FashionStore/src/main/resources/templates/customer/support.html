@@ -59,12 +59,14 @@
                 <div class="mb-3">
                     <label for="title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="title" name="title" required 
+                           minlength="5" maxlength="255"
                            placeholder="Ví dụ: Không thể thanh toán đơn hàng">
                 </div>
                 
                 <div class="mb-4">
                     <label for="description" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
                     <textarea class="form-control" id="description" name="description" rows="6" required 
+                              minlength="10" maxlength="5000"
                               placeholder="Vui lòng mô tả chi tiết vấn đề bạn đang gặp phải..."></textarea>
                 </div>
                 

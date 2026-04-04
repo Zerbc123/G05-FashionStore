@@ -265,7 +265,7 @@
                     </button>
                 </div>
 
-                <form th:action="@{/staff/orders/update-status/{id}(id=${order.orderId})}" method="post">
+                <form th:action="@{/order/details/{id}/update-status(id=${order.orderId})}" method="post">
                     <div class="modal-body">
                         <select name="status" class="form-select">
                             <option value="PENDING" th:selected="${order.status != null and order.status.name() == 'PENDING'}">

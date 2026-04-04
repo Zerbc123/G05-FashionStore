@@ -73,7 +73,9 @@ public class ProductService {
                 });
             }
 
-            return cb.conjunction();
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isNotEmpty(root.get("variants")));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
 
         // Nếu đã sắp xếp bằng Specification, gỡ Sort khỏi Pageable để tránh xung đột
@@ -366,6 +368,9 @@ public class ProductService {
                 predicates.add(cb.equal(variants.get("categorySize").get("sizeName"), size));
             }
 
+            // Always ensure the product has variants for public view
+            predicates.add(cb.isNotEmpty(root.get("variants")));
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -396,16 +401,23 @@ public class ProductService {
                 });
             }
 
+            List<Predicate> predicates = new ArrayList<>();
+            
             if (categoryName != null && !categoryName.isBlank()) {
                 if (categoryName.equalsIgnoreCase("Phụ kiện")) {
                     List<String> accessoryCategories = List.of(
                             "túi xách", "giày dép", "mũ nón", "đồng hồ", "mắt kính", "phụ kiện khác", "phụ kiện");
-                    return cb.lower(root.get("category").get("categoryName")).in(accessoryCategories);
+                    predicates.add(cb.lower(root.get("category").get("categoryName")).in(accessoryCategories));
+                } else {
+                    predicates.add(cb.equal(cb.lower(root.get("category").get("categoryName")),
+                        categoryName.toLowerCase()));
                 }
-                return cb.equal(cb.lower(root.get("category").get("categoryName")),
-                        categoryName.toLowerCase());
             }
-            return cb.conjunction();
+            
+            // Always ensure the product has variants
+            predicates.add(cb.isNotEmpty(root.get("variants")));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
 
         Pageable p = pageable;
@@ -465,14 +477,26 @@ public class ProductService {
     }
 
     @Transactional
-    public boolean deleteProduct(Long productId) {
+    public String deleteProduct(Long productId) {
         Product product = productRepository.findByProductId(productId);
         if (product == null) {
-            return false;
+            return "Không tìm thấy sản phẩm";
         }
+        
+        // Check if any variants are linked to orders
+        List<ProductVariant> variants = productVariantRepository.findByProduct_ProductId(productId);
+        for (ProductVariant variant : variants) {
+            if (orderItemRepository.existsByProductVariantVariantId(variant.getVariantId())) {
+                return "Không thể xóa sản phẩm: Một số biến thể đã được sử dụng trong đơn hàng";
+            }
+        }
+        
+        // Check if product is in any wishlist (Optional)
+        // wishlistRepository.deleteByProduct_ProductId(productId);
+        
         productVariantRepository.deleteByProduct_ProductId(productId);
         productRepository.delete(product);
-        return true;
+        return "SUCCESS";
     }
 
     public String validateProductData(String productName, String description, Integer categoryId) {

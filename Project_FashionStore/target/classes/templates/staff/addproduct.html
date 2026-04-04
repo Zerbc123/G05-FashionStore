@@ -255,7 +255,7 @@
         <div class="page-header">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/staff/products">Products</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/staff/products}">Products</a></li>
                     <li class="breadcrumb-item active">Add New Product</li>
                 </ol>
             </nav>
@@ -338,7 +338,7 @@
                 <button type="submit" class="btn btn-primary btn-lg px-5">
                     <i class="fas fa-save me-2"></i>Save Product
                 </button>
-                <a href="/staff/products" class="btn btn-secondary btn-lg px-5">
+                <a th:href="@{/staff/products}" class="btn btn-secondary btn-lg px-5">
                     <i class="fas fa-times me-2"></i>Cancel
                 </a>
             </div>

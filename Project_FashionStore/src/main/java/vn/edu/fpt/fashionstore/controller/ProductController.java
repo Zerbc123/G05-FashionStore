@@ -216,8 +216,8 @@ public class ProductController {
             Model model) {
 
         Product product = productService.getProductById(id);
-        if (product == null) {
-            return "redirect:/products";
+        if (product == null || product.getVariants() == null || product.getVariants().isEmpty()) {
+            return "redirect:/products?error=product_not_available";
         }
 
         List<vn.edu.fpt.fashionstore.entity.ProductVariant> variants = product.getVariants();
@@ -906,6 +906,17 @@ public class ProductController {
     // ========================================================================
     // 11. ADMIN - DELETE PRODUCT
     // ========================================================================
+    @PostMapping("/admin/delete")
+    public String deleteProduct(@RequestParam("id") Long productId, RedirectAttributes redirectAttributes) {
+        String result = productService.deleteProduct(productId);
+        if ("SUCCESS".equals(result)) {
+            redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("error", result);
+        }
+        return "redirect:/admin/products";
+    }
+
     private boolean hasFilter(String keyword, Long categoryId, String categoryName,
             String size, String color, Double minPrice, Double maxPrice) {
         return (keyword != null && !keyword.isBlank())

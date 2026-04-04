@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(basePackages = "vn.edu.fpt.fashionstore.repository")
 @EntityScan(basePackages = "vn.edu.fpt.fashionstore.entity")
 @ComponentScan(basePackages = "vn.edu.fpt.fashionstore")
+@org.springframework.scheduling.annotation.EnableScheduling
 public class App {
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);

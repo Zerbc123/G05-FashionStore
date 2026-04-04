@@ -581,7 +581,13 @@
                             <form th:action="@{/cart/update}" method="POST" class="quantity-control">
                                 <input type="hidden" name="cartItemId" th:value="${item.cartItemId}">
                                 <button type="submit" name="action" value="decrease" class="quantity-btn">-</button>
-                                <input type="number" class="quantity-input" th:value="${item.quantity}" min="1" readonly>
+                                <input type="number" 
+                                       class="quantity-input" 
+                                       th:value="${item.quantity}" 
+                                       th:attr="data-stock=${item.productVariant.stock}, data-product-name=${item.productVariant.product.productName}"
+                                       min="1" 
+                                       th:max="${item.productVariant.stock}"
+                                       readonly>
                                 <button type="submit" name="action" value="increase" class="quantity-btn">+</button>
                             </form>
                         </div>
@@ -638,6 +644,9 @@
         
         if (checkoutBtn) {
             checkoutBtn.addEventListener('click', function(e) {
+                // ❗ QUAN TRỌNG NHẤT: CHẶN NAVIGATION NGAY ĐẦU TIÊN
+                e.preventDefault();
+                
                 // Nếu nút đang bị disabled bởi class (do hết hàng) thì không làm gì thêm
                 if (this.classList.contains('disabled')) {
                     return;
@@ -645,26 +654,40 @@
 
                 const quantityInputs = document.querySelectorAll('.quantity-input');
                 let hasInvalidQuantity = false;
+                let errorMessage = '';
                 
                 quantityInputs.forEach(input => {
                     const quantity = parseInt(input.value);
+                    const stock = parseInt(input.getAttribute('data-stock'));
+                    const productName = input.getAttribute('data-product-name');
+                    
+                    // Check quantity < 1
                     if (isNaN(quantity) || quantity < 1) {
                         hasInvalidQuantity = true;
+                        errorMessage = 'Số lượng sản phẩm không hợp lệ! Vui lòng kiểm tra lại (tối thiểu là 1).';
                         input.style.borderColor = '#e74c3c';
                         input.style.boxShadow = '0 0 0 0.25rem rgba(231, 76, 60, 0.25)';
-                        
-                        // Scroll đến phần tử lỗi
                         input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
+                    } 
+                    // ✅ QUAN TRỌNG: Check quantity > stock (ĐÂY LÀ PHẦN CHẶN F12 HACK)
+                    else if (quantity > stock) {
+                        hasInvalidQuantity = true;
+                        errorMessage = `Sản phẩm "${productName}" vượt quá số lượng tồn kho! Vui lòng kiểm tra lại.`;
+                        input.style.borderColor = '#e74c3c';
+                        input.style.boxShadow = '0 0 0 0.25rem rgba(231, 76, 60, 0.25)';
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Tự động sửa lại về 1
+                        input.value = 1;
+                    } 
+                    else {
                         input.style.borderColor = '#eee';
                         input.style.boxShadow = 'none';
                     }
                 });
 
                 if (hasInvalidQuantity) {
-                    e.preventDefault();
-                    
-                    // Tạo một toast hoặc alert thông báo
+                    // Có lỗi - Hiển thị thông báo và KHÔNG navigate
                     const alertDiv = document.createElement('div');
                     alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
                     alertDiv.style.zIndex = '9999';
@@ -680,6 +703,9 @@
                         const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
                         if (alert) alert.close();
                     }, 5000);
+                } else {
+                    // KHÔNG có lỗi - Cho phép navigate đến checkout
+                    window.location.href = checkoutBtn.getAttribute('href');
                 }
             });
         }

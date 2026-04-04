@@ -91,7 +91,18 @@ public class CustomerSupportController {
             redirectAttributes.addFlashAttribute("success", "Gửi yêu cầu hỗ trợ thành công! Chúng tôi sẽ phản hồi sớm nhất.");
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi gửi yêu cầu: " + e.getMessage());
+            String message = e.getMessage();
+            if (message != null && message.contains("Validation failed")) {
+                // If it contains specific constraint messages, try to extract them or use a friendly one
+                if (message.contains("Tiêu đề") || message.contains("Mô tả")) {
+                    // This is a bit hacky but works for surfacing our custom messages
+                    redirectAttributes.addFlashAttribute("error", "Dữ liệu không hợp lệ: Vui lòng kiểm tra lại độ dài tiêu đề và mô tả.");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Dữ liệu nhập vào không hợp lệ. Vui lòng kiểm tra lại.");
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Lỗi: " + message);
+            }
         }
 
         return "redirect:/customer/support";
@@ -183,7 +194,12 @@ public class CustomerSupportController {
             redirectAttributes.addFlashAttribute("success", "Đã gửi tin nhắn thành công!");
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi gửi tin nhắn: " + e.getMessage());
+            String message = e.getMessage();
+            if (message != null && message.contains("Validation failed")) {
+                redirectAttributes.addFlashAttribute("error", "Nội dung tin nhắn không hợp lệ. Vui lòng kiểm tra lại.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Lỗi gửi tin nhắn: " + message);
+            }
         }
 
         return "redirect:/customer/support/view/" + id;

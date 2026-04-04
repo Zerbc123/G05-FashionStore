@@ -147,9 +147,9 @@ public class StaffController {
     @PostMapping("/orders/update-status/{id}")
     @org.springframework.transaction.annotation.Transactional
     public String updateStatus(@PathVariable Long id,
-            @RequestParam String status,
-            HttpSession session,
-            RedirectAttributes ra) {
+                               @RequestParam String status,
+                               HttpSession session,
+                               RedirectAttributes ra) {
 
         if (!RoleUtils.canManageOrders(session)) {
             ra.addFlashAttribute("error", "Bạn không có quyền cập nhật đơn hàng!");
@@ -172,8 +172,8 @@ public class StaffController {
 
     @GetMapping("/inventory")
     public String inventory(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            HttpSession session, Model model) {
+                            @RequestParam(defaultValue = "10") int size,
+                            HttpSession session, Model model) {
         if (!RoleUtils.canViewInventory(session)) {
             model.addAttribute("error", RoleUtils.getAccessDeniedMessage("inventory"));
             return "staff/access_denied";
@@ -205,13 +205,35 @@ public class StaffController {
     }
 
     @PostMapping("/inventory/update-stock")
-    public String updateStock(@RequestParam Integer variantId,
-            @RequestParam Integer newStock,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+    public String updateStock(@RequestParam(required = false) Integer variantId,
+                              @RequestParam(required = false) Integer newStock,
+                              @RequestParam(required = false) Long productId,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
         if (!RoleUtils.canManageInventory(session)) {
             redirectAttributes.addFlashAttribute("error", RoleUtils.getAccessDeniedMessage("inventory"));
             return "redirect:/staff/inventory";
+        }
+
+        // Xác định redirect target về trang variants của sản phẩm (nếu có productId)
+        String redirectTarget = (productId != null)
+                ? "redirect:/staff/products/staff/variants?productId=" + productId
+                : "redirect:/staff/inventory";
+
+        // Validate: bắt buộc phải có newStock
+        if (newStock == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập số lượng tồn kho!");
+            return redirectTarget;
+        }
+
+        if (newStock < 0) {
+            redirectAttributes.addFlashAttribute("error", "Số lượng tồn kho không được âm!");
+            return redirectTarget;
+        }
+
+        if (variantId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy biến thể sản phẩm!");
+            return redirectTarget;
         }
 
         try {
@@ -221,16 +243,16 @@ public class StaffController {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật tồn kho: " + e.getMessage());
         }
 
-        return "redirect:/staff/inventory";
+        return redirectTarget;
     }
 
     @GetMapping("/inventory/filter")
     public String filterInventory(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String stockStatus,
-            HttpSession session, Model model) {
+                                  @RequestParam(defaultValue = "10") int size,
+                                  @RequestParam(required = false) String search,
+                                  @RequestParam(required = false) String category,
+                                  @RequestParam(required = false) String stockStatus,
+                                  HttpSession session, Model model) {
         logger.info(
                 "Filter inventory called with params: page={}, size={}, search='{}', category='{}', stockStatus='{}'",
                 page, size, search, category, stockStatus);
@@ -245,9 +267,19 @@ public class StaffController {
         Page<InventoryService.ProductInventoryDTO> productPage;
 
         try {
-            // Get all products grouped
-            Page<InventoryService.ProductInventoryDTO> allProductsPage = inventoryService.getAllProductsGrouped(PageRequest.of(0, Integer.MAX_VALUE));
-            List<InventoryService.ProductInventoryDTO> allProducts = allProductsPage.getContent();
+            // Lấy dữ liệu nguồn (Source Data) giống như Admin
+            // Nếu lọc Hết hàng hoặc Sắp hết, sẽ hiển thị theo Biến thể
+            boolean useVariantView = "out-stock".equals(stockStatus) || "low-stock".equals(stockStatus);
+            List<InventoryService.ProductInventoryDTO> allProducts;
+            
+            if (useVariantView) {
+                logger.info("Using VARIANT view for inventory filtering (Status: {})", stockStatus);
+                allProducts = inventoryService.getAllVariantsAsDTO();
+            } else {
+                logger.info("Using PRODUCT view for inventory filtering (Status: {})", stockStatus);
+                Page<InventoryService.ProductInventoryDTO> allProductsPage = inventoryService.getAllProductsGrouped(PageRequest.of(0, Integer.MAX_VALUE));
+                allProducts = allProductsPage.getContent();
+            }
 
             // Apply filters sequentially
             List<InventoryService.ProductInventoryDTO> filteredProducts = allProducts;
@@ -359,8 +391,8 @@ public class StaffController {
     @GetMapping("/products")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String products(HttpSession session, Model model,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category) {
+                           @RequestParam(required = false) String search,
+                           @RequestParam(required = false) String category) {
         if (!isStaff(session)) {
             return "redirect:/login";
         }
@@ -692,3 +724,4 @@ public class StaffController {
         }
     }
 }
+

@@ -19,12 +19,12 @@ public class SupportRequest {
 
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     @NotBlank(message = "Tiêu đề không được để trống")
-    @Size(min = 5, max = 255, message = "Tiêu đề phải từ 5-255 ký tự")
+    @Size(min = 5, max = 255, message = "Tiêu đề phải có từ 5 đến 255 ký tự")
     private String title;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     @NotBlank(message = "Mô tả không được để trống")
-    @Size(min = 10, message = "Mô tả phải có ít nhất 10 ký tự")
+    @Size(min = 10, max = 5000, message = "Mô tả phải có từ 10 đến 5000 ký tự")
     private String description;
 
     @Column(name = "customer_name", columnDefinition = "NVARCHAR(100)")

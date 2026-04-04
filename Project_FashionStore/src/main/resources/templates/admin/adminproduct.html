@@ -230,6 +230,17 @@
 
     <div class="admin-container" style="margin-top: 80px;">
         <div class="container-fluid">
+            <!-- Alert Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="page-title mb-0">Quản Lý Sản Phẩm</h1>
                 <div class="d-flex gap-2">
@@ -370,8 +381,6 @@
                                         class="btn btn-sm btn-primary btn-action">
                                         Sửa
                                     </a>
-
-
                                 </td>
 
                             </tr>

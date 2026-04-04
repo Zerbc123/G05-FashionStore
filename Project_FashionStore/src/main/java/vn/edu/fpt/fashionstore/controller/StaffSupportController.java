@@ -257,7 +257,12 @@ public class StaffSupportController {
             redirectAttributes.addFlashAttribute("success", "Đã gửi tin nhắn thành công!");
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi gửi tin nhắn: " + e.getMessage());
+            String message = e.getMessage();
+            if (message != null && message.contains("Validation failed")) {
+                redirectAttributes.addFlashAttribute("error", "Nội dung tin nhắn không hợp lệ. Vui lòng kiểm tra lại.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Lỗi gửi tin nhắn: " + message);
+            }
         }
 
         return "redirect:/staff/support/view/" + id;
