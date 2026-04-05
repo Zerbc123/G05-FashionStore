@@ -97,7 +97,8 @@ public class StaffController {
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String orders(HttpSession session, Model model) {
         if (!RoleUtils.canViewOrders(session)) {
-            return "redirect:/login";
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("orders"));
+            return "staff/access_denied";
         }
 
         // Sử dụng query có FETCH để lấy luôn Customer, tránh lỗi Lazy loading trong
@@ -135,7 +136,8 @@ public class StaffController {
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String viewOrderDetails(@PathVariable Long id, HttpSession session, Model model) {
         if (!RoleUtils.canViewOrders(session)) {
-            return "redirect:/login";
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("orders"));
+            return "staff/access_denied";
         }
 
         Order order = orderRepository.findOrderWithItems(id);
@@ -393,8 +395,9 @@ public class StaffController {
     public String products(HttpSession session, Model model,
                            @RequestParam(required = false) String search,
                            @RequestParam(required = false) String category) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canViewInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
 
         // Lấy danh sách sản phẩm từ database với variants
@@ -450,8 +453,9 @@ public class StaffController {
 
     @GetMapping("/products/add")
     public String addProduct(HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
         model.addAttribute("title", "Add New Product");
         return "staff/addproduct";
@@ -459,8 +463,9 @@ public class StaffController {
 
     @GetMapping("/products/edit")
     public String editProduct(@RequestParam("id") Long productId, HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
         // Redirect to ProductController's edit endpoint
         return "redirect:/products/staff/edit?id=" + productId;
@@ -474,8 +479,9 @@ public class StaffController {
             @RequestParam("productId") Long productId,
             HttpSession session, Model model) {
 
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canViewInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
 
         Product product = productService.getProductById(productId);
@@ -508,8 +514,9 @@ public class StaffController {
 
     @GetMapping("/products/staff/variant/add")
     public String showAddVariantForm(@RequestParam("productId") Long productId, HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
 
         Product product = productService.getProductById(productId);
@@ -540,8 +547,9 @@ public class StaffController {
             RedirectAttributes redirectAttributes,
             HttpSession session) {
 
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            redirectAttributes.addFlashAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "redirect:/staff/products";
         }
 
         try {
@@ -599,8 +607,9 @@ public class StaffController {
 
     @GetMapping("/products/staff/variant/edit")
     public String showEditVariantForm(@RequestParam("variantId") Integer variantId, HttpSession session, Model model) {
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            model.addAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "staff/access_denied";
         }
 
         ProductVariant variant = productVariantService.getVariantById(variantId).orElse(null);
@@ -631,8 +640,9 @@ public class StaffController {
             RedirectAttributes redirectAttributes,
             HttpSession session) {
 
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            redirectAttributes.addFlashAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "redirect:/staff/products";
         }
 
         try {
@@ -695,8 +705,9 @@ public class StaffController {
             RedirectAttributes redirectAttributes,
             HttpSession session) {
 
-        if (!isStaff(session)) {
-            return "redirect:/login";
+        if (!RoleUtils.canManageInventory(session)) {
+            redirectAttributes.addFlashAttribute("error", RoleUtils.getAccessDeniedMessage("products"));
+            return "redirect:/staff/products";
         }
 
         try {

@@ -320,12 +320,13 @@
             box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
         }
         .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
+            border: none;
         }
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
         }
         .btn-danger {
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
@@ -591,7 +592,7 @@
 
             <!-- 5. NÚT HỦY ĐƠN HÀNG VÀ HOÀN TRẢ HÀNG-->
             <div class="d-flex gap-3 align-items-center mt-4">
-                <a th:href="@{/products}" class="btn btn-success px-4 py-2" style="border-radius: 10px;">
+                <a th:href="@{/products}" class="btn-action btn-primary px-4 py-2" style="border-radius: 10px;">
                     <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
                 </a>
 

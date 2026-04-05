@@ -82,8 +82,7 @@ public class RoleUtils {
      * Check if current user can view orders (read-only)
      */
     public static boolean canViewOrders(HttpSession session) {
-        return isAdmin(session) || isSale(session) || isSupport(session) || 
-               isStock(session);
+        return isAdmin(session) || isSale(session);
     }
     
     /**
@@ -114,6 +113,8 @@ public class RoleUtils {
         switch (action) {
             case "inventory":
                 return "Bạn không có quyền quản lý kho. Chỉ Admin và Quản lý kho mới có thể thực hiện thao tác này.";
+            case "products":
+                return "Bạn không có quyền quản lý sản phẩm. Chỉ Admin và Quản lý kho mới có thể thực hiện thao tác này.";
             case "orders":
                 return "Bạn không có quyền quản lý đơn hàng. Chỉ Admin và Nhân viên bán hàng mới có thể thực hiện thao tác này.";
             case "support":
