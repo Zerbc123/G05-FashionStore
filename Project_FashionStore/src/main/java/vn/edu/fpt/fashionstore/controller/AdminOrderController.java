@@ -96,6 +96,21 @@ public class AdminOrderController {
         }
 
         try {
+            // Kiểm tra trạng thái hiện tại của đơn hàng trước
+            Order currentOrder = orderService.getOrderById(id);
+            OrderStatus currentStatus = currentOrder.getStatus();
+            
+            // NGĂN CẬP NHẬT ĐƠN HÀNG ĐÃ COMPLETED HOẶC CANCELLED
+            if (currentStatus == OrderStatus.COMPLETED) {
+                redirectAttributes.addFlashAttribute("error", "Không thể cập nhật đơn hàng đã hoàn thành!");
+                return "redirect:/admin/orders";
+            }
+            
+            if (currentStatus == OrderStatus.CANCELLED) {
+                redirectAttributes.addFlashAttribute("error", "Không thể cập nhật đơn hàng đã hủy!");
+                return "redirect:/admin/orders";
+            }
+            
             // Chuyển String nhận từ HTML form sang Enum
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
 

@@ -161,6 +161,21 @@ public class StaffController {
         }
 
         try {
+            // Kiểm tra trạng thái hiện tại của đơn hàng trước
+            Order currentOrder = orderService.getOrderById(id);
+            OrderStatus currentStatus = currentOrder.getStatus();
+            
+            // NGĂN CẬP NHẬT ĐƠN HÀNG ĐÃ COMPLETED HOẶC CANCELLED
+            if (currentStatus == OrderStatus.COMPLETED) {
+                ra.addFlashAttribute("error", "Không thể cập nhật đơn hàng đã hoàn thành!");
+                return "redirect:/staff/orders";
+            }
+            
+            if (currentStatus == OrderStatus.CANCELLED) {
+                ra.addFlashAttribute("error", "Không thể cập nhật đơn hàng đã hủy!");
+                return "redirect:/staff/orders";
+            }
+            
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
             orderService.updateOrderStatus(id, newStatus);
             ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:temp="http://www.thymeleaf.org/extras/temporal">
 
 <head>
@@ -222,7 +222,8 @@
                             <td>
                                 <span class="badge-status" th:classappend="
                                     ${order.status != null and order.status.name() == 'PENDING'} ? ' badge-pending' :
-                                    (${order.status != null and order.status.name() == 'CONFIRMED'} ? ' badge-confirmed' : ' badge-cancelled')"
+                                    (${order.status != null and order.status.name() == 'CONFIRMED'} ? ' badge-confirmed' :
+                                    (${order.status != null and order.status.name() == 'COMPLETED'} ? ' badge-completed' : ' badge-cancelled'))"
                                       th:text="${order.status != null ? order.status.name() : 'UNKNOWN'}">
                                 </span>
                             </td>
@@ -234,8 +235,8 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
 
-                                <!-- UPDATE STATUS -->
-                                <div th:with="isFinalStatus=${order.status != null and (order.status.name() == 'CONFIRMED' or order.status.name() == 'CANCELLED')}">
+                                <!-- UPDATE STATUS: chỉ cho update khi PENDING -->
+                                <div th:with="isFinalStatus=${order.status != null and (order.status.name() == 'CONFIRMED' or order.status.name() == 'COMPLETED' or order.status.name() == 'CANCELLED')}">
                                     <button type="button" class="btn btn-sm btn-primary btn-action"
                                             th:disabled="${isFinalStatus}"
                                             data-bs-toggle="modal" th:data-bs-target="'#updateModal' + ${order.orderId}"
@@ -252,9 +253,11 @@
     </div>
 </div>
 
-<!-- MODAL LẶP THEO ORDER -->
+<!-- MODAL LẶP THEO ORDER - CHỈ HIỂN THỊ CHO ĐƠN HÀNG CHƯA COMPLETED/CANCELLED -->
 <div th:each="order : ${orders}">
-    <div class="modal fade" th:id="'updateModal' + ${order.orderId}" tabindex="-1">
+    <!-- Chỉ tạo modal nếu đơn hàng chưa ở trạng thái cuối cùng -->
+    <div th:if="${order.status != null and order.status.name() != 'COMPLETED' and order.status.name() != 'CANCELLED'}"
+         class="modal fade" th:id="'updateModal' + ${order.orderId}" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -276,15 +279,9 @@
                                 Đã xác nhận (CONFIRMED)
                             </option>
 
-
-
-
-
                             <option value="CANCELLED" th:selected="${order.status != null and order.status.name() == 'CANCELLED'}">
                                 Đã hủy (CANCELLED)
                             </option>
-
-
                         </select>
                     </div>
 

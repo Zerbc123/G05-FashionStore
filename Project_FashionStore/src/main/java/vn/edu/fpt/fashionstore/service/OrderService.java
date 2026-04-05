@@ -321,6 +321,24 @@ public class OrderService {
     public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        OrderStatus currentStatus = order.getStatus();
+
+        // Không cho cập nhật đơn hàng đã COMPLETED
+        if (currentStatus == OrderStatus.COMPLETED) {
+            throw new RuntimeException("Đơn hàng #" + orderId + " đã hoàn thành, không thể thay đổi trạng thái!");
+        }
+
+        // Không cho cập nhật đơn hàng đã CANCELLED
+        if (currentStatus == OrderStatus.CANCELLED) {
+            throw new RuntimeException("Đơn hàng #" + orderId + " đã bị hủy, không thể thay đổi trạng thái!");
+        }
+
+        // Không cho quay về PENDING nếu đã CONFIRMED
+        if (currentStatus == OrderStatus.CONFIRMED && newStatus == OrderStatus.PENDING) {
+            throw new RuntimeException("Không thể chuyển đơn hàng đã xác nhận về trạng thái chờ!");
+        }
+
         order.setStatus(newStatus);
         return orderRepository.save(order);
     }

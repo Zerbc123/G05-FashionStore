@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:temp="http://www.thymeleaf.org/extras/temporal">
 
 <head>
@@ -174,9 +174,11 @@
     </div>
 </div>
 
-<!-- MODAL LẶP THEO ORDER -->
+<!-- MODAL LẶP THEO ORDER - CHỈ HIỂN THỊ CHO ĐƠN HÀNG CHƯA COMPLETED/CANCELLED -->
 <div th:each="order : ${orders}">
-    <div class="modal fade" th:id="'updateModal' + ${order.orderId}" tabindex="-1">
+    <!-- Chỉ tạo modal nếu đơn hàng chưa ở trạng thái cuối cùng -->
+    <div th:if="${order.status != null and order.status.name() != 'COMPLETED' and order.status.name() != 'CANCELLED' and order.status.name() != 'SHIPPING' and order.status.name() != 'REFUNDED'}"
+         class="modal fade" th:id="'updateModal' + ${order.orderId}" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
