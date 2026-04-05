@@ -20,47 +20,31 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f6fa;
+            background: #F4F7FB !important;
         }
 
-        .admin-navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .admin-navbar .navbar-brand {
+        .hero-section {
+            padding: 120px 0 60px 0;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
+            text-align: center;
+        }
+
+        .hero-section h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 2.8rem;
             font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.15);
         }
 
-        .admin-navbar .nav-link {
-            color: rgba(255, 255, 255, 0.9);
-            margin: 0 10px;
-            transition: all 0.3s;
-        }
-
-        .admin-navbar .nav-link:hover {
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .admin-navbar .nav-link.active {
-            color: white;
-            font-weight: 600;
+        .hero-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         .main-content {
             padding: 40px 0;
-        }
-
-        .page-header h1 {
-            font-family: 'Playfair Display', serif;
-            color: #2d3436;
-            font-size: 2rem;
-            margin-bottom: 30px;
         }
 
         .report-card {
@@ -85,11 +69,44 @@
             margin-bottom: 30px;
         }
 
+        .card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8rem;
+            color: white;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             border: none;
             padding: 10px 25px;
-            border-radius: 10px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+            color: white;
         }
     </style>
 </head>
@@ -98,111 +115,92 @@
     <!-- Admin Header -->
     <div th:replace="~{fragments/header :: adminheader}"></div>
 
-    <div style="margin-top: 80px;">
-        <nav class="navbar navbar-expand-lg admin-navbar" style="display: none;">
-            <div class="container">
-                <a class="navbar-brand" href="${pageContext.request.contextPath}/admin/dashboard"><i
-                        class="bi bi-shop"></i> Fashion Store Admin</a>
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link"
-                                href="${pageContext.request.contextPath}/admin/dashboard"><i
-                                    class="bi bi-speedometer2"></i> Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="${pageContext.request.contextPath}/admin/products"><i class="bi bi-box-seam"></i>
-                                Products</a></li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="${pageContext.request.contextPath}/admin/orders"><i class="bi bi-cart-check"></i>
-                                Orders</a></li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="${pageContext.request.contextPath}/admin/customers"><i class="bi bi-people"></i>
-                                Customers</a></li>
-                        <li class="nav-item"><a class="nav-link active"
-                                href="${pageContext.request.contextPath}/admin/reports"><i class="bi bi-graph-up"></i>
-                                Reports</a></li>
-                        <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/logout"><i
-                                    class="bi bi-box-arrow-right"></i> Logout</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        <div class="main-content">
-            <div class="container">
-                <div class="page-header">
-                    <h1><i class="bi bi-graph-up"></i> Sales Reports & Analytics</h1>
-                </div>
-                <div class="row">
-                    <!-- Report Cards -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="feature-icon mb-3">
-                                    <i class="bi bi-graph-up"></i>
-                                </div>
-                                <h5 class="card-title">Revenue Report</h5>
-                                <p class="card-text">View detailed revenue analytics and financial insights</p>
-                                <a th:href="@{/admin/reports/revenue}" class="btn btn-primary">View Report</a>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1><i class="bi bi-graph-up me-2"></i>Sales Reports &amp; Analytics</h1>
+            <p>Xem báo cáo doanh thu và thống kê toàn hệ thống</p>
+        </div>
+    </section>
 
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="feature-icon mb-3">
-                                    <i class="bi bi-trophy"></i>
-                                </div>
-                                <h5 class="card-title">Best Seller Report</h5>
-                                <p class="card-text">Analyze top-selling products and categories</p>
-                                <a th:href="@{/admin/reports/best-seller}" class="btn btn-primary">View Report</a>
+    <div class="main-content">
+        <div class="container">
+            <div class="row">
+                <!-- Revenue Report -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-graph-up"></i>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="feature-icon mb-3">
-                                    <i class="bi bi-box-seam"></i>
-                                </div>
-                                <h5 class="card-title">Inventory Report</h5>
-                                <p class="card-text">Monitor stock levels and inventory status</p>
-                                <a th:href="@{/admin/reports/inventory}" class="btn btn-primary">View Report</a>
-                            </div>
+                            <h5 class="card-title fw-bold">Revenue Report</h5>
+                            <p class="card-text text-muted">View detailed revenue analytics and financial insights</p>
+                            <a th:href="@{/admin/reports/revenue}" class="btn btn-primary mt-2">View Report</a>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="feature-icon mb-3">
-                                    <i class="bi bi-box"></i>
-                                </div>
-                                <h5 class="card-title">Product Report</h5>
-                                <p class="card-text">Comprehensive product analysis and overview</p>
-                                <a th:href="@{/admin/reports/product}" class="btn btn-primary">View Report</a>
+                <!-- Best Seller -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-trophy"></i>
                             </div>
+                            <h5 class="card-title fw-bold">Best Seller Report</h5>
+                            <p class="card-text text-muted">Analyze top-selling products and categories</p>
+                            <a th:href="@{/admin/reports/best-seller}" class="btn btn-primary mt-2">View Report</a>
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="feature-icon mb-3">
-                                    <i class="bi bi-people"></i>
-                                </div>
-                                <h5 class="card-title">Customer Report</h5>
-                                <p class="card-text">Customer analytics and engagement insights</p>
-                                <a th:href="@{/admin/reports/customer}" class="btn btn-primary">View Report</a>
+                <!-- Inventory -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-box-seam"></i>
                             </div>
+                            <h5 class="card-title fw-bold">Inventory Report</h5>
+                            <p class="card-text text-muted">Monitor stock levels and inventory status</p>
+                            <a th:href="@{/admin/reports/inventory}" class="btn btn-primary mt-2">View Report</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-box"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Product Report</h5>
+                            <p class="card-text text-muted">Comprehensive product analysis and overview</p>
+                            <a th:href="@{/admin/reports/product}" class="btn btn-primary mt-2">View Report</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Customer Report</h5>
+                            <p class="card-text text-muted">Customer analytics and engagement insights</p>
+                            <a th:href="@{/admin/reports/customer}" class="btn btn-primary mt-2">View Report</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
+

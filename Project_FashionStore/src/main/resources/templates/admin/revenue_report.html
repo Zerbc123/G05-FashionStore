@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #F4F7FB !important;
             min-height: 100vh;
         }
 
@@ -67,11 +67,6 @@
             padding: 40px 0;
         }
 
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
         .page-header h1 {
             font-family: 'Playfair Display', serif;
             color: white;
@@ -83,6 +78,13 @@
         .page-header p {
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
+        }
+
+        .hero-section {
+            padding: 120px 0 60px 0;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-align: center;
         }
 
         .report-container {
@@ -322,13 +324,18 @@
 <body>
     <div th:replace="~{fragments/header :: adminheader}"></div>
 
-    <div style="margin-top: 100px;">
-        <div class="main-content">
-            <div class="container">
-                <div class="page-header">
-                    <h1><i class="bi bi-graph-up-arrow"></i> Revenue Report</h1>
-                    <p>Comprehensive revenue analysis and insights</p>
-                </div>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="bi bi-graph-up-arrow"></i> Revenue Report</h1>
+                <p>Comprehensive revenue analysis and insights</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <div class="container">
 
                 <!-- Date Filter -->
                 <div class="filter-card">
@@ -471,12 +478,12 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Hidden data elements for JavaScript -->
+    <!-- Hidden data elements for JavaScript -->
         <script th:inline="javascript">
             // Direct data embedding from Thymeleaf
             window.dailyRevenueData = /*[[${report.dailyRevenue}]]*/[];

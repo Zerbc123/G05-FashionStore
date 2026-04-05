@@ -81,7 +81,6 @@ public class AdminOrderController {
     }
 
     @PostMapping("/update-status/{id}")
-    @Transactional
     public String updateStatus(@PathVariable Long id,
                                @RequestParam String status, 
                                HttpSession session, 
@@ -91,12 +90,12 @@ public class AdminOrderController {
             return "redirect:/login";
         }
 
-        try {
-            String userRole = (String) session.getAttribute("userRole");
-            if (userRole == null) {
-                userRole = "Admin";
-            }
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null) {
+            userRole = "Admin";
+        }
 
+        try {
             // Chuyển String nhận từ HTML form sang Enum
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase().trim());
 
@@ -108,19 +107,14 @@ public class AdminOrderController {
                 orderService.cancelOrder(id, userRole, "Đã hủy bởi " + userRole);
                 redirectAttributes.addFlashAttribute("success", "Đã hủy đơn hàng và hoàn lại stock thành công!");
             } else {
-                // Các trạng thái khác chỉ cập nhật đơn giản
-                Order order = orderRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
-                order.setStatus(newStatus);
-                orderRepository.save(order);
+                // Các trạng thái khác - gọi qua service riêng để có transaction sạch
+                orderService.updateOrderStatus(id, newStatus);
                 redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái đơn hàng thành công!");
             }
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", "Trạng thái không hợp lệ!");
+            redirectAttributes.addFlashAttribute("error", "Trạng thái không hợp lệ: " + e.getMessage());
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật trạng thái: " + e.getMessage());
         }
 
         return "redirect:/admin/orders";

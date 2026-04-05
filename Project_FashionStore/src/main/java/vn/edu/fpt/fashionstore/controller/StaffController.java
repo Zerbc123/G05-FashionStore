@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.fpt.fashionstore.service.AccountService;
 import vn.edu.fpt.fashionstore.service.CloudinaryService;
+import vn.edu.fpt.fashionstore.service.OrderService;
 import vn.edu.fpt.fashionstore.service.ProductService;
-import vn.edu.fpt.fashionstore.entity.Category;
 import vn.edu.fpt.fashionstore.service.CategoryService;
 import vn.edu.fpt.fashionstore.entity.Product;
 import vn.edu.fpt.fashionstore.entity.ProductVariant;
@@ -52,6 +52,9 @@ public class StaffController {
 
     @Autowired
     private vn.edu.fpt.fashionstore.repository.OrderRepository orderRepository;
+
+    @Autowired
+    private OrderService orderService;
 
     private boolean isStaff(HttpSession session) {
         String role = (String) session.getAttribute("userRole");
@@ -147,7 +150,6 @@ public class StaffController {
     }
 
     @PostMapping("/orders/update-status/{id}")
-    @org.springframework.transaction.annotation.Transactional
     public String updateStatus(@PathVariable Long id,
                                @RequestParam String status,
                                HttpSession session,
@@ -158,16 +160,15 @@ public class StaffController {
             return "redirect:/staff/orders";
         }
 
-        orderRepository.findById(id).ifPresent(order -> {
-            try {
-                OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
-                order.setStatus(newStatus);
-                orderRepository.save(order);
-                ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");
-            } catch (IllegalArgumentException e) {
-                ra.addFlashAttribute("error", "Trạng thái không hợp lệ: " + status);
-            }
-        });
+        try {
+            OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+            orderService.updateOrderStatus(id, newStatus);
+            ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", "Trạng thái không hợp lệ: " + status);
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
 
         return "redirect:/staff/orders";
     }

@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #F4F7FB !important;
             min-height: 100vh;
         }
 
@@ -67,9 +67,15 @@
             padding: 40px 0;
         }
 
+        .hero-section {
+            padding: 120px 0 60px 0;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-align: center;
+        }
+
         .page-header {
             text-align: center;
-            margin-bottom: 40px;
         }
 
         .page-header h1 {
@@ -311,13 +317,18 @@
 <body>
     <div th:replace="~{fragments/header :: adminheader}"></div>
 
-    <div style="margin-top: 100px;">
-        <div class="main-content">
-            <div class="container">
-                <div class="page-header">
-                    <h1><i class="bi bi-box-seam"></i> Inventory Report</h1>
-                    <p>Current stock levels and inventory analysis</p>
-                </div>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="bi bi-box-seam"></i> Inventory Report</h1>
+                <p>Current stock levels and inventory analysis</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <div class="container">
 
                 <!-- Summary Statistics -->
                 <div class="stats-grid">
@@ -500,8 +511,8 @@
                         </table>
                     </div>
                 </div>
-            </div>
         </div>
+    </div>
 
         <!-- Hidden data elements for JavaScript -->
         <script th:inline="javascript">

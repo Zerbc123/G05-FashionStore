@@ -317,7 +317,14 @@ public class OrderService {
         return order;
     }
 
-    // =======================================================
+    @Transactional
+    public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+        order.setStatus(newStatus);
+        return orderRepository.save(order);
+    }
+
     // 4. KIỂM TRA QUYỀN SỞ HỮU ĐƠN HÀNG
     // =======================================================
     @Transactional(readOnly = true)
