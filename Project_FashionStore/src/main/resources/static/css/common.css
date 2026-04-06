@@ -1,12 +1,12 @@
 /* CSS Variables */
 :root {
-    --primary-color: #11998e;
-    --secondary-color: #38ef7d;
-    --accent-color: #0fb89e;
+    --primary-color: #FF6B9D;
+    --secondary-color: #C44569;
+    --accent-color: #FEA47F;
     --dark-text: #2C3E50;
     --light-text: #7F8C8D;
     --white: #FFFFFF;
-    --light-bg: #F0FFF9;
+    --light-bg: #FFF9F9;
     --pastel-purple: #E8D5F2;
     --pastel-blue: #C5E3F6;
 }

@@ -596,9 +596,9 @@
                                th:text="${#numbers.formatDecimal(item.productVariant.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</p>
                         </div>
                         <div class="col-md-1 text-end">
-                            <form th:action="@{/cart/remove}" method="POST" style="display: inline;">
+                            <form th:action="@{/cart/remove}" method="POST" style="display: inline;" class="remove-form">
                                 <input type="hidden" name="cartItemId" th:value="${item.cartItemId}">
-                                <button type="submit" class="remove-btn" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                <button type="button" class="remove-btn" onclick="showRemoveConfirm(this)">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -710,6 +710,50 @@
             });
         }
     });
+
+    // Xác nhận xóa sản phẩm
+    let currentRemoveForm = null;
+
+    function showRemoveConfirm(button) {
+        currentRemoveForm = button.closest('form');
+        const modal = new bootstrap.Modal(document.getElementById('removeConfirmModal'));
+        modal.show();
+    }
+
+    function confirmRemove() {
+        if (currentRemoveForm) {
+            currentRemoveForm.submit();
+        }
+    }
 </script>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="removeConfirmModal" tabindex="-1" aria-labelledby="removeConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.5rem;">
+                <h5 class="modal-title" id="removeConfirmModalLabel" style="color: #2C3E50; font-weight: 600;">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    Xác nhận xóa sản phẩm
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem; color: #555;">
+                <p class="mb-0">Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                    style="border-radius: 8px; padding: 0.5rem 1.5rem;">
+                    <i class="bi bi-x-circle me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmRemove()" data-bs-dismiss="modal"
+                    style="border-radius: 8px; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #FF6B9D, #C44569); border: none;">
+                    <i class="bi bi-trash me-1"></i>Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

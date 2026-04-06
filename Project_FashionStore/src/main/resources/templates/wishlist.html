@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -210,9 +210,9 @@
                          th:src="@{${item.product.variants[0].imageUrl}}" 
                          alt="Product" 
                          class="product-image"
-                         onerror="this.src='https://via.placeholder.com/280x300/667eea/ffffff?text=Product'">
+                         onerror="this.src='https://via.placeholder.com/280x300/FF6B9D/ffffff?text=Product'">
                     <img th:unless="${item.product.variants != null and !item.product.variants.isEmpty() and item.product.variants[0].imageUrl != null}" 
-                         src="https://via.placeholder.com/280x300/667eea/ffffff?text=Product" 
+                         src="https://via.placeholder.com/280x300/FF6B9D/ffffff?text=Product" 
                          alt="Product" 
                          class="product-image">
                 </a>
