@@ -64,6 +64,12 @@
             border: 1px solid #bee5eb;
         }
 
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
         .badge-cancelled {
             background: #f8d7da;
             color: #721c24;
@@ -143,7 +149,8 @@
                             <td>
                                 <span class="badge-status" th:classappend="
                                     ${order.status != null and order.status.name() == 'PENDING'} ? ' badge-pending' :
-                                    (${order.status != null and (order.status.name() == 'CONFIRMED' or order.status.name() == 'COMPLETED' or order.status.name() == 'SHIPPING')} ? ' badge-confirmed' : ' badge-cancelled')"
+                                    (${order.status != null and order.status.name() == 'COMPLETED'} ? ' badge-completed' :
+                                    (${order.status != null and (order.status.name() == 'CONFIRMED' or order.status.name() == 'SHIPPING')} ? ' badge-confirmed' : ' badge-cancelled'))"
                                       th:text="${order.status != null ? order.status.displayName : 'N/A'}">
                                 </span>
                             </td>

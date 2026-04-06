@@ -177,8 +177,18 @@ public class StaffController {
             }
             
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
-            orderService.updateOrderStatus(id, newStatus);
-            ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");
+            
+            // Gọi service để xử lý logic trừ/hoàn stock
+            if (newStatus == OrderStatus.CONFIRMED) {
+                orderService.confirmOrder(id, "STAFF");
+                ra.addFlashAttribute("success", "Đã xác nhận đơn hàng và trừ stock thành công!");
+            } else if (newStatus == OrderStatus.CANCELLED) {
+                orderService.cancelOrder(id, "STAFF", "Đã hủy bởi STAFF");
+                ra.addFlashAttribute("success", "Đã hủy đơn hàng và hoàn stock thành công!");
+            } else {
+                orderService.updateOrderStatus(id, newStatus);
+                ra.addFlashAttribute("success", "Cập nhật trạng thái cho đơn hàng #" + id + " thành công!");
+            }
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("error", "Trạng thái không hợp lệ: " + status);
         } catch (RuntimeException e) {
